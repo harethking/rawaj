@@ -1,0 +1,2727 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>رواج — متجرك وحساباته في جيبك</title>
+<meta name="description" content="رواج: منصة لإدارة متجرك أونلاين — الطلبات والمخزن والأرباح ورابط متجرك للزبائن.">
+<meta name="theme-color" content="#1f6b4f">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Readex+Pro:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#eef1ef; --surface:#ffffff; --sunk:#f5f7f6; --line:#dde3e0; --line-strong:#c5cdc9;
+  --ink:#14211f; --muted:#5d6b67; --faint:#8a9692;
+  --brand:#1f6b4f;
+  --brand-soft:color-mix(in srgb, var(--brand) 12%, var(--surface));
+  --brand-ink:#ffffff;
+  --new:#1d4ed8; --confirmed:#7c3aed; --preparing:#b45309; --shipped:#0e7490; --delivered:#15803d; --canceled:#6b7280; --returned:#b91c1c;
+  --bad:#b91c1c; --good:#15803d; --warn:#b45309;
+  --r-lg:20px; --r-md:12px; --r-sm:8px;
+  --nav-h:64px;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0f1716; --surface:#172220; --sunk:#121b1a; --line:#26332f; --line-strong:#33433e;
+    --ink:#e7eeeb; --muted:#9fb0ab; --faint:#74857f;
+    --new:#7aa2ff; --confirmed:#b69bff; --preparing:#f2b25c; --shipped:#5cc8dc; --delivered:#5fd18a; --canceled:#9aa3ad; --returned:#ff8a8a;
+    --bad:#ff8a8a; --good:#5fd18a; --warn:#f2b25c;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0f1716; --surface:#172220; --sunk:#121b1a; --line:#26332f; --line-strong:#33433e;
+  --ink:#e7eeeb; --muted:#9fb0ab; --faint:#74857f;
+  --new:#7aa2ff; --confirmed:#b69bff; --preparing:#f2b25c; --shipped:#5cc8dc; --delivered:#5fd18a; --canceled:#9aa3ad; --returned:#ff8a8a;
+  --bad:#ff8a8a; --good:#5fd18a; --warn:#f2b25c;
+  color-scheme: dark;
+}
+:root{--rw:#1f6b4f;--shadow-sm:0 1px 2px rgba(16,32,28,.06),0 1px 1px rgba(16,32,28,.04);--shadow-md:0 2px 6px rgba(16,32,28,.06),0 10px 24px -12px rgba(16,32,28,.18)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--shadow-sm:0 1px 2px rgba(0,0,0,.3);--shadow-md:0 8px 24px -10px rgba(0,0,0,.6)}}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  background:var(--bg); color:var(--ink);
+  font-family:"Readex Pro", system-ui, sans-serif; font-size:15px; line-height:1.55;
+  font-variant-numeric: tabular-nums;
+  -webkit-tap-highlight-color: transparent;
+}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+a{color:var(--brand)}
+.num{font-variant-numeric:tabular-nums; direction:ltr; unicode-bidi:isolate; display:inline-block}
+
+/* Demo notice */
+
+/* Header */
+header.top{
+  position:sticky;top:0;z-index:20;background:var(--surface);
+  border-bottom:1px solid var(--line);
+  padding:10px 16px;display:flex;align-items:center;gap:10px;
+}
+.store-mark{width:38px;height:38px;border-radius:11px;background:var(--brand);color:var(--brand-ink);display:grid;place-items:center;font-weight:700;font-size:17px;flex:none}
+.store-pick{flex:1;min-width:0}
+.store-pick select{border:0;background:none;font-weight:600;font-size:16px;padding:0;max-width:100%;appearance:none;-webkit-appearance:none}
+.store-pick small{display:block;color:var(--muted);font-size:12px;margin-top:-2px}
+.icon-btn{width:40px;height:40px;border-radius:12px;border:1px solid var(--line);background:var(--surface);display:grid;place-items:center;flex:none}
+.icon-btn svg{width:20px;height:20px}
+.role-pick{border:1px solid var(--line);background:var(--sunk);border-radius:10px;padding:6px 8px;font-size:13px}
+
+/* Layout */
+.shell{display:flex;min-height:calc(100vh - 100px)}
+main{flex:1;min-width:0;padding:16px 16px calc(var(--nav-h) + 28px);max-width:860px;margin:0 auto;width:100%}
+nav.side{display:none}
+nav.bottom{
+  position:fixed;bottom:0;inset-inline:0;z-index:20;height:calc(var(--nav-h) + env(safe-area-inset-bottom));
+  padding-bottom:env(safe-area-inset-bottom);
+  background:var(--surface);border-top:1px solid var(--line);display:flex;
+}
+nav.bottom button{flex:1;border:0;background:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:11.5px;color:var(--muted)}
+nav.bottom button svg{width:22px;height:22px}
+nav.bottom button[aria-current="page"]{color:var(--brand);font-weight:600}
+@media (min-width:920px){
+  nav.bottom{display:none}
+  nav.side{display:flex;flex-direction:column;gap:2px;width:220px;flex:none;padding:16px 12px;border-inline-start:0;border-inline-end:1px solid var(--line);background:var(--surface);position:sticky;top:59px;height:calc(100vh - 59px)}
+  nav.side button{display:flex;align-items:center;gap:10px;border:0;background:none;padding:10px 12px;border-radius:10px;color:var(--muted);text-align:start}
+  nav.side button svg{width:20px;height:20px}
+  nav.side button[aria-current="page"]{background:var(--brand-soft);color:var(--brand);font-weight:600}
+  main{padding:24px 28px 40px}
+}
+
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+h1{font-size:22px;font-weight:600;margin:4px 0 14px;letter-spacing:-.2px}
+h2{font-size:16px;font-weight:600;margin:24px 0 10px}
+.sub{color:var(--muted);font-size:13px}
+.row{display:flex;align-items:center;gap:10px}
+.spread{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.grow{flex:1;min-width:0}
+.trunc{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* Order pipeline — the signature element */
+.pipeline{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:18px 14px 14px;overflow-x:auto}
+.pipe-track{display:grid;grid-template-columns:repeat(5,minmax(64px,1fr));position:relative;min-width:340px}
+.pipe-track::before{content:"";position:absolute;top:21px;inset-inline:10%;height:2px;background:var(--line-strong)}
+.stop{position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;border:0;background:none;padding:0}
+.stop .dot{width:44px;height:44px;border-radius:50%;background:var(--surface);border:2px solid var(--c);color:var(--c);display:grid;place-items:center;font-weight:700;font-size:17px;position:relative}
+.stop.hot .dot{background:var(--c);color:#fff}
+.stop span{font-size:12px;color:var(--muted)}
+.pipe-foot{display:flex;gap:16px;margin-top:14px;padding-top:12px;border-top:1px dashed var(--line);font-size:13px;color:var(--muted);flex-wrap:wrap}
+.pipe-foot b{color:var(--ink);font-weight:600}
+
+/* Money strip */
+.money{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--r-md);overflow:hidden;margin-top:14px}
+@media (min-width:640px){.money{grid-template-columns:repeat(4,1fr)}}
+.money div{background:var(--surface);padding:12px 14px}
+.money dt{font-size:12.5px;color:var(--muted)}
+.money dd{margin:2px 0 0;font-size:18px;font-weight:600}
+.money .cod dd{color:var(--shipped)}
+.money .neg dd{color:var(--bad)}
+
+/* Lists */
+.list{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);overflow:hidden}
+.item{display:flex;align-items:center;gap:12px;padding:12px 14px;border:0;border-bottom:1px solid var(--line);background:none;width:100%;text-align:start}
+.item:last-child{border-bottom:0}
+button.item:hover{background:var(--sunk)}
+.item .meta{font-size:12.5px;color:var(--muted)}
+.ono{font-weight:600;color:var(--muted);font-size:13px;min-width:44px}
+.empty{padding:28px 16px;text-align:center;color:var(--muted)}
+.empty button{margin-top:10px}
+
+.badge{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:500;padding:2px 9px;border-radius:999px;color:var(--c);background:color-mix(in srgb,var(--c) 13%,transparent);white-space:nowrap}
+.badge::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--c)}
+.tag{font-size:11.5px;padding:1px 7px;border-radius:6px;background:var(--sunk);border:1px solid var(--line);color:var(--muted);white-space:nowrap}
+.tag.warn{color:var(--warn);border-color:color-mix(in srgb,var(--warn) 35%,transparent);background:color-mix(in srgb,var(--warn) 10%,transparent)}
+
+/* Chips */
+.chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:10px;scrollbar-width:none}
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:5px 12px;font-size:13px;white-space:nowrap;color:var(--muted)}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.chip b{font-weight:600;margin-inline-start:4px}
+
+/* Inputs & buttons */
+.field{display:flex;flex-direction:column;gap:5px;margin-bottom:12px}
+.field label{font-size:13px;color:var(--muted)}
+.input,select.input,textarea.input{width:100%;border:1px solid var(--line-strong);background:var(--surface);border-radius:10px;padding:10px 12px;min-height:44px}
+textarea.input{min-height:76px;resize:vertical}
+.input:focus{outline:2px solid var(--brand);outline-offset:-1px;border-color:transparent}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.search{position:relative;margin-bottom:10px}
+.search svg{position:absolute;inset-inline-start:12px;top:50%;transform:translateY(-50%);width:18px;height:18px;color:var(--faint)}
+.search .input{padding-inline-start:38px}
+.btn{border:1px solid var(--line-strong);background:var(--surface);border-radius:10px;padding:9px 16px;min-height:42px;font-weight:500;display:inline-flex;align-items:center;justify-content:center;gap:6px}
+.btn.primary{background:var(--brand);border-color:var(--brand);color:var(--brand-ink)}
+.btn.danger{color:var(--bad);border-color:color-mix(in srgb,var(--bad) 40%,transparent)}
+.btn.block{width:100%}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn svg{width:18px;height:18px}
+.fab{position:fixed;inset-inline-start:16px;bottom:calc(var(--nav-h) + 16px + env(safe-area-inset-bottom));z-index:15;border-radius:16px;box-shadow:0 6px 20px color-mix(in srgb,var(--brand) 35%,transparent)}
+@media (min-width:920px){.fab{bottom:24px}}
+.err{color:var(--bad);font-size:13px;margin:-4px 0 10px}
+
+/* Sheet */
+.scrim{position:fixed;inset:0;background:rgba(10,20,18,.45);z-index:40;display:none}
+.scrim.open{display:block}
+.sheet{
+  position:fixed;z-index:41;inset-inline:0;bottom:0;max-height:92vh;overflow-y:auto;
+  background:var(--surface);border-radius:22px 22px 0 0;padding:8px 18px calc(20px + env(safe-area-inset-bottom));
+  transform:translateY(100%);transition:transform .22s ease;
+}
+.sheet.open{transform:none}
+@media (min-width:720px){
+  .sheet{inset-inline:auto;left:50%;right:auto;bottom:auto;top:50%;width:560px;max-height:86vh;border-radius:20px;transform:translate(-50%,-46%);opacity:0;pointer-events:none;transition:opacity .16s, transform .16s}
+  .sheet.open{transform:translate(-50%,-50%);opacity:1;pointer-events:auto}
+}
+.grab{width:40px;height:4px;border-radius:2px;background:var(--line-strong);margin:4px auto 10px}
+@media (min-width:720px){.grab{display:none}}
+.sheet-head{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.sheet-head h3{margin:0;font-size:18px;font-weight:600;flex:1}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.actions .btn{flex:1;min-width:120px}
+
+/* Order detail */
+.cust{background:var(--sunk);border-radius:var(--r-md);padding:12px 14px;margin-bottom:12px}
+.lines{width:100%;border-collapse:collapse;font-size:14px}
+.lines td{padding:8px 0;border-bottom:1px solid var(--line)}
+.lines td:last-child{text-align:left}
+.tot{display:flex;justify-content:space-between;padding:4px 0;font-size:14px;color:var(--muted)}
+.tot.grand{color:var(--ink);font-weight:600;font-size:16px;border-top:1px solid var(--line);margin-top:6px;padding-top:10px}
+.timeline{list-style:none;padding:0;margin:8px 0 0;border-inline-start:2px solid var(--line);padding-inline-start:14px}
+.timeline li{position:relative;padding:4px 0 10px;font-size:13.5px}
+.timeline li::before{content:"";position:absolute;inset-inline-start:-20px;top:10px;width:10px;height:10px;border-radius:50%;background:var(--c);border:2px solid var(--surface)}
+.timeline small{color:var(--muted);display:block}
+
+/* Order builder lines */
+.oline{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--line);font-size:14px}
+.qty{display:flex;align-items:center;border:1px solid var(--line-strong);border-radius:9px;overflow:hidden}
+.qty button{width:32px;height:32px;border:0;background:var(--sunk)}
+.qty span{min-width:28px;text-align:center}
+
+/* Products */
+.thumb{width:46px;height:46px;border-radius:11px;flex:none;display:grid;place-items:center;font-weight:600;font-size:18px;color:#fff}
+.vrow{display:grid;grid-template-columns:1.4fr 1fr 1fr .8fr 28px;gap:6px;margin-bottom:6px;align-items:center}
+.vrow .input{min-height:38px;padding:7px 8px;font-size:14px}
+.vrow.head{font-size:12px;color:var(--muted)}
+.vrow .x{border:0;background:none;color:var(--faint);font-size:18px}
+
+/* Bars */
+.bars{display:flex;align-items:flex-end;gap:4px;height:110px;padding:8px 0 0}
+.bars div{flex:1;background:var(--brand);border-radius:4px 4px 0 0;min-height:2px;opacity:.85;position:relative}
+.bars div.today{opacity:1}
+.bars-x{display:flex;justify-content:space-between;font-size:11px;color:var(--faint);margin-top:4px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:14px}
+
+/* Report table */
+.ledger{width:100%;border-collapse:collapse;font-size:14.5px}
+.ledger td{padding:10px 0;border-bottom:1px solid var(--line)}
+.ledger td:last-child{text-align:left;font-weight:500}
+.ledger tr.sum td{font-weight:600;border-bottom:0;font-size:16px}
+.ledger tr.minus td:first-child::before{content:"− ";color:var(--faint)}
+.note{font-size:12.5px;color:var(--muted);margin-top:10px}
+
+/* Storefront */
+.sf{position:fixed;inset:0;z-index:30;background:var(--bg);overflow-y:auto;display:none}
+.sf.open{display:block}
+.sf-url{background:var(--ink);color:var(--bg);font-size:12.5px;padding:7px 14px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.sf-url button{background:none;border:1px solid color-mix(in srgb,var(--bg) 40%,transparent);color:inherit;border-radius:8px;padding:3px 10px;font-size:12.5px}
+.sf-hero{background:var(--brand);color:var(--brand-ink);padding:26px 18px 30px}
+.sf-hero h2{margin:0;font-size:26px;font-weight:600}
+.sf-hero p{margin:4px 0 0;opacity:.85}
+.sf-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;padding:16px;max-width:900px;margin:0 auto}
+@media (min-width:700px){.sf-grid{grid-template-columns:repeat(3,1fr)}}
+.sf-card{background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden;text-align:start;padding:0}
+.sf-card .pic{aspect-ratio:1;display:grid;place-items:center;font-size:42px;font-weight:600;color:#fff}
+.sf-card .txt{padding:10px 12px}
+.sf-card .txt div{font-weight:500}
+.opts{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 12px}
+.opt{border:1px solid var(--line-strong);background:var(--surface);border-radius:10px;padding:7px 12px;font-size:14px}
+.opt[aria-pressed="true"]{border-color:var(--brand);background:var(--brand-soft);color:var(--brand);font-weight:600}
+.opt:disabled{text-decoration:line-through;opacity:.5}
+
+/* ---- Visual polish ---- */
+.rawaj-logo{width:52px;height:52px;flex:none;filter:drop-shadow(0 6px 14px color-mix(in srgb,var(--rw) 40%,transparent))}
+.rawaj-name{font-size:30px !important;font-weight:700;letter-spacing:-.5px}
+.auth-points{list-style:none;padding:0;margin:0 0 18px;display:grid;gap:6px}
+.auth-points li{position:relative;padding-inline-start:22px;color:var(--muted);font-size:14px}
+.auth-points li::before{content:"";position:absolute;inset-inline-start:2px;top:.55em;width:10px;height:10px;border-radius:3px;background:color-mix(in srgb,var(--rw) 70%,transparent)}
+.auth .panel{box-shadow:var(--shadow-md)}
+header.top{box-shadow:0 1px 0 var(--line), 0 3px 0 -1px color-mix(in srgb,var(--brand) 55%,transparent)}
+.store-mark{box-shadow:0 0 0 3px color-mix(in srgb,var(--brand) 18%,transparent)}
+.panel,.list,.pipeline,.money,.link-card{box-shadow:var(--shadow-sm)}
+.list{border-radius:16px}
+.panel{border-radius:16px}
+button.item{transition:background-color .12s}
+.btn{transition:filter .12s, background-color .12s, transform .06s}
+.btn:active{transform:scale(.98)}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn:not(.primary):hover{background:var(--sunk)}
+h1{font-size:23px;font-weight:700;letter-spacing:-.3px}
+h2{font-size:15.5px;color:var(--ink)}
+nav.bottom button span{transition:color .12s}
+nav.bottom button svg{padding:3px 12px;width:46px;height:28px;border-radius:999px;box-sizing:content-box;transition:background-color .15s}
+nav.bottom button[aria-current="page"] svg{background:var(--brand-soft)}
+nav.bottom button{gap:1px}
+.empty{padding:32px 16px}
+.empty::before{content:"";display:block;width:44px;height:44px;margin:0 auto 10px;border-radius:14px;background:var(--sunk) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238a9692' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 8l9-5 9 5-9 5-9-5z'/%3E%3Cpath d='M3 8v8l9 5 9-5V8'/%3E%3C/svg%3E") center/24px no-repeat}
+@keyframes viewIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+main.enter > *{animation:viewIn .22s ease both}
+@media (prefers-reduced-motion: reduce){main.enter > *{animation:none}}
+
+/* Home greeting card */
+.hello{position:relative;overflow:hidden;border-radius:20px;padding:18px 18px 16px;color:#fff;
+  background:linear-gradient(135deg, var(--brand), color-mix(in srgb,var(--brand) 70%,#000));box-shadow:var(--shadow-md)}
+.hello::after{content:"";position:absolute;inset:0;pointer-events:none;opacity:.14;
+  background-image:radial-gradient(circle at 1px 1px,#fff 1px,transparent 1.4px);background-size:16px 16px;
+  mask-image:linear-gradient(to left,#000,transparent 70%);-webkit-mask-image:linear-gradient(to left,#000,transparent 70%)}
+.hello-greet{font-size:19px;font-weight:600}
+.hello-date{opacity:.8;font-size:13px}
+.hello-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:16px;position:relative;z-index:1}
+.hello-stats div{background:rgba(255,255,255,.13);border-radius:12px;padding:9px 10px}
+.hello-stats span{display:block;font-size:12px;opacity:.85}
+.hello-stats b{display:block;font-size:17px;font-weight:600;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.quick{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:14px 0 16px}
+.quick button{display:flex;flex-direction:column;align-items:center;gap:6px;border:1px solid var(--line);background:var(--surface);border-radius:14px;padding:12px 4px;font-size:12.5px;color:var(--ink);box-shadow:var(--shadow-sm)}
+.quick button:hover{background:var(--sunk)}
+.quick svg{width:22px;height:22px;color:var(--brand)}
+.quick .qi{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:var(--brand-soft)}
+
+/* Product cards */
+.pgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+@media (min-width:640px){.pgrid{grid-template-columns:repeat(3,1fr)}}
+@media (min-width:1100px){.pgrid{grid-template-columns:repeat(4,1fr)}}
+.pcard{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden;text-align:start;padding:0;display:flex;flex-direction:column;box-shadow:var(--shadow-sm);transition:transform .12s, box-shadow .12s}
+.pcard:hover{transform:translateY(-2px);box-shadow:var(--shadow-md)}
+.pcard .pic{aspect-ratio:4/3;display:grid;place-items:center;font-size:36px;font-weight:600;color:#fff}
+.pcard .pc-body{padding:10px 12px 12px;display:flex;flex-direction:column;gap:4px}
+.pcard .pc-name{font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pcard .pc-row{display:flex;justify-content:space-between;align-items:center;gap:6px;font-size:13.5px}
+.pcard .pc-flag{position:absolute;top:8px;inset-inline-start:8px;z-index:1}
+.pcard .pc-flag .tag{background:var(--surface);box-shadow:var(--shadow-sm)}
+.pcard.off .pic{filter:grayscale(.8);opacity:.6}
+
+.sync-dot{position:absolute;inset-inline-start:-6px;top:2px;width:9px;height:9px;border-radius:50%;background:var(--good);border:2px solid var(--surface)}
+.sync-dot[data-st="saving"]{background:var(--warn);animation:pulse 1s infinite}
+.sync-dot[data-st="error"]{background:var(--bad)}
+@keyframes pulse{50%{opacity:.35}}
+/* Segmented tabs inside a view */
+.seg{display:flex;gap:4px;background:var(--sunk);border:1px solid var(--line);border-radius:12px;padding:4px;margin-bottom:14px;overflow-x:auto;scrollbar-width:none}
+.seg button{flex:1;border:0;background:none;border-radius:9px;padding:8px 10px;color:var(--muted);white-space:nowrap;font-size:14px}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.ledger td.ind{padding-inline-start:18px;color:var(--muted);font-size:13.5px}
+.ledger tr.sub-sum td{font-weight:600}
+.trend{display:flex;align-items:stretch;gap:8px;height:150px}
+.trend .col{flex:1;display:flex;flex-direction:column;align-items:center;min-width:0}
+.trend .up,.trend .down{flex:1;width:100%;display:flex;justify-content:center}
+.trend .up{align-items:flex-end;border-bottom:1px solid var(--line-strong)}
+.trend .down{align-items:flex-start}
+.trend .bar{width:70%;max-width:42px;border-radius:4px 4px 0 0;background:var(--good)}
+.trend .down .bar{border-radius:0 0 4px 4px;background:var(--bad)}
+.trend .lbl{font-size:11px;color:var(--faint);margin-top:4px;white-space:nowrap}
+.qty-pill{min-width:44px;text-align:center;font-weight:600;padding:2px 8px;border-radius:8px;background:var(--sunk)}
+.qty-pill.low{color:var(--warn);background:color-mix(in srgb,var(--warn) 12%,transparent)}
+.qty-pill.out{color:var(--bad);background:color-mix(in srgb,var(--bad) 12%,transparent)}
+.cash-big{font-size:26px;font-weight:600;margin:2px 0 0}
+.check-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--line);font-size:14px}
+.check-row input{width:20px;height:20px;accent-color:var(--brand)}
+.sf-price{font-size:20px;font-weight:600;margin:10px 0 4px}
+.var-table{width:100%;border-collapse:collapse;font-size:14.5px;margin-top:6px}
+.var-table td{padding:9px 0;border-bottom:1px solid var(--line)}
+.var-table td:last-child{text-align:left;font-weight:500}
+
+/* Images */
+.thumb,.pic,.store-mark{overflow:hidden}
+.thumb img,.pic img,.store-mark img{width:100%;height:100%;object-fit:cover;display:block}
+.pimgs{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:8px;margin-bottom:8px}
+.pimg{position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;background:var(--sunk);border:1px solid var(--line)}
+.pimg img{width:100%;height:100%;object-fit:cover;display:block}
+.pimg .x{position:absolute;top:4px;inset-inline-end:4px;width:26px;height:26px;border-radius:50%;border:0;background:rgba(0,0,0,.6);color:#fff;font-size:16px;line-height:1}
+.pimg .cover{position:absolute;bottom:4px;inset-inline-start:4px;border:0;border-radius:6px;background:rgba(0,0,0,.6);color:#fff;font-size:11px;padding:2px 6px}
+.pimg.first{outline:2px solid var(--brand);outline-offset:-2px}
+.upload{position:relative;overflow:hidden}
+.upload input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.gal-main{aspect-ratio:1;border-radius:14px;overflow:hidden;background:var(--sunk)}
+.gal-main img{width:100%;height:100%;object-fit:cover;display:block}
+.gal-thumbs{display:flex;gap:6px;margin-top:8px;overflow-x:auto}
+.gal-thumbs button{width:56px;height:56px;flex:none;border-radius:9px;overflow:hidden;border:2px solid transparent;padding:0;background:var(--sunk)}
+.gal-thumbs button[aria-pressed="true"]{border-color:var(--brand)}
+.gal-thumbs img{width:100%;height:100%;object-fit:cover;display:block}
+.link-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:12px 14px;margin-bottom:14px}
+.link-card .url{direction:ltr;text-align:left;font-size:13.5px;background:var(--sunk);border-radius:8px;padding:8px 10px;margin:6px 0 10px;word-break:break-all}
+.sf-logo{width:64px;height:64px;border-radius:16px;overflow:hidden;background:rgba(255,255,255,.2);margin-bottom:10px}
+.sf-logo img{width:100%;height:100%;object-fit:cover;display:block}
+
+/* Auth */
+.auth{min-height:100vh;display:grid;place-items:center;padding:24px 16px}
+.auth-box{width:100%;max-width:400px}
+.auth-brand{display:flex;align-items:center;gap:12px;margin-bottom:22px}
+.auth-brand .store-mark{width:48px;height:48px;border-radius:14px;font-size:22px}
+.auth-brand h1{margin:0;font-size:24px}
+.auth-brand p{margin:0;color:var(--muted);font-size:13.5px}
+.tabs{display:grid;grid-template-columns:1fr 1fr;background:var(--sunk);border:1px solid var(--line);border-radius:12px;padding:4px;margin-bottom:16px}
+.tabs button{border:0;background:none;border-radius:9px;padding:9px;color:var(--muted)}
+.tabs button[aria-selected="true"]{background:var(--surface);color:var(--ink);font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.hint{margin-top:16px;padding:12px 14px;border:1px dashed var(--line-strong);border-radius:12px;font-size:13px;color:var(--muted)}
+.hint b{color:var(--ink)}
+body.signed-out header.top, body.signed-out .shell, body.signed-out nav.bottom,
+body.admin-mode header.top, body.admin-mode .shell, body.admin-mode nav.bottom{display:none}
+body:not(.signed-out) #auth{display:none}
+body:not(.admin-mode) #admin{display:none}
+#adminBanner{display:none;background:var(--confirmed);color:#fff;font-size:13.5px;padding:8px 16px;align-items:center;justify-content:space-between;gap:10px}
+#adminBanner.on{display:flex}
+#planBanner{display:none;padding:10px 16px;font-size:14px;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;border-bottom:1px solid var(--line)}
+#planBanner.on{display:flex}
+#planBanner.warn{background:color-mix(in srgb,var(--warn) 14%,var(--surface))}
+#planBanner.bad{background:color-mix(in srgb,var(--bad) 14%,var(--surface))}
+#planBanner .row{gap:6px}
+#planBanner .btn{min-height:34px;padding:4px 12px;font-size:13.5px;text-decoration:none}
+body.signed-out #planBanner, body.admin-mode #planBanner{display:none}
+#adminBanner button{background:#fff;color:var(--ink);border:0;border-radius:8px;padding:5px 12px;font-size:13px;font-weight:600;white-space:nowrap}
+.admin-top{position:sticky;top:0;z-index:20;background:var(--ink);color:var(--bg);padding:12px 16px;display:flex;align-items:center;gap:12px}
+.admin-top h1{margin:0;font-size:18px;flex:1}
+.admin-top .btn{background:transparent;color:inherit;border-color:color-mix(in srgb,var(--bg) 35%,transparent);min-height:36px;padding:5px 12px}
+.admin-wrap{max-width:980px;margin:0 auto;padding:16px 16px 40px}
+.plan{font-size:11.5px;padding:1px 8px;border-radius:6px;border:1px solid var(--line);white-space:nowrap}
+.plan.paid{color:var(--good);border-color:color-mix(in srgb,var(--good) 40%,transparent);background:color-mix(in srgb,var(--good) 10%,transparent)}
+.plan.expired{color:var(--bad);border-color:color-mix(in srgb,var(--bad) 40%,transparent)}
+.st-susp{color:var(--bad);font-size:12px;font-weight:600}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:14px;margin:0 0 12px}
+.kv dt{color:var(--muted)}
+.kv dd{margin:0;word-break:break-all}
+.temp-pw{font-size:22px;font-weight:600;letter-spacing:1px;direction:ltr;text-align:center;background:var(--sunk);border-radius:10px;padding:12px;margin:10px 0}
+
+/* Toast */
+.toast{position:fixed;z-index:60;left:50%;transform:translateX(-50%);bottom:calc(var(--nav-h) + 24px);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:14px;max-width:calc(100vw - 32px);display:none}
+.toast.show{display:block}
+.toast.bad{background:var(--bad);color:#fff}
+
+/* Print */
+#print{display:none}
+@media print{
+  body > *:not(#print){display:none !important}
+  #print{display:block;color:#000;font-family:"Readex Pro",sans-serif;padding:10mm}
+  #print table{width:100%;border-collapse:collapse}
+  #print td,#print th{border-bottom:1px solid #999;padding:6px 4px;text-align:start}
+}
+@media (prefers-reduced-motion: reduce){ .sheet{transition:none} }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="store-mark" id="storeMark">أ</div>
+  <div class="store-pick" style="position:relative">
+    <span id="syncDot" class="sync-dot" data-st="ok" title="محفوظ" aria-hidden="true"></span>
+    <b id="storeName" class="trunc" style="display:block;font-size:16px"></b>
+    <small id="storeSub"></small>
+  </div>
+  <select class="role-pick" id="roleSelect" aria-label="تجربة الصلاحيات">
+    <option value="owner">المالك</option>
+    <option value="orders">موظف طلبات</option>
+    <option value="inventory">موظف مخزون</option>
+  </select>
+  <button class="icon-btn" type="button" data-act="open-storefront" aria-label="واجهة المتجر للزبائن" title="واجهة المتجر للزبائن">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l1.5-5h15L21 9"/><path d="M4 9v11h16V9"/><path d="M3 9h18"/><path d="M9 20v-6h6v6"/></svg>
+  </button>
+  <button class="icon-btn" type="button" data-act="logout" aria-label="تسجيل الخروج" title="تسجيل الخروج">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 4H5v16h5"/><path d="M14 8l-4 4 4 4"/><path d="M10 12h10"/></svg>
+  </button>
+</header>
+<div id="auth"></div>
+<div id="admin"></div>
+<div id="adminBanner" role="status"></div>
+<div id="planBanner" role="status"></div>
+
+<div class="shell">
+  <nav class="side" id="sideNav" aria-label="الأقسام"></nav>
+  <main id="view" tabindex="-1"></main>
+</div>
+<nav class="bottom" id="bottomNav" aria-label="الأقسام"></nav>
+
+<div class="scrim" id="scrim"></div>
+<div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle"></div>
+<div class="sf" id="storefront" aria-label="واجهة المتجر"></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<div id="print"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+'use strict';
+/* =========================================================================
+   رواج — platform for small online stores.
+   Data lives in Supabase (Postgres + Auth + Storage). Every store is isolated
+   by Row Level Security in the database; this page only holds the public key.
+   ========================================================================= */
+
+const SUPA_URL = 'https://awollmwahlczurrtjweg.supabase.co';
+const SUPA_KEY = 'sb_publishable_4eaby42Qz7Rr4nbvv3Biog_g5FzAaSW'; // publishable key: safe in the browser, RLS protects data
+const SITE_URL = ''; // optional: the public address of this page, e.g. https://rawaj.example.com/ (empty = current address)
+const sb = window.supabase.createClient(SUPA_URL, SUPA_KEY, { auth: { persistSession: true, autoRefreshToken: true } });
+const UI_KEY = 'rawaj-ui-v1';
+const PHONE_DOMAIN = 'phone.rawaj.app'; // phone numbers sign in as <phone>@phone.rawaj.app
+const idToEmail = (id) => (id.includes('@') ? id : `${id}@${PHONE_DOMAIN}`);
+const emailToDisplay = (e) => (String(e || '').endsWith('@' + PHONE_DOMAIN) ? e.split('@')[0] : String(e || ''));
+const DAY = 864e5;
+
+const STATUS = {
+  new:       { l: 'جديد',         c: 'var(--new)' },
+  confirmed: { l: 'مؤكد',         c: 'var(--confirmed)' },
+  preparing: { l: 'قيد التجهيز',  c: 'var(--preparing)' },
+  shipped:   { l: 'عند التوصيل',  c: 'var(--shipped)' },
+  delivered: { l: 'تم التسليم',   c: 'var(--delivered)' },
+  canceled:  { l: 'ملغى',         c: 'var(--canceled)' },
+  returned:  { l: 'مرتجع',        c: 'var(--returned)' },
+};
+const NEXT = {
+  new: ['confirmed', 'canceled'],
+  confirmed: ['preparing', 'canceled'],
+  preparing: ['shipped', 'canceled'],
+  shipped: ['delivered', 'returned'],
+  delivered: ['returned'],
+  canceled: [],
+  returned: [],
+};
+const ACTION_LABEL = {
+  confirmed: 'تأكيد الطلب', preparing: 'بدء التجهيز', shipped: 'تسليم لشركة التوصيل',
+  delivered: 'تم التسليم للزبون', canceled: 'إلغاء الطلب', returned: 'تسجيل مرتجع',
+};
+const STOCK_OUT = new Set(['confirmed', 'preparing', 'shipped', 'delivered']); // stock already deducted
+
+const ROLES = {
+  owner:     { l: 'المالك',      p: ['home', 'orders', 'orders.write', 'products', 'products.write', 'cost', 'warehouse', 'customers', 'reports', 'settings'] },
+  orders:    { l: 'موظف طلبات',  p: ['home', 'orders', 'orders.write', 'products', 'customers'] },
+  inventory: { l: 'موظف مخزون',  p: ['home', 'orders', 'products', 'products.write', 'cost', 'warehouse'] },
+};
+
+const CITIES = ['بغداد', 'الأنبار', 'البصرة', 'أربيل', 'نينوى', 'النجف', 'كربلاء', 'بابل', 'ديالى', 'صلاح الدين'];
+const TILE_COLORS = ['#1f6b4f', '#8a4b14', '#2f4f8f', '#7b2d55', '#4b5a1e', '#a23b2a', '#3a5f66', '#6a4c93'];
+
+const ICONS = {
+  home: '<path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/>',
+  orders: '<rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h4"/>',
+  products: '<path d="M3 8l9-5 9 5-9 5-9-5z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/>',
+  customers: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.6 3.4-5.5 6.5-5.5s5.7 1.9 6.5 5.5"/><path d="M16 4.5a3.5 3.5 0 010 7M18.5 14.8c1.6.9 2.6 2.6 3 5.2"/>',
+  reports: '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
+  settings: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 00.3 1.8l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.6 1.6 0 00-1.8-.3 1.6 1.6 0 00-1 1.5V21a2 2 0 11-4 0v-.1a1.6 1.6 0 00-1-1.5 1.6 1.6 0 00-1.8.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.6 1.6 0 00.3-1.8 1.6 1.6 0 00-1.5-1H3a2 2 0 110-4h.1a1.6 1.6 0 001.5-1 1.6 1.6 0 00-.3-1.8l-.1-.1a2 2 0 112.8-2.8l.1.1a1.6 1.6 0 001.8.3H9a1.6 1.6 0 001-1.5V3a2 2 0 114 0v.1a1.6 1.6 0 001 1.5 1.6 1.6 0 001.8-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.6 1.6 0 00-.3 1.8V9a1.6 1.6 0 001.5 1H21a2 2 0 110 4h-.1a1.6 1.6 0 00-1.5 1z"/>',
+  warehouse: '<path d="M3 9l9-5 9 5v11H3z"/><path d="M7 20v-7h10v7"/><path d="M7 16h10"/>',
+  more: '<circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/>',
+  download: '<path d="M12 4v11M7 10l5 5 5-5"/><path d="M4 20h16"/>',
+  search: '<circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/>',
+  plus: '<path d="M12 5v14M5 12h14"/>',
+  close: '<path d="M6 6l12 12M18 6L6 18"/>',
+  phone: '<path d="M5 4h4l2 5-2.5 1.5a11 11 0 005 5L15 13l5 2v4a2 2 0 01-2 2A16 16 0 013 6a2 2 0 012-2"/>',
+  copy: '<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a1 1 0 011-1h10"/>',
+  camera: '<path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>',
+  share: '<circle cx="18" cy="5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="19" r="2.5"/><path d="M8.3 10.8l7.4-4.3M8.3 13.2l7.4 4.3"/>',
+  print: '<path d="M6 9V3h12v6"/><rect x="3" y="9" width="18" height="8" rx="2"/><path d="M6 14h12v7H6z"/>',
+};
+const NAV = [
+  { id: 'home', l: 'الرئيسية' },
+  { id: 'orders', l: 'الطلبات' },
+  { id: 'products', l: 'المنتجات' },
+  { id: 'warehouse', l: 'المخزن' },
+  { id: 'reports', l: 'الحسابات' },
+  { id: 'customers', l: 'الزبائن', sideOnly: true },
+  { id: 'settings', l: 'الإعدادات', sideOnly: true },
+];
+
+/* ---------------- helpers ---------------- */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const money = (n) => `<span class="num">${Math.round(n).toLocaleString('en-US')}</span> د.ع`;
+const moneyText = (n) => `${Math.round(n).toLocaleString('en-US')} د.ع`;
+const uid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-3);
+const icon = (n) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[n]}</svg>`;
+const badge = (s) => `<span class="badge" style="--c:${STATUS[s].c}">${STATUS[s].l}</span>`;
+const normPhone = (p) => String(p || '').replace(/[\s-]/g, '').replace(/^\+964/, '0');
+const validPhone = (p) => /^07[0-9]{9}$/.test(normPhone(p));
+
+function ago(ts) {
+  const d = Date.now() - ts;
+  if (d < 60e3) return 'الآن';
+  if (d < 3600e3) return `منذ ${Math.floor(d / 60e3)} د`;
+  if (d < DAY) return `منذ ${Math.floor(d / 3600e3)} س`;
+  const days = Math.floor(d / DAY);
+  if (days === 1) return 'أمس';
+  if (days < 7) return `منذ ${days} أيام`;
+  return dateText(ts);
+}
+function dateText(ts) {
+  const d = new Date(ts);
+  return `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`;
+}
+function startOfDay(ts) { const d = new Date(ts); d.setHours(0, 0, 0, 0); return d.getTime(); }
+function monthKey(ts) { const d = new Date(ts); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`; }
+const MONTHS = ['كانون الثاني', 'شباط', 'آذار', 'نيسان', 'أيار', 'حزيران', 'تموز', 'آب', 'أيلول', 'تشرين الأول', 'تشرين الثاني', 'كانون الأول'];
+function monthLabel(key) { const [y, m] = key.split('-').map(Number); return `${MONTHS[m - 1]} ${y}`; }
+
+const WELCOME_DAYS = 45;
+const ADMIN_PHONE = '07801691548';
+function renewLinks(s, compact) {
+  const wa = `https://wa.me/964${ADMIN_PHONE.slice(1)}?text=${encodeURIComponent(`مرحباً، أريد تجديد اشتراك متجر "${s.name}" (${s.slug})`)}`;
+  return `<a class="btn ${compact ? '' : 'primary'}" href="${wa}" target="_blank" rel="noopener">مراسلة واتساب</a>
+    <a class="btn" href="tel:${ADMIN_PHONE}">اتصال <span class="num">${ADMIN_PHONE}</span></a>`;
+}
+const daysLeft = (s) => (s.planEnds ? Math.ceil((s.planEnds - Date.now()) / DAY) : Infinity);
+const PLANS = {
+  trial:    { l: 'تجربة',     price: 0 },
+  free:     { l: 'مجانية',    price: 0 },
+  basic:    { l: 'أساسية',    price: 15000 },
+  pro:      { l: 'احترافية',  price: 35000 },
+  business: { l: 'أعمال',     price: 75000 },
+};
+const statusOf = (s) => s.status || 'active';
+function planOf(s) {
+  const pl = s.plan || 'trial';
+  if (pl !== 'free' && s.planEnds && s.planEnds < Date.now()) return 'expired';
+  return pl;
+}
+const isPaid = (s) => ['basic', 'pro', 'business'].includes(planOf(s));
+function planBadge(s) {
+  const pl = planOf(s);
+  if (pl === 'expired') return '<span class="plan expired">منتهي</span>';
+  return `<span class="plan ${isPaid(s) ? 'paid' : ''}">${PLANS[pl].l}</span>`;
+}
+function logAdmin(action, s, detail) {
+  if (!Array.isArray(state.audit)) state.audit = [];
+  state.audit.unshift({ at: Date.now(), action, store: s ? s.name : '', detail: detail || '' });
+  const u = currentUser();
+  if (u && u.isAdmin) sb.from('admin_audit').insert({ admin_id: u.id, action, store_id: s ? s.id : null, store_name: s ? s.name : null, detail: detail || null }).then(() => {}, () => {});
+}
+// Business data of a new store. Plan/status/link are server columns, not part of this object.
+function emptyStore(name) {
+  return { name, color: TILE_COLORS[Math.floor(Math.random() * TILE_COLORS.length)], phone: '', tagline: '', products: [], orders: [], expenses: [], movements: [], notes: {}, suppliers: [], purchases: [], supplierPayments: [], cashOpening: 0, nextNo: 1001 };
+}
+// Older saved stores get the newer fields.
+function ensureShape(s) {
+  for (const k of ['suppliers', 'purchases', 'supplierPayments', 'expenses', 'movements', 'products', 'orders']) if (!Array.isArray(s[k])) s[k] = [];
+  if (typeof s.cashOpening !== 'number') s.cashOpening = 0;
+  if (!s.notes) s.notes = {};
+  return s;
+}
+async function uniqueSlug(name) {
+  const latin = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 30).replace(/-+$/, '');
+  const base = latin.length >= 3 && !RESERVED.has(latin) ? latin : 'store';
+  for (let i = 0; i < 6; i++) {
+    const slug = base === 'store' || i > 0 ? `${base}-${Math.floor(1000 + Math.random() * 9000)}` : base;
+    const { data, error } = await sb.rpc('slug_available', { p_slug: slug });
+    if (!error && data === true) return slug;
+  }
+  return `store-${Date.now().toString(36)}`;
+}
+const currentUser = () => (state.session ? state.users.find((u) => u.id === state.session) : null);
+
+/* ---------------- images (Supabase Storage, bucket store-images) ----------------
+   Each store writes only inside its own folder <store id>/ (enforced by storage policies). */
+const IMG_MAX = 5;
+const RESERVED = new Set(['admin', 'api', 'app', 'www', 'login', 'register', 'store', 'stores', 's', 'static', 'help', 'support']);
+const IMG_BUCKET = 'store-images';
+const imgUrl = (id) => `${SUPA_URL}/storage/v1/object/public/${IMG_BUCKET}/${id.split('/').map(encodeURIComponent).join('/')}`;
+async function imgPut(id, blob) {
+  const { error } = await sb.storage.from(IMG_BUCKET).upload(id, blob, { contentType: blob.type || 'image/webp', cacheControl: '31536000', upsert: false });
+  if (error) throw error;
+}
+async function imgDel(ids) {
+  const list = ids.filter((x) => typeof x === 'string' && x.includes('/'));
+  if (!list.length) return;
+  try { await sb.storage.from(IMG_BUCKET).remove(list); } catch (e) { /* orphan files are harmless */ }
+}
+async function imgDelFolder(storeId) {
+  try {
+    const { data } = await sb.storage.from(IMG_BUCKET).list(storeId, { limit: 1000 });
+    if (data && data.length) await sb.storage.from(IMG_BUCKET).remove(data.map((f) => `${storeId}/${f.name}`));
+  } catch (e) { /* ignore */ }
+}
+function hydrateImages(root) {
+  for (const el of (root || document).querySelectorAll('img[data-img]:not([src])')) {
+    const id = el.dataset.img;
+    const box = el.closest('.pimg,.thumb,.pic,.gal-main,.store-mark,.sf-logo');
+    if (id && id.includes('/')) { el.onerror = () => { if (box) box.classList.add('noimg'); }; el.src = imgUrl(id); }
+    else if (box) box.classList.add('noimg');
+  }
+}
+// Any <img data-img> added anywhere gets its picture, so templates stay synchronous.
+new MutationObserver(() => hydrateImages(document)).observe(document.documentElement, { childList: true, subtree: true });
+
+// Resize + re-encode on the phone before saving: smaller files, and it strips hidden metadata (location etc.).
+// Every photo is shrunk on the phone before upload: target ≤ 180 KB, never above 200 KB
+// (the storage bucket also rejects anything larger). Tries lower quality first, then smaller size.
+const IMG_TARGET = 180 * 1024;
+const IMG_HARD_MAX = 200 * 1024;
+const IMG_QUALITIES = [0.8, 0.7, 0.6, 0.5, 0.42];
+async function shrinkToTarget(w0, h0, encode, max = 1200, target = IMG_TARGET, hardMax = IMG_HARD_MAX) {
+  let dim = Math.min(max, Math.max(w0, h0));
+  let best = null;
+  while (dim >= 240) {
+    const scale = dim / Math.max(w0, h0);
+    const w = Math.max(1, Math.round(w0 * scale)), h = Math.max(1, Math.round(h0 * scale));
+    for (const q of IMG_QUALITIES) {
+      const blob = await encode(w, h, q);
+      if (!blob) continue;
+      if (!best || blob.size < best.size) best = blob;
+      if (blob.size <= target) return blob;
+    }
+    dim = Math.floor(dim * 0.75);
+  }
+  return best && best.size <= hardMax ? best : null;
+}
+async function compressImage(file, max = 1200) {
+  const url = URL.createObjectURL(file);
+  try {
+    const img = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = () => rej(new Error('bad image')); i.src = url; });
+    const c = document.createElement('canvas');
+    const ctx = c.getContext('2d');
+    let webpOk = true;
+    const encode = async (w, h, q) => {
+      c.width = w; c.height = h;
+      ctx.fillStyle = '#ffffff'; // transparent PNGs get a white background instead of black
+      ctx.fillRect(0, 0, w, h);
+      ctx.drawImage(img, 0, 0, w, h);
+      if (webpOk) {
+        const b = await new Promise((r) => c.toBlob(r, 'image/webp', q));
+        if (b && b.type === 'image/webp') return b;
+        webpOk = false; // older iPhones: fall back to JPEG
+      }
+      return new Promise((r) => c.toBlob(r, 'image/jpeg', q));
+    };
+    return await shrinkToTarget(img.naturalWidth, img.naturalHeight, encode, max);
+  } finally { URL.revokeObjectURL(url); }
+}
+async function addImages(files, room, max) {
+  const ids = [];
+  const sizes = [];
+  let skipped = 0;
+  for (const f of Array.from(files)) {
+    if (ids.length >= room) { skipped++; continue; }
+    if (!/^image\//.test(f.type) || f.size > 20 * 1024 * 1024) { skipped++; continue; }
+    try {
+      const st = store();
+      if (!st) { skipped++; continue; }
+      const blob = await compressImage(f, max);
+      if (!blob || blob.size > IMG_HARD_MAX) { skipped++; continue; }
+      const id = `${st.id}/${uid()}.${blob.type === 'image/webp' ? 'webp' : 'jpg'}`;
+      await imgPut(id, blob);
+      ids.push(id);
+      sizes.push(blob.size);
+    } catch (e) { skipped++; }
+  }
+  return { ids, skipped, sizes };
+}
+function tile(p, cls) {
+  const cover = p.images && p.images[0];
+  if (cover) return `<div class="${cls}" style="background:var(--sunk)"><img data-img="${cover}" alt="${esc(p.name)}" loading="lazy"></div>`;
+  return `<div class="${cls}" style="background:${p.color}">${esc(p.name.charAt(0))}</div>`;
+}
+
+/* ---------------- state (cloud) ----------------
+   state.users / state.stores hold what this account may see: its own store,
+   or every store for the platform admin. Only UI preferences stay in the browser. */
+function freshState() {
+  return { users: [], stores: [], audit: [], session: null, adminAs: null, role: 'owner', view: 'home', orderFilter: 'all', q: '', pq: '', cq: '', aq: '', af: 'all', aLimit: 50, accTab: 'pl', whTab: 'stock', whFilter: 'all', wq: '', month: null };
+}
+let state = freshState();
+const UI_FIELDS = ['role', 'view', 'orderFilter', 'accTab', 'whTab', 'whFilter'];
+function loadUI() {
+  try { const ui = JSON.parse(localStorage.getItem(UI_KEY) || '{}'); for (const k of UI_FIELDS) if (ui[k] != null) state[k] = ui[k]; } catch (e) { /* ignore */ }
+  if (!ROLES[state.role]) state.role = 'owner';
+}
+function saveUI() {
+  try { const ui = {}; for (const k of UI_FIELDS) ui[k] = state[k]; localStorage.setItem(UI_KEY, JSON.stringify(ui)); } catch (e) { /* ignore */ }
+}
+
+const SERVER_KEYS = new Set(['id', 'slug', 'status', 'plan', 'planEnds', 'welcome', 'ownerId', 'createdAt', '_version', '_synced']);
+function toData(s) { const d = {}; for (const k of Object.keys(s)) if (!SERVER_KEYS.has(k)) d[k] = s[k]; return d; }
+// What the server must match: the business data plus the store link.
+const fingerprint = (s) => JSON.stringify([s.slug, toData(s)]);
+function fromRow(r) {
+  const s = Object.assign({}, r.data || {});
+  s.id = r.id; s.slug = r.slug; s.status = r.status; s.plan = r.plan;
+  s.planEnds = r.plan_ends ? Date.parse(r.plan_ends) : null; s.welcome = r.welcome; s.ownerId = r.owner_id;
+  s.createdAt = Date.parse(r.created_at); s._version = r.version;
+  if (!s.name) s.name = 'متجري';
+  if (!s.color) s.color = TILE_COLORS[0];
+  ensureShape(s);
+  s._synced = fingerprint(s);
+  return s;
+}
+
+// Changes are saved to the server shortly after each edit. `version` prevents two devices overwriting each other.
+let syncTimer = null, syncing = false, syncAgain = false;
+function save() { saveUI(); clearTimeout(syncTimer); syncTimer = setTimeout(syncNow, 600); }
+function hasPending() { const s = store(); return !!s && (syncing || fingerprint(s) !== s._synced); }
+function setSync(st) {
+  const el = document.getElementById('syncDot');
+  if (el) { el.dataset.st = st; el.title = { saving: 'جارِ الحفظ…', ok: 'محفوظ', error: 'لم يُحفظ بعد' }[st]; }
+}
+async function syncNow() {
+  const s = store();
+  if (!s) return;
+  if (syncing) { syncAgain = true; return; }
+  const data = toData(s);
+  const json = fingerprint(s);
+  if (json === s._synced) return;
+  syncing = true;
+  setSync('saving');
+  try {
+    const { data: rows, error } = await sb.from('stores').update({ data, slug: s.slug, version: s._version + 1 }).eq('id', s.id).eq('version', s._version).select('version');
+    if (error) throw error;
+    if (!rows || !rows.length) { await mergeConflict(s); return; }
+    s._version = rows[0].version;
+    s._synced = json;
+    setSync('ok');
+  } catch (e) {
+    setSync('error');
+    const msg = String((e && (e.message || e.code)) || '');
+    if (msg.includes('STORE_SUSPENDED')) { s.status = 'suspended'; render(); return; }
+    if (e && e.code === '23505') { toast('اسم الرابط مستخدم من متجر آخر، اختر اسماً غيره', true); await reloadStore(s.id); return; }
+    toast('تعذّر الحفظ، تحقق من الإنترنت. سنعيد المحاولة تلقائياً', true);
+    clearTimeout(syncTimer);
+    syncTimer = setTimeout(syncNow, 5000);
+  } finally {
+    syncing = false;
+    if (syncAgain) { syncAgain = false; syncNow(); }
+  }
+}
+// Someone else saved first (another device, or the admin). Keep the parts only this device changed.
+async function mergeConflict(s) {
+  const { data: r } = await sb.from('stores').select('*').eq('id', s.id).maybeSingle();
+  if (!r) { setSync('error'); return; }
+  const [baseSlug, base] = JSON.parse(s._synced);
+  const local = toData(s);
+  const fresh = fromRow(r);
+  const remote = toData(fresh);
+  const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+  let lost = false;
+  for (const k of new Set([...Object.keys(local), ...Object.keys(base)])) {
+    if (same(local[k], base[k])) continue;              // not changed here
+    if (same(remote[k], base[k])) fresh[k] = local[k];  // changed only here: keep it
+    else if (!same(remote[k], local[k])) lost = true;   // changed in both places: newer save wins
+  }
+  if (s.slug !== baseSlug && fresh.slug === baseSlug) fresh.slug = s.slug;
+  const i = state.stores.findIndex((x) => x.id === s.id);
+  if (i >= 0) state.stores[i] = fresh;
+  toast(lost ? 'تغيّرت بيانات متجرك من جهاز آخر في نفس الوقت؛ عُرضت النسخة الأحدث لبعض الأقسام' : 'دُمجت تعديلاتك مع تحديث من جهاز آخر', lost);
+  render();
+  if (fingerprint(fresh) !== fresh._synced) save(); else setSync('ok');
+}
+async function reloadStore(id, note) {
+  const { data: r } = await sb.from('stores').select('*').eq('id', id).maybeSingle();
+  if (r) {
+    const s = fromRow(r);
+    const i = state.stores.findIndex((x) => x.id === id);
+    if (i >= 0) state.stores[i] = s; else state.stores.push(s);
+  }
+  if (note) toast(note, true);
+  setSync('ok');
+  render();
+}
+window.addEventListener('beforeunload', (e) => { if (hasPending()) { syncNow(); e.preventDefault(); e.returnValue = ''; } });
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') syncNow(); });
+
+async function loadAccount(user) {
+  const { data: prof } = await sb.from('profiles').select('id,name,email,is_admin').eq('id', user.id).maybeSingle();
+  const me = {
+    id: user.id,
+    name: (prof && prof.name) || (user.user_metadata && user.user_metadata.name) || '',
+    email: emailToDisplay(user.email),
+    isAdmin: !!(prof && prof.is_admin),
+    storeId: null,
+  };
+  state.users = [me]; state.stores = []; state.audit = []; state.session = me.id; state.adminAs = null;
+  const { data: mine, error } = await sb.from('stores').select('*').eq('owner_id', user.id).maybeSingle();
+  if (error) throw error;
+  if (mine) { const s = fromRow(mine); state.stores.push(s); me.storeId = s.id; }
+  if (me.isAdmin) await loadAdminData();
+}
+async function loadAdminData() {
+  const me = currentUser();
+  const [st, pr, au] = await Promise.all([
+    sb.from('stores').select('*').order('created_at', { ascending: false }),
+    sb.from('profiles').select('id,name,email,is_admin'),
+    sb.from('admin_audit').select('*').order('at', { ascending: false }).limit(50),
+  ]);
+  if (st.error) throw st.error;
+  const stores = (st.data || []).map(fromRow);
+  const byOwner = new Map(stores.map((s) => [s.ownerId, s.id]));
+  state.stores = stores;
+  state.users = (pr.data || []).map((p) => ({ id: p.id, name: p.name, email: emailToDisplay(p.email), isAdmin: p.is_admin, storeId: byOwner.get(p.id) || null }));
+  if (!state.users.some((u) => u.id === me.id)) state.users.push(me);
+  state.audit = (au.data || []).map((a) => ({ at: Date.parse(a.at), action: a.action, store: a.store_name || '', detail: a.detail || '' }));
+}
+async function createStore(name) {
+  const me = currentUser();
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const slug = await uniqueSlug(name);
+    const { data: row, error } = await sb.from('stores').insert({ owner_id: me.id, slug, data: emptyStore(name) }).select('*').single();
+    if (!error) {
+      const s = fromRow(row);
+      state.stores.push(s);
+      me.storeId = s.id;
+      return s;
+    }
+    if (error.code === '23505' && String(error.message).includes('owner_id')) { await loadAccount((await sb.auth.getUser()).data.user); return store(); }
+    if (error.code !== '23505') throw error;
+  }
+  throw new Error('تعذّر حجز رابط للمتجر');
+}
+
+// A signed-in user only ever sees the store tied to their account.
+// The platform admin has no store of their own; they open one explicitly from the admin panel.
+const store = () => {
+  const u = currentUser();
+  if (!u) return null;
+  if (u.isAdmin) return state.adminAs ? state.stores.find((s) => s.id === state.adminAs) || null : null;
+  return state.stores.find((s) => s.id === u.storeId) || null;
+};
+const can = (perm) => ROLES[state.role].p.includes(perm);
+const findVariant = (s, vid) => { for (const p of s.products) { const v = p.variants.find((x) => x.id === vid); if (v) return { p, v }; } return null; };
+const orderSubtotal = (o) => o.items.reduce((t, it) => t + it.price * it.qty, 0);
+const orderTotal = (o) => Math.max(0, orderSubtotal(o) - (o.discount || 0)) + (o.delivery || 0);
+const orderCost = (o) => o.items.reduce((t, it) => t + it.cost * it.qty, 0);
+const statusAt = (o, s) => { const h = o.history.find((x) => x.to === s); return h ? h.at : null; };
+const totalStock = (p) => p.variants.reduce((t, v) => t + v.stock, 0);
+const isLow = (p) => p.active && p.variants.some((v) => v.stock <= p.low);
+
+/* ---------------- business rules (mirrors server policy) ---------------- */
+function changeStatus(o, to) {
+  const s = store();
+  if (!can('orders.write')) return fail('لا تملك صلاحية تعديل الطلبات');
+  if (!NEXT[o.status].includes(to)) return fail('هذا الانتقال غير مسموح');
+  if (to === 'confirmed') {
+    // Deduct stock on confirm, all-or-nothing.
+    for (const it of o.items) {
+      const f = findVariant(s, it.variantId);
+      if (!f) return fail(`المنتج "${it.name}" لم يعد موجوداً`);
+      if (f.v.stock < it.qty) return fail(`لا يكفي المخزون: ${it.name} (${it.label}) متوفر ${f.v.stock} فقط`);
+    }
+    for (const it of o.items) {
+      findVariant(s, it.variantId).v.stock -= it.qty;
+      s.movements.push({ id: uid(), kind: 'sale', variantId: it.variantId, qty: -it.qty, reason: `تأكيد الطلب #${o.no}`, at: Date.now(), by: ROLES[state.role].l });
+    }
+  }
+  if ((to === 'canceled' || to === 'returned') && STOCK_OUT.has(o.status)) {
+    for (const it of o.items) {
+      const f = findVariant(s, it.variantId);
+      if (!f) continue;
+      f.v.stock += it.qty;
+      s.movements.push({ id: uid(), kind: 'return', variantId: it.variantId, qty: it.qty, reason: `${STATUS[to].l} #${o.no}`, at: Date.now(), by: ROLES[state.role].l });
+    }
+  }
+  o.history.push({ from: o.status, to, at: Date.now(), by: ROLES[state.role].l });
+  o.status = to;
+  save();
+  return true;
+}
+
+function createOrder(s, data, source, by) {
+  const o = {
+    id: uid(), no: s.nextNo++, source, customer: data.customer, items: data.items,
+    discount: data.discount || 0, delivery: data.delivery || 0, status: 'new', createdAt: Date.now(),
+    history: [{ to: 'new', at: Date.now(), by }], note: data.note || '',
+  };
+  s.orders.push(o);
+  save();
+  return o;
+}
+
+function customersOf(s) {
+  const map = new Map();
+  for (const o of s.orders) {
+    const k = normPhone(o.customer.phone);
+    let c = map.get(k);
+    if (!c) { c = { phone: k, name: o.customer.name, city: o.customer.city, address: o.customer.address, orders: [], spent: 0, last: 0 }; map.set(k, c); }
+    c.orders.push(o);
+    if (o.createdAt >= c.last) { c.last = o.createdAt; c.name = o.customer.name; c.city = o.customer.city; c.address = o.customer.address; }
+    if (o.status === 'delivered') c.spent += orderTotal(o) - o.delivery;
+  }
+  return Array.from(map.values()).sort((a, b) => b.last - a.last);
+}
+
+// Period key: 'YYYY-MM' for a month, or 'year' for the current calendar year.
+function inPeriod(ts, key) {
+  if (!ts) return false;
+  if (key === 'year') return new Date(ts).getFullYear() === new Date().getFullYear();
+  return monthKey(ts) === key;
+}
+function periodLabel(key) { return key === 'year' ? `سنة ${new Date().getFullYear()}` : monthLabel(key); }
+
+// Profit & loss for a period. Sales are recognised when the customer receives the order.
+function monthReport(s, key) {
+  ensureShape(s);
+  const delivered = s.orders.filter((o) => o.status === 'delivered' && inPeriod(statusAt(o, 'delivered'), key));
+  const grossSales = delivered.reduce((t, o) => t + orderSubtotal(o), 0);
+  const discounts = delivered.reduce((t, o) => t + Math.min(o.discount || 0, orderSubtotal(o)), 0);
+  const revenue = grossSales - discounts;
+  const cogs = delivered.reduce((t, o) => t + orderCost(o), 0);
+  const expenses = s.expenses.filter((e) => inPeriod(e.at, key));
+  const exp = expenses.reduce((t, e) => t + e.amount, 0);
+  const byCat = new Map();
+  for (const e of expenses) byCat.set(e.category, (byCat.get(e.category) || 0) + e.amount);
+  const stockMoves = s.movements.filter((m) => (m.kind === 'loss' || m.kind === 'adjust') && inPeriod(m.at, key));
+  const stockDiff = stockMoves.reduce((t, m) => t + (m.value || 0), 0);
+  const returned = s.orders.filter((o) => o.status === 'returned' && inPeriod(statusAt(o, 'returned'), key));
+  const canceled = s.orders.filter((o) => o.status === 'canceled' && inPeriod(statusAt(o, 'canceled'), key));
+  const qty = new Map();
+  for (const o of delivered) for (const it of o.items) {
+    const cur = qty.get(it.productId) || { name: it.name, qty: 0, revenue: 0, profit: 0 };
+    cur.qty += it.qty; cur.revenue += it.price * it.qty; cur.profit += (it.price - it.cost) * it.qty; qty.set(it.productId, cur);
+  }
+  const gross = revenue - cogs;
+  const net = gross - exp + stockDiff;
+  return {
+    delivered, grossSales, discounts, revenue, cogs, gross, exp, byCat: Array.from(byCat.entries()).sort((x, y) => y[1] - x[1]),
+    stockDiff, stockMoves, net, expenses, returned, canceled,
+    margin: revenue ? Math.round((net / revenue) * 100) : 0,
+    top: Array.from(qty.values()).sort((x, y) => y.qty - x.qty).slice(0, 8),
+  };
+}
+
+// Cash box: what actually came in and went out.
+const settleValue = (o) => Math.max(0, orderSubtotal(o) - (o.discount || 0)); // delivery company keeps its fee
+function supplierBalance(s, supId) {
+  const bought = s.purchases.filter((p) => p.supplierId === supId).reduce((t, p) => t + p.total, 0);
+  const paid = s.purchases.filter((p) => p.supplierId === supId).reduce((t, p) => t + p.paid, 0) + s.supplierPayments.filter((p) => p.supplierId === supId).reduce((t, p) => t + p.amount, 0);
+  return { bought, paid, owed: bought - paid };
+}
+function cashLedger(s) {
+  ensureShape(s);
+  const rows = [];
+  const byDay = new Map();
+  for (const o of s.orders) if (o.settledAt) {
+    const k = startOfDay(o.settledAt);
+    const g = byDay.get(k) || { at: o.settledAt, amount: 0, n: 0 };
+    g.amount += settleValue(o); g.n++; g.at = Math.max(g.at, o.settledAt); byDay.set(k, g);
+  }
+  byDay.forEach((g) => rows.push({ at: g.at, amount: g.amount, label: `تحصيل من شركة التوصيل (${g.n} طلب)` }));
+  for (const e of s.expenses) rows.push({ at: e.at, amount: -e.amount, label: `مصروف: ${e.category}${e.note ? ' — ' + e.note : ''}` });
+  const supName = (id) => (s.suppliers.find((x) => x.id === id) || { name: 'مورد' }).name;
+  for (const p of s.purchases) if (p.paid) rows.push({ at: p.at, amount: -p.paid, label: `دفع مشتريات: ${supName(p.supplierId)}` });
+  for (const p of s.supplierPayments) rows.push({ at: p.at, amount: -p.amount, label: `تسديد للمورد: ${supName(p.supplierId)}` });
+  rows.sort((x, y) => y.at - x.at);
+  const balance = s.cashOpening + rows.reduce((t, r) => t + r.amount, 0);
+  return { rows, balance };
+}
+
+function downloadCSV(name, rows) {
+  const cell = (c) => { const v = String(c == null ? '' : c); return /[",\n\r]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v; };
+  const csv = '﻿' + rows.map((r) => r.map(cell).join(',')).join('\r\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+  a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
+}
+
+function stagnant(s) {
+  const since = Date.now() - 30 * DAY;
+  const moved = new Set();
+  for (const o of s.orders) if (o.createdAt >= since && o.status !== 'canceled') for (const it of o.items) moved.add(it.productId);
+  return s.products.filter((p) => p.active && !moved.has(p.id) && totalStock(p) > 0);
+}
+
+/* ---------------- UI plumbing ---------------- */
+let toastTimer;
+function toast(msg, bad) {
+  const t = $('#toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (bad ? ' bad' : '');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { t.className = 'toast'; }, 2800);
+}
+function fail(msg) { toast(msg, true); return false; }
+
+let lastFocus = null;
+function openSheet(html, onMount) {
+  lastFocus = document.activeElement;
+  const sh = $('#sheet');
+  sh.innerHTML = `<div class="grab"></div>${html}`;
+  $('#scrim').classList.add('open');
+  sh.classList.add('open');
+  if (onMount) onMount(sh);
+  const first = sh.querySelector('input,select,textarea,button:not([data-act="close-sheet"])');
+  if (first) setTimeout(() => first.focus(), 60);
+}
+function closeSheet() {
+  $('#sheet').classList.remove('open');
+  $('#scrim').classList.remove('open');
+  if (lastFocus && lastFocus.focus) lastFocus.focus();
+}
+function sheetHead(title) {
+  return `<div class="sheet-head"><h3 id="sheetTitle">${title}</h3><button class="icon-btn" type="button" data-act="close-sheet" aria-label="إغلاق">${icon('close')}</button></div>`;
+}
+function confirmSheet(title, body, okLabel, danger) {
+  return new Promise((resolve) => {
+    openSheet(`${sheetHead(esc(title))}<p>${esc(body)}</p>
+      <div class="actions"><button class="btn" type="button" id="cNo">رجوع</button>
+      <button class="btn ${danger ? 'danger' : 'primary'}" type="button" id="cYes">${esc(okLabel)}</button></div>`, (sh) => {
+      sh.querySelector('#cNo').onclick = () => { closeSheet(); resolve(false); };
+      sh.querySelector('#cYes').onclick = () => { closeSheet(); resolve(true); };
+    });
+  });
+}
+
+async function copyText(text) {
+  try { await navigator.clipboard.writeText(text); return true; } catch (e) {
+    const ta = document.createElement('textarea');
+    ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    let ok = false;
+    try { ok = document.execCommand('copy'); } catch (e2) { ok = false; }
+    ta.remove();
+    return ok;
+  }
+}
+
+/* ---------------- chrome ---------------- */
+function renderChrome() {
+  const s = store();
+  document.documentElement.style.setProperty('--brand', s.color);
+  $('#storeMark').innerHTML = s.logo ? `<img data-img="${s.logo}" alt="شعار ${esc(s.name)}">` : esc(s.name.trim().charAt(0));
+  $('#storeName').textContent = s.name;
+  $('#storeSub').textContent = `${currentUser().name} · ${ROLES[state.role].l}`;
+  $('#roleSelect').value = state.role;
+  const allowed = NAV.filter((n) => can(n.id));
+  const btn = (n) => `<button type="button" data-nav="${n.id}" ${state.view === n.id ? 'aria-current="page"' : ''}>${icon(n.id)}<span>${n.l}</span></button>`;
+  $('#sideNav').innerHTML = allowed.map(btn).join('');
+  const extra = allowed.filter((n) => n.sideOnly);
+  $('#bottomNav').innerHTML = allowed.filter((n) => !n.sideOnly).map(btn).join('')
+    + (extra.length ? `<button type="button" data-act="more" ${extra.some((n) => n.id === state.view) ? 'aria-current="page"' : ''}>${icon('more')}<span>المزيد</span></button>` : '');
+}
+
+function render() {
+  const u = currentUser();
+  if (!u) { renderAuth(); return; }
+  if (u.isAdmin && !store()) { state.adminAs = null; renderAdmin(); return; }
+  const s0 = store();
+  if (!s0) { renderNoStore(); return; }
+  if (!u.isAdmin && statusOf(s0) === 'suspended') { renderSuspended(s0); return; }
+  document.body.classList.remove('signed-out', 'admin-mode');
+  const banner = $('#adminBanner');
+  if (u.isAdmin) {
+    banner.innerHTML = `<span>تدير الآن متجر <b>${esc(s0.name)}</b> بصلاحية مدير المنصة</span><button type="button" data-act="admin-exit">رجوع للوحة الإدارة</button>`;
+    banner.classList.add('on');
+  } else banner.classList.remove('on');
+  // Subscription reminder: 7 days before the end, and after it ends.
+  const pb = $('#planBanner');
+  const left = daysLeft(s0);
+  const expired = planOf(s0) === 'expired';
+  if (!u.isAdmin && (expired || (left <= 7 && (s0.plan || 'trial') !== 'free'))) {
+    pb.className = `on ${expired ? 'bad' : 'warn'}`;
+    pb.innerHTML = `<span>${expired ? 'انتهى اشتراك متجرك. للتجديد راسل إدارة المنصة:' : `اشتراكك ينتهي ${left <= 0 ? 'اليوم' : left === 1 ? 'غداً' : `بعد ${left} أيام`}. للتجديد راسل إدارة المنصة:`}</span><span class="row">${renewLinks(s0, true)}</span>`;
+  } else { pb.className = ''; pb.innerHTML = ''; }
+  if (!can(state.view)) state.view = 'home';
+  renderChrome();
+  const v = $('#view');
+  ensureShape(s0);
+  const views = { home: viewHome, orders: viewOrders, products: viewProducts, warehouse: viewWarehouse, customers: viewCustomers, reports: viewReports, settings: viewSettings };
+  const changed = v.dataset.view !== state.view;
+  v.innerHTML = views[state.view]();
+  v.dataset.view = state.view;
+  if (changed) { v.classList.remove('enter'); void v.offsetWidth; v.classList.add('enter'); }
+  const fab = $('.fab');
+  if (fab) fab.blur();
+}
+
+function go(view) {
+  state.view = view;
+  save();
+  render();
+  window.scrollTo(0, 0);
+}
+
+/* ---------------- sign in / create account ---------------- */
+let authTab = 'login';
+function normId(v) {
+  const s = String(v || '').trim();
+  if (s.includes('@')) return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s) ? s.toLowerCase() : null;
+  return validPhone(s) ? normPhone(s) : null;
+}
+function renderAuth() {
+  document.body.classList.add('signed-out');
+  document.body.classList.remove('admin-mode');
+  $('#adminBanner').classList.remove('on');
+  closeSheet();
+  const reg = authTab === 'register';
+  $('#auth').innerHTML = `
+  <div class="auth"><div class="auth-box">
+    <div class="auth-brand"><svg class="rawaj-logo" viewBox="0 0 48 48" aria-hidden="true"><rect width="48" height="48" rx="14" fill="var(--rw)"/><path d="M14 33l7-8 5 4 9-11" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M30 18h5v5" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/></svg><div><h1 class="rawaj-name">رواج</h1><p>متجرك وطلباته وحساباته… في جيبك</p></div></div>
+    <ul class="auth-points">
+      <li>رابط متجر أنيق تشاركه مع زبائنك</li>
+      <li>الطلبات والمخزن والموردون في مكان واحد</li>
+      <li>تعرف ربحك الحقيقي كل يوم</li>
+    </ul>
+    <div class="tabs" role="tablist">
+      <button type="button" role="tab" data-tab="login" aria-selected="${!reg}">تسجيل الدخول</button>
+      <button type="button" role="tab" data-tab="register" aria-selected="${reg}">إنشاء متجر جديد</button>
+    </div>
+    ${reg ? '<h2 style="margin:0 0 10px">أنشئ متجرك خلال دقيقة</h2>' : ''}
+    <form class="panel" id="authForm" novalidate>
+      ${reg ? `
+        <div class="field"><label for="aName">اسمك</label><input class="input" id="aName" maxlength="80" autocomplete="name"></div>
+        <div class="field"><label for="aStore">اسم متجرك</label><input class="input" id="aStore" maxlength="80" placeholder="مثال: عطور الأنبار"></div>
+        <div class="hint" style="margin:0 0 12px">متجرك الجديد يحصل على <b>الاشتراك الاحترافي مجاناً لمدة ${WELCOME_DAYS} يوماً</b>.</div>` : ''}
+      <div class="field"><label for="aId">البريد الإلكتروني أو رقم الهاتف</label><input class="input" id="aId" maxlength="120" autocomplete="username" dir="ltr" style="text-align:right"></div>
+      <div class="field"><label for="aPw">كلمة المرور</label><input class="input" id="aPw" type="password" maxlength="200" autocomplete="${reg ? 'new-password' : 'current-password'}">${reg ? '<small class="sub">8 أحرف على الأقل</small>' : ''}</div>
+      <div id="aErr" class="err" hidden></div>
+      <button class="btn primary block" type="submit" id="aSubmit">${reg ? 'إنشاء الحساب والمتجر' : 'دخول'}</button>
+    </form>
+    ${reg ? `<p class="sub" style="text-align:center;margin-top:14px">يُنشأ لك متجر خاص بك. لا يرى أحد غيرك منتجاته وطلباته.</p>
+    <button class="btn block" type="button" data-tab="login" style="margin-top:6px">عندي حساب، أريد تسجيل الدخول</button>` : `
+    <div class="panel" style="margin-top:14px;text-align:center">
+      <div style="font-weight:600">ما عندك متجر؟</div>
+      <div class="sub" style="margin-bottom:10px">سجّل حساباً جديداً ويُنشأ لك متجرك مباشرة</div>
+      <button class="btn primary block" type="button" data-tab="register">إنشاء متجر جديد</button>
+    </div>
+`}
+  </div></div>`;
+  $('#authForm').addEventListener('submit', onAuthSubmit);
+  setTimeout(() => { const f = $(reg ? '#aName' : '#aId'); if (f) f.focus(); }, 30);
+}
+function authError(e) {
+  const m = String((e && e.message) || '').toLowerCase();
+  if (m.includes('invalid login')) return 'البريد أو رقم الهاتف أو كلمة المرور غير صحيحة';
+  if (m.includes('already') && m.includes('regist')) return 'هذا الحساب مسجّل مسبقاً، سجّل الدخول بدلاً من ذلك';
+  if (m.includes('not confirmed')) return 'لم يُؤكَّد البريد بعد. افتح رسالة التأكيد ثم سجّل الدخول';
+  if (m.includes('not authorized') || m.includes('sending') || m.includes('confirmation')) return 'تعذّر إرسال بريد التأكيد. يجب إيقاف «Confirm email» من إعدادات Supabase';
+  if (m.includes('rate limit') || m.includes('too many') || m.includes('security purposes')) return 'محاولات كثيرة، انتظر دقيقة ثم حاول';
+  if (m.includes('password')) return 'كلمة المرور ضعيفة، استخدم 8 أحرف على الأقل';
+  if (m.includes('fetch') || m.includes('network') || m.includes('failed')) return 'لا يوجد اتصال بالإنترنت';
+  return 'حدث خطأ: ' + ((e && e.message) || '');
+}
+async function onAuthSubmit(e) {
+  e.preventDefault();
+  const errEl = $('#aErr');
+  const btn = $('#aSubmit');
+  const label = btn.textContent;
+  const showErr = (m) => { errEl.textContent = m; errEl.hidden = false; btn.disabled = false; btn.textContent = label; };
+  errEl.hidden = true;
+  const id = normId($('#aId').value);
+  const pw = $('#aPw').value;
+  if (authTab === 'register') {
+    const name = $('#aName').value.trim();
+    const storeName = $('#aStore').value.trim();
+    if (!name) return showErr('اكتب اسمك');
+    if (!storeName) return showErr('اكتب اسم متجرك');
+    if (!id) return showErr('اكتب بريداً صحيحاً أو رقم هاتف من 11 رقماً يبدأ بـ 07');
+    if (pw.length < 8) return showErr('كلمة المرور 8 أحرف على الأقل');
+    btn.disabled = true; btn.textContent = 'جارِ إنشاء متجرك…';
+    const { data, error } = await sb.auth.signUp({ email: idToEmail(id), password: pw, options: { data: { name } } });
+    if (error) return showErr(authError(error));
+    if (data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) return showErr('هذا الحساب مسجّل مسبقاً، سجّل الدخول بدلاً من ذلك');
+    if (!data.session) {
+      try { localStorage.setItem('rawaj-pending-store', storeName); } catch (err) { /* ignore */ }
+      return showErr('أُنشئ الحساب. أكّد بريدك من الرسالة التي وصلتك ثم سجّل الدخول');
+    }
+    try { await loadAccount(data.user); if (!store()) await createStore(storeName); } catch (err) { return showErr('أُنشئ الحساب لكن تعذّر إنشاء المتجر. سجّل الدخول لإكماله'); }
+    afterSignIn('products');
+    toast(`أُنشئ متجرك ومعه اشتراك احترافي مجاني لمدة ${WELCOME_DAYS} يوماً`);
+    return;
+  }
+  if (!id || !pw) return showErr('اكتب بيانات الدخول');
+  btn.disabled = true; btn.textContent = 'جارِ الدخول…';
+  const { data, error } = await sb.auth.signInWithPassword({ email: idToEmail(id), password: pw });
+  if (error) return showErr(authError(error));
+  try { await loadAccount(data.user); } catch (err) { await sb.auth.signOut().catch(() => {}); return showErr('تعذّر تحميل بياناتك، حاول مجدداً'); }
+  let pending = null;
+  try { pending = localStorage.getItem('rawaj-pending-store'); } catch (err) { /* ignore */ }
+  if (pending && !store() && !currentUser().isAdmin) {
+    try { await createStore(pending); localStorage.removeItem('rawaj-pending-store'); } catch (err) { /* user can create it from the next screen */ }
+  }
+  afterSignIn('home');
+}
+function afterSignIn(view) {
+  Object.assign(state, { role: 'owner', view, orderFilter: 'all', q: '', pq: '', cq: '', aq: '', af: 'all', aLimit: 50, accTab: 'pl', whTab: 'stock', whFilter: 'all', wq: '', month: null });
+  saveUI();
+  render();
+  setSync('ok');
+  window.scrollTo(0, 0);
+}
+async function signOut() {
+  await syncNow();
+  try { await sb.auth.signOut(); } catch (e) { /* ignore */ }
+  state = freshState();
+  loadUI();
+  authTab = 'login';
+  renderAuth();
+}
+function renderNoStore() {
+  document.body.classList.add('signed-out');
+  document.body.classList.remove('admin-mode');
+  $('#adminBanner').classList.remove('on');
+  $('#auth').innerHTML = `<div class="auth"><div class="auth-box">
+    <form class="panel" id="nsStoreForm" novalidate>
+      <h2 style="margin-top:0">أنشئ متجرك</h2>
+      <p class="sub">حسابك جاهز. اكتب اسم متجرك لنبدأ، ومعه اشتراك احترافي مجاني ${WELCOME_DAYS} يوماً.</p>
+      <div class="field"><label for="nsStoreName">اسم المتجر</label><input class="input" id="nsStoreName" maxlength="80"></div>
+      <div id="nsErr" class="err" hidden></div>
+      <button class="btn primary block" type="submit" id="nsBtn">إنشاء المتجر</button>
+    </form>
+    <button class="btn block" type="button" data-act="logout" style="margin-top:10px">تسجيل الخروج</button>
+  </div></div>`;
+  $('#nsStoreForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const name = $('#nsStoreName').value.trim();
+    const errEl = $('#nsErr');
+    if (!name) { errEl.textContent = 'اكتب اسم المتجر'; errEl.hidden = false; return; }
+    $('#nsBtn').disabled = true;
+    try { await createStore(name); afterSignIn('products'); toast('أُنشئ متجرك'); }
+    catch (err) { errEl.textContent = 'تعذّر إنشاء المتجر، تحقق من الإنترنت وحاول مجدداً'; errEl.hidden = false; $('#nsBtn').disabled = false; }
+  });
+}
+function renderLoading() {
+  document.body.classList.add('signed-out');
+  $('#auth').innerHTML = '<div class="auth"><div class="auth-box" style="text-align:center"><svg class="rawaj-logo" viewBox="0 0 48 48" aria-hidden="true" style="margin:0 auto 12px;display:block"><rect width="48" height="48" rx="14" fill="var(--rw)"/><path d="M14 33l7-8 5 4 9-11" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M30 18h5v5" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/></svg><p class="sub">جارِ التحميل…</p></div></div>';
+}
+
+/* ---------------- platform admin ----------------
+   Real system: separate /admin API, a separate DB role, and every action in audit_log. */
+function renderSuspended(s) {
+  document.body.classList.add('signed-out');
+  document.body.classList.remove('admin-mode');
+  $('#adminBanner').classList.remove('on');
+  $('#auth').innerHTML = `<div class="auth"><div class="auth-box panel" style="text-align:center">
+    <h1>${esc(s.name)}</h1>
+    <p>هذا المتجر معلّق من إدارة المنصة. بياناتك محفوظة ولم يُحذف شيء.</p>
+    <p class="sub">تواصل مع إدارة المنصة لإعادة التفعيل.</p>
+    <button class="btn block" type="button" data-act="logout">تسجيل الخروج</button></div></div>`;
+}
+
+function renderAdmin() {
+  document.body.classList.remove('signed-out');
+  document.body.classList.add('admin-mode');
+  $('#adminBanner').classList.remove('on');
+  const now = Date.now();
+  const mk = monthKey(now);
+  const owners = new Map(state.users.filter((u) => u.storeId).map((u) => [u.storeId, u]));
+  const all = state.stores;
+  let orders = 0, gmv = 0;
+  for (const s of all) {
+    orders += s.orders.length;
+    for (const o of s.orders) if (o.status === 'delivered' && monthKey(statusAt(o, 'delivered')) === mk) gmv += Math.max(0, orderSubtotal(o) - o.discount);
+  }
+  const suspended = all.filter((s) => statusOf(s) === 'suspended').length;
+  const paid = all.filter((s) => isPaid(s) && statusOf(s) === 'active');
+  const mrr = paid.reduce((t, s) => t + PLANS[planOf(s)].price, 0);
+  const newWeek = all.filter((s) => s.createdAt > now - 7 * DAY).length;
+
+  const f = state.af || 'all';
+  const q = (state.aq || '').trim().toLowerCase();
+  const filters = {
+    all: () => true,
+    active: (s) => statusOf(s) === 'active',
+    suspended: (s) => statusOf(s) === 'suspended',
+    trial: (s) => planOf(s) === 'trial',
+    paid: (s) => isPaid(s),
+    expired: (s) => planOf(s) === 'expired',
+  };
+  const labels = { all: 'الكل', active: 'نشط', suspended: 'معلّق', trial: 'تجربة', paid: 'مدفوع', expired: 'منتهي' };
+  const counts = {};
+  for (const k of Object.keys(filters)) counts[k] = all.filter(filters[k]).length;
+  let list = all.filter(filters[f]);
+  if (q) list = list.filter((s) => {
+    const o = owners.get(s.id);
+    return s.name.toLowerCase().includes(q) || s.slug.includes(q) || (o && (o.name.toLowerCase().includes(q) || o.email.includes(q)));
+  });
+  list = list.slice().sort((a, b) => b.createdAt - a.createdAt);
+  const limit = state.aLimit || 50;
+
+  $('#admin').innerHTML = `
+  <div class="admin-top"><h1>رواج · لوحة الإدارة</h1><span class="sub" style="color:inherit;opacity:.75">${esc(currentUser().email)}</span>
+    <button class="btn" type="button" data-act="admin-refresh">تحديث</button>
+    <button class="btn" type="button" data-act="logout">خروج</button></div>
+  <div class="admin-wrap">
+    <dl class="money" style="margin-top:0">
+      <div><dt>المتاجر</dt><dd><span class="num">${all.length}</span> <span class="sub">(+${newWeek} هذا الأسبوع)</span></dd></div>
+      <div class="${suspended ? 'neg' : ''}"><dt>معلّقة</dt><dd><span class="num">${suspended}</span></dd></div>
+      <div><dt>اشتراكات مدفوعة</dt><dd><span class="num">${paid.length}</span></dd></div>
+      <div class="cod"><dt>إيراد الاشتراكات الشهري</dt><dd>${money(mrr)}</dd></div>
+      <div><dt>المستخدمون</dt><dd><span class="num">${state.users.length}</span></dd></div>
+      <div><dt>كل الطلبات</dt><dd><span class="num">${orders.toLocaleString('en-US')}</span></dd></div>
+      <div><dt>مبيعات المتاجر هذا الشهر</dt><dd>${money(gmv)}</dd></div>
+      <div><dt>متاجر بلا منتجات</dt><dd><span class="num">${all.filter((s) => !s.products.length).length}</span></dd></div>
+    </dl>
+
+    <h2>المتاجر</h2>
+    <div class="search">${icon('search')}<input class="input" id="aq" type="search" placeholder="اسم المتجر، الرابط، اسم المالك أو بريده" value="${esc(state.aq || '')}" aria-label="بحث في المتاجر"></div>
+    <div class="chips" role="group" aria-label="تصفية المتاجر">
+      ${Object.keys(filters).map((k) => `<button class="chip" type="button" data-af="${k}" aria-pressed="${f === k}">${labels[k]}<b class="num">${counts[k]}</b></button>`).join('')}
+    </div>
+    ${list.length ? `<div class="list">${list.slice(0, limit).map((s) => {
+      const o = owners.get(s.id);
+      return `<button class="item" type="button" data-astore="${s.id}">
+        <div class="thumb" style="background:${s.color}">${s.logo ? `<img data-img="${s.logo}" alt="">` : esc(s.name.trim().charAt(0))}</div>
+        <div class="grow"><div class="row" style="gap:6px"><span class="trunc">${esc(s.name)}</span>${planBadge(s)}${statusOf(s) === 'suspended' ? '<span class="st-susp">معلّق</span>' : ''}</div>
+          <div class="meta trunc">${o ? esc(o.name) + ' · <span dir="ltr">' + esc(o.email) + '</span>' : 'بلا مالك'}</div></div>
+        <div style="text-align:left" class="meta"><div><span class="num">${s.products.length}</span> منتج</div><div><span class="num">${s.orders.length}</span> طلب</div></div>
+      </button>`;
+    }).join('')}</div>
+    ${list.length > limit ? `<button class="btn block" type="button" data-act="admin-more" style="margin-top:10px">عرض المزيد (${list.length - limit} متبقي)</button>` : ''}`
+    : '<div class="list"><div class="empty">لا توجد متاجر تطابق البحث.</div></div>'}
+
+    <h2>سجل عمليات الإدارة</h2>
+    ${(state.audit || []).length ? `<div class="list">${state.audit.slice(0, 25).map((a) => `<div class="item"><div class="grow"><div>${esc(a.action)}${a.store ? ` — ${esc(a.store)}` : ''}</div>${a.detail ? `<div class="meta">${esc(a.detail)}</div>` : ''}</div><div class="meta">${ago(a.at)}</div></div>`).join('')}</div>`
+      : '<div class="list"><div class="empty">لم تُسجَّل أي عملية بعد.</div></div>'}
+  </div>`;
+}
+
+async function adminUpdate(s, patch, action, detail) {
+  const { data: row, error } = await sb.from('stores').update(patch).eq('id', s.id).select('*').single();
+  if (error || !row) { toast('تعذّر الحفظ: ' + ((error && error.message) || ''), true); return false; }
+  const local = toData(s);
+  const fresh = fromRow(row);
+  Object.assign(s, fresh);
+  // Keep unsaved local business data if the admin was editing the store at the same time.
+  if (JSON.stringify([fresh.slug, local]) !== fresh._synced && state.adminAs === s.id) Object.assign(s, local);
+  logAdmin(action, s, detail);
+  return true;
+}
+function adminStoreSheet(id) {
+  const s = state.stores.find((x) => x.id === id);
+  if (!s) return;
+  const owner = state.users.find((u) => u.storeId === s.id);
+  const mk = monthKey(Date.now());
+  const sales = s.orders.filter((o) => o.status === 'delivered' && monthKey(statusAt(o, 'delivered')) === mk).reduce((t, o) => t + Math.max(0, orderSubtotal(o) - o.discount), 0);
+  const last = s.orders.reduce((m, o) => Math.max(m, o.createdAt), 0);
+  const susp = statusOf(s) === 'suspended';
+  openSheet(`${sheetHead(esc(s.name))}
+    <dl class="kv">
+      <dt>الحالة</dt><dd>${susp ? '<span class="st-susp">معلّق</span>' : 'نشط'}</dd>
+      <dt>الخطة</dt><dd>${planBadge(s)} ${s.planEnds && planOf(s) !== 'free' ? `<span class="sub">حتى ${dateText(s.planEnds)}</span>` : ''}</dd>
+      <dt>المالك</dt><dd>${owner ? `${esc(owner.name)}<br><span dir="ltr">${esc(owner.email)}</span>` : '—'}</dd>
+      <dt>الرابط</dt><dd dir="ltr" style="text-align:right">${esc(publicLink(s))}</dd>
+      <dt>أُنشئ</dt><dd>${dateText(s.createdAt)}</dd>
+      <dt>المنتجات</dt><dd><span class="num">${s.products.length}</span></dd>
+      <dt>الطلبات</dt><dd><span class="num">${s.orders.length}</span>${last ? ` · آخر طلب ${ago(last)}` : ''}</dd>
+      <dt>مبيعات الشهر</dt><dd>${money(sales)}</dd>
+    </dl>
+    <div class="field"><label for="aPlan">تغيير الخطة</label>
+      <div class="row"><select class="input grow" id="aPlan">${Object.keys(PLANS).map((k) => `<option value="${k}" ${(s.plan || 'trial') === k ? 'selected' : ''}>${PLANS[k].l}${PLANS[k].price ? ` — ${PLANS[k].price.toLocaleString('en-US')} د.ع شهرياً` : ''}</option>`).join('')}</select>
+      <button class="btn primary" type="button" id="aPlanBtn">تطبيق 30 يوماً</button></div>
+      <small class="sub">في المرحلة الأولى يُفعَّل الاشتراك يدوياً بعد استلام التحويل.</small></div>
+    <div class="actions">
+      <button class="btn primary" type="button" id="aEnter">إدارة المتجر</button>
+      <button class="btn" type="button" id="aOpen">فتح صفحة المتجر</button>
+    </div>
+    <div class="actions">
+      <button class="btn ${susp ? '' : 'danger'}" type="button" id="aSusp">${susp ? 'إعادة تفعيل المتجر' : 'تعليق المتجر'}</button>
+      ${owner ? '<button class="btn" type="button" id="aReset">كلمة مرور مؤقتة للمالك</button>' : ''}
+    </div>
+    <div class="actions"><button class="btn danger" type="button" id="aDel">حذف المتجر نهائياً</button></div>`,
+  (sh) => {
+    sh.querySelector('#aPlanBtn').addEventListener('click', async (ev) => {
+      const pl = sh.querySelector('#aPlan').value;
+      // Renewal adds 30 days after the current end if it hasn't passed yet.
+      const ends = pl === 'free' ? null : Math.max(Date.now(), s.planEnds || 0) + 30 * DAY;
+      ev.target.disabled = true;
+      const ok = await adminUpdate(s, { plan: pl, welcome: false, plan_ends: ends ? new Date(ends).toISOString() : null },
+        'تغيير الخطة', `${PLANS[pl].l}${ends ? ' حتى ' + dateText(ends) : ''}`);
+      renderAdmin(); adminStoreSheet(id);
+      if (ok) toast(`الخطة الآن: ${PLANS[pl].l}`);
+    });
+    sh.querySelector('#aEnter').addEventListener('click', () => {
+      state.adminAs = s.id; state.role = 'owner'; state.view = 'home'; state.orderFilter = 'all'; state.q = ''; state.pq = ''; state.cq = ''; state.month = null;
+      logAdmin('دخول لإدارة متجر', s);
+      saveUI(); closeSheet(); render(); setSync('ok'); window.scrollTo(0, 0);
+    });
+    sh.querySelector('#aOpen').addEventListener('click', () => { closeSheet(); openStorefront(s, false); });
+    sh.querySelector('#aSusp').addEventListener('click', async () => {
+      const ok = await confirmSheet(susp ? 'إعادة تفعيل المتجر' : 'تعليق المتجر',
+        susp ? 'سيعود المالك والموظفون للعمل، وتظهر صفحة المتجر للزبائن.' : 'لن يستطيع المالك والموظفون العمل، وتختفي منتجات المتجر من صفحته العامة. لا يُحذف أي شيء.',
+        susp ? 'إعادة التفعيل' : 'تعليق', !susp);
+      if (!ok) { adminStoreSheet(id); return; }
+      const done = await adminUpdate(s, { status: susp ? 'active' : 'suspended' }, susp ? 'إعادة تفعيل متجر' : 'تعليق متجر');
+      renderAdmin(); adminStoreSheet(id);
+      if (done) toast(susp ? 'أُعيد تفعيل المتجر' : 'عُلّق المتجر');
+    });
+    const rb = sh.querySelector('#aReset');
+    if (rb) rb.addEventListener('click', async () => {
+      const ok = await confirmSheet('كلمة مرور مؤقتة', `ستتوقف كلمة المرور الحالية لـ ${owner.name}. أعطه الكلمة المؤقتة ليدخل بها ثم يغيّرها.`, 'إنشاء كلمة مؤقتة', false);
+      if (!ok) { adminStoreSheet(id); return; }
+      const { data: res, error } = await sb.functions.invoke('admin-actions', { body: { action: 'reset_password', user_id: owner.id } });
+      if (error || !res || !res.password) { toast('تعذّر إنشاء كلمة مؤقتة، حاول مجدداً', true); adminStoreSheet(id); return; }
+      const pw = res.password;
+      logAdmin('كلمة مرور مؤقتة للمالك', s, owner.email);
+      renderAdmin();
+      openSheet(`${sheetHead('كلمة المرور المؤقتة')}<p>أرسلها للمالك ${esc(owner.name)}. لن تظهر مرة ثانية.</p>
+        <div class="temp-pw" id="tmpPw">${esc(pw)}</div>
+        <div class="actions"><button class="btn" type="button" id="cpPw">${icon('copy')} نسخ</button><button class="btn primary" type="button" data-act="close-sheet">تم</button></div>`,
+      (sh2) => sh2.querySelector('#cpPw').addEventListener('click', async () => toast((await copyText(pw)) ? 'نُسخت' : 'تعذّر النسخ')));
+    });
+    sh.querySelector('#aDel').addEventListener('click', () => {
+      openSheet(`${sheetHead('حذف المتجر نهائياً')}
+        <p>سيُحذف متجر <b>${esc(s.name)}</b> وكل منتجاته وطلباته وصوره وحساب مالكه. لا يمكن التراجع.</p>
+        <div class="field"><label for="delConfirm">للتأكيد اكتب رابط المتجر: <b dir="ltr">${esc(s.slug)}</b></label><input class="input" id="delConfirm" dir="ltr" autocapitalize="off" spellcheck="false"></div>
+        <div class="actions"><button class="btn" type="button" id="delNo">رجوع</button><button class="btn danger" type="button" id="delYes" disabled>حذف نهائي</button></div>`,
+      (sh2) => {
+        const inp = sh2.querySelector('#delConfirm'), yes = sh2.querySelector('#delYes');
+        inp.addEventListener('input', () => { yes.disabled = inp.value.trim() !== s.slug; });
+        sh2.querySelector('#delNo').addEventListener('click', () => adminStoreSheet(id));
+        yes.addEventListener('click', async () => {
+          if (inp.value.trim() !== s.slug) return;
+          yes.disabled = true; yes.textContent = 'جارِ الحذف…';
+          await imgDelFolder(s.id);
+          let err = null;
+          if (owner && !owner.isAdmin) {
+            // Deleting the account removes its store too (foreign key ON DELETE CASCADE).
+            const { data: res, error } = await sb.functions.invoke('admin-actions', { body: { action: 'delete_user', user_id: owner.id } });
+            if (error || !res || !res.ok) err = error || new Error('failed');
+          } else {
+            const { error } = await sb.from('stores').delete().eq('id', s.id);
+            err = error;
+          }
+          if (err) { toast('تعذّر حذف المتجر، حاول مجدداً', true); adminStoreSheet(id); return; }
+          state.stores = state.stores.filter((x) => x.id !== s.id);
+          state.users = owner && !owner.isAdmin ? state.users.filter((u) => u.id !== owner.id) : state.users;
+          logAdmin('حذف متجر', s, owner ? owner.email : '');
+          closeSheet(); renderAdmin(); toast('حُذف المتجر');
+        });
+      });
+    });
+  });
+}
+
+/* ---------------- views ---------------- */
+function linkCard(s) {
+  return `<section class="link-card" aria-label="رابط متجرك">
+    <div class="spread"><b>رابط متجرك</b><span class="sub">أرسله لزبائنك أو ضعه في البايو</span></div>
+    <div class="url">${esc(publicLink(s))}</div>
+    <div class="row" style="flex-wrap:wrap">
+      <button class="btn" type="button" data-act="copy-link">${icon('copy')} نسخ</button>
+      <button class="btn" type="button" data-act="share-link">${icon('share')} مشاركة</button>
+      <button class="btn" type="button" data-act="open-storefront">فتح المتجر</button>
+    </div></section>`;
+}
+async function shareLink(s) {
+  const url = publicLink(s);
+  if (navigator.share) {
+    try { await navigator.share({ title: s.name, text: s.tagline || s.name, url }); return; } catch (e) { if (e && e.name === 'AbortError') return; }
+  }
+  toast((await copyText(url)) ? 'نُسخ رابط المتجر، أرسله لزبائنك' : 'تعذّر النسخ', false);
+}
+
+function viewHome() {
+  const s = store();
+  const counts = {};
+  for (const k of Object.keys(STATUS)) counts[k] = 0;
+  for (const o of s.orders) counts[o.status]++;
+  const flow = ['new', 'confirmed', 'preparing', 'shipped', 'delivered'];
+  const cod = s.orders.filter((o) => o.status === 'shipped').reduce((t, o) => t + orderTotal(o), 0);
+  const today = startOfDay(Date.now());
+  const todays = s.orders.filter((o) => o.createdAt >= today).length;
+  const rep = monthReport(s, monthKey(Date.now()));
+  const low = s.products.filter(isLow);
+  const days = [];
+  for (let i = 13; i >= 0; i--) {
+    const d0 = today - i * DAY;
+    days.push(s.orders.filter((o) => o.createdAt >= d0 && o.createdAt < d0 + DAY).length);
+  }
+  const max = Math.max(1, ...days);
+  const recent = s.orders.slice().sort((a, b) => b.createdAt - a.createdAt).slice(0, 5);
+
+  const now = new Date();
+  const who = (currentUser().name || '').trim().split(/\s+/)[0];
+  const todaysSales = s.orders.filter((o) => o.createdAt >= today && o.status !== 'canceled').reduce((t, o) => t + Math.max(0, orderSubtotal(o) - (o.discount || 0)), 0);
+  let dateStr = '';
+  try { dateStr = now.toLocaleDateString('ar-IQ-u-nu-latn', { weekday: 'long', day: 'numeric', month: 'long' }); } catch (e) { dateStr = dateText(now.getTime()); }
+  const quick = [
+    can('orders.write') && `<button type="button" data-act="new-order"><span class="qi">${icon('plus')}</span>طلب جديد</button>`,
+    can('products.write') && `<button type="button" data-act="new-product"><span class="qi">${icon('products')}</span>منتج جديد</button>`,
+    can('warehouse') && `<button type="button" data-act="new-purchase"><span class="qi">${icon('warehouse')}</span>استلام بضاعة</button>`,
+    can('reports') && `<button type="button" data-act="new-expense"><span class="qi">${icon('reports')}</span>مصروف</button>`,
+    `<button type="button" data-act="share-link"><span class="qi">${icon('share')}</span>رابط متجري</button>`,
+  ].filter(Boolean).slice(0, 4);
+  return `
+  <h1 class="sr-only">${esc(s.name)}</h1>
+  <section class="hello" aria-label="ملخص اليوم">
+    <div class="hello-greet">${now.getHours() < 12 ? 'صباح الخير' : 'مساء الخير'}${who ? '، ' + esc(who) : ''}</div>
+    <div class="hello-date">${esc(dateStr)}</div>
+    <div class="hello-stats">
+      <div><span>طلبات اليوم</span><b class="num">${todays}</b></div>
+      <div><span>مبيعات اليوم</span><b>${money(todaysSales)}</b></div>
+      <div><span>تنتظر التأكيد</span><b class="num">${counts.new}</b></div>
+    </div>
+  </section>
+  <div class="quick">${quick.join('')}</div>
+  <section class="pipeline" aria-label="مسار الطلبات">
+    <div class="pipe-track">
+      ${flow.map((k) => `<button class="stop ${counts[k] && k !== 'delivered' ? 'hot' : ''}" type="button" style="--c:${STATUS[k].c}" data-filter="${k}">
+        <div class="dot"><span class="num">${counts[k]}</span></div><span>${STATUS[k].l}</span></button>`).join('')}
+    </div>
+    <div class="pipe-foot">
+      <span>ملغى <b class="num">${counts.canceled}</b></span>
+      <span>مرتجع <b class="num">${counts.returned}</b></span>
+    </div>
+  </section>
+
+  <dl class="money">
+    <div class="cod"><dt>مبالغ عند شركة التوصيل</dt><dd>${money(cod)}</dd></div>
+    <div><dt>بذمّتها وتم التسليم</dt><dd>${money(s.orders.filter((o) => o.status === 'delivered' && !o.settledAt).reduce((t, o) => t + settleValue(o), 0))}</dd></div>
+    ${can('reports') ? `<div class="${rep.net < 0 ? 'neg' : ''}"><dt>صافي ربح ${MONTHS[new Date().getMonth()]}</dt><dd>${money(rep.net)}</dd></div>` : `<div><dt>تم التسليم هذا الشهر</dt><dd><span class="num">${rep.delivered.length}</span></dd></div>`}
+    <div><dt>منتجات قاربت على النفاد</dt><dd><span class="num">${low.length}</span></dd></div>
+  </dl>
+
+  <h2>الطلبات آخر 14 يوماً</h2>
+  <div class="panel">
+    <div class="bars" role="img" aria-label="عدد الطلبات يومياً لآخر 14 يوماً">
+      ${days.map((n, i) => `<div class="${i === 13 ? 'today' : ''}" style="height:${(n / max) * 100}%" title="${n} طلب"></div>`).join('')}
+    </div>
+    <div class="bars-x"><span>قبل 13 يوماً</span><span>اليوم</span></div>
+  </div>
+
+  <div class="spread"><h2>أحدث الطلبات</h2><button class="btn" type="button" data-nav="orders">كل الطلبات</button></div>
+  ${orderList(recent)}
+
+  ${low.length ? `<h2>يحتاج إعادة تعبئة</h2><div class="list">${low.map((p) => `
+    <button class="item" type="button" data-product="${p.id}">
+      ${tile(p, 'thumb')}
+      <div class="grow"><div class="trunc">${esc(p.name)}</div>
+      <div class="meta">${p.variants.filter((v) => v.stock <= p.low).map((v) => `${esc(v.label)}: <span class="num">${v.stock}</span>`).join(' ، ')}</div></div>
+      <span class="tag warn">قليل</span></button>`).join('')}</div>` : ''}
+  ${can('orders.write') ? `<button class="btn primary fab" type="button" data-act="new-order">${icon('plus')} طلب جديد</button>` : ''}`;
+}
+
+function orderList(orders) {
+  if (!orders.length) return `<div class="list"><div class="empty">لا توجد طلبات هنا.${can('orders.write') ? '<br><button class="btn primary" type="button" data-act="new-order">سجّل طلباً</button>' : ''}</div></div>`;
+  return `<div class="list">${orders.map((o) => `
+    <button class="item" type="button" data-order="${o.id}">
+      <span class="ono num">#${o.no}</span>
+      <div class="grow"><div class="trunc">${esc(o.customer.name)}</div>
+        <div class="meta">${esc(o.customer.city)} · ${ago(o.createdAt)}${o.source === 'storefront' ? ' · من واجهة المتجر' : ''}</div></div>
+      <div style="text-align:left"><div>${money(orderTotal(o))}</div>${badge(o.status)}</div>
+    </button>`).join('')}</div>`;
+}
+
+function viewOrders() {
+  const s = store();
+  const q = (state.q || '').trim();
+  const nq = normPhone(q);
+  let list = s.orders.slice().sort((a, b) => b.createdAt - a.createdAt);
+  const counts = { all: list.length };
+  for (const k of Object.keys(STATUS)) counts[k] = list.filter((o) => o.status === k).length;
+  if (state.orderFilter !== 'all') list = list.filter((o) => o.status === state.orderFilter);
+  if (q) list = list.filter((o) => String(o.no).includes(q.replace('#', '')) || o.customer.name.includes(q) || (nq.length >= 3 && normPhone(o.customer.phone).includes(nq)));
+  const chips = ['all', ...Object.keys(STATUS)];
+  return `
+  <div class="spread"><h1>الطلبات</h1>${can('orders.write') ? `<button class="btn primary" type="button" data-act="new-order">${icon('plus')} طلب جديد</button>` : ''}</div>
+  <div class="search">${icon('search')}<input class="input" id="q" type="search" placeholder="رقم الطلب، اسم الزبون أو الهاتف" value="${esc(state.q || '')}" aria-label="بحث في الطلبات"></div>
+  <div class="chips" role="group" aria-label="تصفية حسب الحالة">
+    ${chips.map((k) => `<button class="chip" type="button" data-filter="${k}" aria-pressed="${state.orderFilter === k}">${k === 'all' ? 'الكل' : STATUS[k].l}<b class="num">${counts[k]}</b></button>`).join('')}
+  </div>
+  ${orderList(list.slice(0, 80))}
+  ${list.length > 80 ? `<p class="sub">تُعرض أحدث 80 نتيجة. استخدم البحث للوصول لطلب أقدم.</p>` : ''}`;
+}
+
+function viewProducts() {
+  const s = store();
+  const q = (state.pq || '').trim();
+  const list = s.products.filter((p) => !q || p.name.includes(q) || p.category.includes(q));
+  return `
+  <div class="spread"><h1>المنتجات</h1>${can('products.write') ? `<button class="btn primary" type="button" data-act="new-product">${icon('plus')} منتج جديد</button>` : ''}</div>
+  <div class="search">${icon('search')}<input class="input" id="pq" type="search" placeholder="اسم المنتج أو التصنيف" value="${esc(q)}" aria-label="بحث في المنتجات"></div>
+  ${list.length ? `<div class="pgrid">${list.map((p) => {
+    const prices = p.variants.map((v) => v.price);
+    const lo = prices.length ? Math.min(...prices) : 0, hi = prices.length ? Math.max(...prices) : 0;
+    const stock = totalStock(p);
+    return `<button class="pcard ${p.active ? '' : 'off'}" type="button" data-product="${p.id}">
+      ${!p.active ? '<span class="pc-flag"><span class="tag">مخفي عن الزبائن</span></span>' : isLow(p) ? '<span class="pc-flag"><span class="tag warn">قارب على النفاد</span></span>' : ''}
+      ${tile(p, 'pic')}
+      <div class="pc-body">
+        <div class="pc-name">${esc(p.name)}</div>
+        <div class="pc-row"><b>${lo === hi ? money(lo) : `${money(lo)}+`}</b><span class="qty-pill num ${stock <= 0 ? 'out' : isLow(p) ? 'low' : ''}" title="المخزون">${stock}</span></div>
+        <div class="meta">${esc(p.category)} · ${p.variants.length} خيار</div>
+      </div>
+    </button>`;
+  }).join('')}</div>` : `<div class="list"><div class="empty">${q ? 'لا توجد منتجات بهذا الاسم.' : 'لم تضف أي منتج بعد.'}${!q && can('products.write') ? '<br><button class="btn primary" type="button" data-act="new-product" style="margin-top:10px">أضف أول منتج</button>' : ''}</div></div>`}`;
+}
+
+function viewCustomers() {
+  const s = store();
+  const q = (state.cq || '').trim();
+  const nq = normPhone(q);
+  const list = customersOf(s).filter((c) => !q || c.name.includes(q) || (nq.length >= 3 && c.phone.includes(nq)));
+  return `
+  <h1>الزبائن</h1>
+  <p class="sub" style="margin-top:-8px">يُنشأ ملف الزبون تلقائياً من رقم هاتفه عند أول طلب.</p>
+  <div class="search">${icon('search')}<input class="input" id="cq" type="search" placeholder="الاسم أو الهاتف" value="${esc(q)}" aria-label="بحث في الزبائن"></div>
+  ${list.length ? `<div class="list">${list.slice(0, 100).map((c) => `
+    <button class="item" type="button" data-customer="${esc(c.phone)}">
+      <div class="grow"><div class="trunc">${esc(c.name)}</div>
+        <div class="meta"><span class="num">${esc(c.phone)}</span> · ${esc(c.city)} · ${c.orders.length} طلب</div></div>
+      <div style="text-align:left"><div>${money(c.spent)}</div><div class="meta">${ago(c.last)}</div></div>
+    </button>`).join('')}</div>` : `<div class="list"><div class="empty">لا يوجد زبائن بعد.</div></div>`}`;
+}
+
+function periodKeys() {
+  const keys = [];
+  const d = new Date();
+  for (let i = 0; i < 6; i++) keys.push(monthKey(new Date(d.getFullYear(), d.getMonth() - i, 15).getTime()));
+  keys.push('year');
+  return keys;
+}
+function periodSelect(key) {
+  return `<select class="input" id="monthSel" style="width:auto" aria-label="الفترة">${periodKeys().map((k) => `<option value="${k}" ${k === key ? 'selected' : ''}>${periodLabel(k)}</option>`).join('')}</select>`;
+}
+function segTabs(group, current, tabs) {
+  return `<div class="seg" role="group">${tabs.map(([k, l]) => `<button type="button" data-${group}="${k}" aria-pressed="${current === k}">${l}</button>`).join('')}</div>`;
+}
+
+function viewReports() {
+  const s = store();
+  const keys = periodKeys();
+  const key = state.month && keys.includes(state.month) ? state.month : keys[0];
+  const tab = state.accTab || 'pl';
+  const head = `<div class="spread"><h1>الحسابات</h1>${tab === 'cash' ? '' : periodSelect(key)}</div>
+    ${segTabs('acctab', tab, [['pl', 'الأرباح والخسائر'], ['cash', 'الصندوق'], ['expenses', 'المصروفات'], ['insights', 'المنتجات']])}`;
+  if (tab === 'cash') return head + accCash(s);
+  if (tab === 'expenses') return head + accExpenses(s, key);
+  if (tab === 'insights') return head + accInsights(s, key);
+  return head + accPL(s, key);
+}
+
+function accPL(s, key) {
+  const r = monthReport(s, key);
+  const loss = r.net < 0;
+  // six-month trend of net result
+  const d = new Date();
+  const months = [];
+  for (let i = 5; i >= 0; i--) { const k = monthKey(new Date(d.getFullYear(), d.getMonth() - i, 15).getTime()); months.push({ k, net: monthReport(s, k).net }); }
+  const max = Math.max(1, ...months.map((m) => Math.abs(m.net)));
+  return `
+  <div class="panel">
+    <table class="ledger">
+      <tr><td>المبيعات <span class="sub">(${r.delivered.length} طلب مُسلَّم)</span></td><td>${money(r.grossSales)}</td></tr>
+      <tr class="minus"><td>الخصومات</td><td>${money(r.discounts)}</td></tr>
+      <tr class="sub-sum"><td>صافي المبيعات</td><td>${money(r.revenue)}</td></tr>
+      <tr class="minus"><td>تكلفة البضاعة المباعة</td><td>${money(r.cogs)}</td></tr>
+      <tr class="sub-sum"><td>مجمل الربح</td><td>${money(r.gross)}</td></tr>
+      <tr class="minus"><td>المصروفات</td><td>${money(r.exp)}</td></tr>
+      ${r.byCat.map(([c, v]) => `<tr><td class="ind">${esc(c)}</td><td class="ind" style="text-align:left">${money(v)}</td></tr>`).join('')}
+      <tr><td>${r.stockDiff < 0 ? '− ' : ''}تلف وفروقات المخزون</td><td style="color:${r.stockDiff < 0 ? 'var(--bad)' : 'inherit'}">${money(Math.abs(r.stockDiff))}</td></tr>
+      <tr class="sum"><td>${loss ? 'صافي الخسارة' : 'صافي الربح'}</td><td style="color:${loss ? 'var(--bad)' : 'var(--good)'}">${money(Math.abs(r.net))}</td></tr>
+    </table>
+    <p class="note">نسبة صافي الربح من المبيعات: <span class="num">${r.margin}%</span>. المبيعات تُحسب عند تسليم الطلب للزبون، من دون أجرة التوصيل لأنها لشركة التوصيل.
+    في ${periodLabel(key)}: <span class="num">${r.returned.length}</span> مرتجع و<span class="num">${r.canceled.length}</span> ملغى.</p>
+    <div class="row" style="flex-wrap:wrap;margin-top:6px">
+      <button class="btn" type="button" data-act="export-pl">${icon('download')} تصدير الأرباح والخسائر</button>
+      <button class="btn" type="button" data-act="export-orders">${icon('download')} تصدير الطلبات</button>
+    </div>
+  </div>
+  <h2>صافي الربح آخر 6 أشهر</h2>
+  <div class="panel">
+    <div class="trend" role="img" aria-label="صافي الربح أو الخسارة لكل شهر خلال آخر 6 أشهر">
+      ${months.map((m) => `<div class="col" title="${periodLabel(m.k)}: ${moneyText(m.net)}">
+        <div class="up">${m.net > 0 ? `<div class="bar" style="height:${(m.net / max) * 100}%"></div>` : ''}</div>
+        <div class="down">${m.net < 0 ? `<div class="bar" style="height:${(-m.net / max) * 100}%"></div>` : ''}</div>
+        <div class="lbl">${MONTHS[Number(m.k.slice(5)) - 1]}</div></div>`).join('')}
+    </div>
+    <p class="note">الأخضر ربح والأحمر خسارة.</p>
+  </div>
+  ${r.stockMoves.length ? `<h2>تلف وفروقات المخزون</h2><div class="list">${r.stockMoves.map((m) => { const f = findVariant(s, m.variantId); return `<div class="item"><div class="grow"><div>${f ? esc(f.p.name) + ' — ' + esc(f.v.label) : 'منتج محذوف'}</div><div class="meta">${esc(m.reason)} · ${dateText(m.at)}</div></div><b class="num" style="color:${(m.value || 0) < 0 ? 'var(--bad)' : 'var(--good)'}">${m.qty > 0 ? '+' : ''}${m.qty}</b><div style="min-width:100px;text-align:left">${money(Math.abs(m.value || 0))}</div></div>`; }).join('')}</div>` : ''}`;
+}
+
+function accCash(s) {
+  const { rows, balance } = cashLedger(s);
+  const unsettled = s.orders.filter((o) => o.status === 'delivered' && !o.settledAt);
+  const due = unsettled.reduce((t, o) => t + settleValue(o), 0);
+  const transit = s.orders.filter((o) => o.status === 'shipped').reduce((t, o) => t + settleValue(o), 0);
+  const owedSup = s.suppliers.reduce((t, x) => t + Math.max(0, supplierBalance(s, x.id).owed), 0);
+  return `
+  <div class="panel">
+    <div class="sub">رصيد الصندوق الآن</div>
+    <div class="cash-big" style="color:${balance < 0 ? 'var(--bad)' : 'inherit'}">${money(balance)}</div>
+    <div class="sub">رصيد البداية ${money(s.cashOpening)} · <button class="btn" type="button" data-act="cash-opening" style="min-height:30px;padding:2px 10px;font-size:13px">تعديل</button></div>
+  </div>
+  <dl class="money">
+    <div class="cod"><dt>بذمّة شركة التوصيل (مُسلَّم)</dt><dd>${money(due)}</dd></div>
+    <div><dt>طلبات في الطريق</dt><dd>${money(transit)}</dd></div>
+    <div class="${owedSup ? 'neg' : ''}"><dt>ديون للموردين</dt><dd>${money(owedSup)}</dd></div>
+    <div><dt>طلبات لم تُحصَّل</dt><dd><span class="num">${unsettled.length}</span></dd></div>
+  </dl>
+  ${unsettled.length ? `<button class="btn primary block" type="button" data-act="settle" style="margin-top:12px">استلمت مبلغاً من شركة التوصيل</button>` : ''}
+  <h2>حركة الصندوق</h2>
+  ${rows.length ? `<div class="list">${rows.slice(0, 60).map((r) => `<div class="item"><div class="grow"><div class="trunc">${esc(r.label)}</div><div class="meta">${dateText(r.at)}</div></div><b style="color:${r.amount < 0 ? 'var(--bad)' : 'var(--good)'}">${r.amount < 0 ? '−' : '+'} ${money(Math.abs(r.amount))}</b></div>`).join('')}</div>` : '<div class="list"><div class="empty">لا توجد حركة بعد.</div></div>'}
+  <p class="note">يدخل الصندوق: ما تستلمه من شركة التوصيل. يخرج منه: المصروفات، ودفعات المشتريات والموردين.</p>`;
+}
+
+function accExpenses(s, key) {
+  const r = monthReport(s, key);
+  return `
+  <div class="spread"><h2 style="margin-top:0">مصروفات ${periodLabel(key)}: ${money(r.exp)}</h2><button class="btn primary" type="button" data-act="new-expense">${icon('plus')} مصروف</button></div>
+  ${r.byCat.length ? `<div class="panel" style="margin-bottom:12px"><table class="ledger">${r.byCat.map(([c, v]) => `<tr><td>${esc(c)}</td><td>${money(v)}</td></tr>`).join('')}</table></div>` : ''}
+  ${r.expenses.length ? `<div class="list">${r.expenses.slice().sort((x, y) => y.at - x.at).map((e) => `<div class="item"><div class="grow"><div>${esc(e.category)}</div><div class="meta">${esc(e.note)} · ${dateText(e.at)}</div></div><div>${money(e.amount)}</div>
+    <button class="icon-btn" type="button" data-delexp="${e.id}" aria-label="حذف المصروف" style="width:32px;height:32px">${icon('close')}</button></div>`).join('')}</div>` : '<div class="list"><div class="empty">لا مصروفات مسجّلة في هذه الفترة.</div></div>'}`;
+}
+
+function accInsights(s, key) {
+  const r = monthReport(s, key);
+  const stg = stagnant(s);
+  return `
+  <h2 style="margin-top:0">الأكثر مبيعاً في ${periodLabel(key)}</h2>
+  ${r.top.length ? `<div class="list">${r.top.map((x, i) => `<div class="item"><span class="ono num">${i + 1}</span><div class="grow"><div class="trunc">${esc(x.name)}</div><div class="meta"><span class="num">${x.qty}</span> قطعة · ربح ${money(x.profit)}</div></div><div>${money(x.revenue)}</div></div>`).join('')}</div>` : '<div class="list"><div class="empty">لا توجد مبيعات مُسلَّمة في هذه الفترة.</div></div>'}
+  <h2>منتجات راكدة <span class="sub">بلا طلبات خلال 30 يوماً</span></h2>
+  ${stg.length ? `<div class="list">${stg.map((p) => `<button class="item" type="button" data-product="${p.id}">${tile(p, 'thumb')}<div class="grow trunc">${esc(p.name)}</div><div class="meta">في المخزن <span class="num">${totalStock(p)}</span> · قيمتها ${money(p.variants.reduce((t, v) => t + v.cost * v.stock, 0))}</div></button>`).join('')}</div>` : '<div class="list"><div class="empty">كل المنتجات تتحرك.</div></div>'}`;
+}
+
+/* ---------------- warehouse ---------------- */
+function viewWarehouse() {
+  const s = store();
+  ensureShape(s);
+  const tab = state.whTab || 'stock';
+  const head = `<div class="spread"><h1>المخزن</h1><div class="row"><button class="btn" type="button" data-act="adjust-stock">تسوية / تالف</button><button class="btn primary" type="button" data-act="new-purchase">${icon('plus')} استلام بضاعة</button></div></div>
+    ${segTabs('whtab', tab, [['stock', 'المخزون'], ['purchases', 'المشتريات'], ['suppliers', 'الموردون'], ['moves', 'الحركات']])}`;
+  if (tab === 'purchases') return head + whPurchases(s);
+  if (tab === 'suppliers') return head + whSuppliers(s);
+  if (tab === 'moves') return head + whMoves(s);
+  return head + whStock(s);
+}
+
+function whStock(s) {
+  const rows = s.products.flatMap((p) => p.variants.map((v) => ({ p, v })));
+  const units = rows.reduce((t, x) => t + x.v.stock, 0);
+  const costVal = rows.reduce((t, x) => t + x.v.stock * x.v.cost, 0);
+  const saleVal = rows.reduce((t, x) => t + x.v.stock * x.v.price, 0);
+  const low = rows.filter((x) => x.v.stock > 0 && x.v.stock <= x.p.low);
+  const out = rows.filter((x) => x.v.stock <= 0);
+  const stg = new Set(stagnant(s).map((p) => p.id));
+  const f = state.whFilter || 'all';
+  const q = (state.wq || '').trim();
+  let list = rows;
+  if (f === 'low') list = low; else if (f === 'out') list = out; else if (f === 'stagnant') list = rows.filter((x) => stg.has(x.p.id));
+  if (q) list = list.filter((x) => x.p.name.includes(q) || x.v.label.includes(q));
+  const chips = [['all', 'الكل', rows.length], ['low', 'قليل', low.length], ['out', 'نفد', out.length], ['stagnant', 'راكد', rows.filter((x) => stg.has(x.p.id)).length]];
+  return `
+  <dl class="money" style="margin-top:0">
+    <div><dt>قطع في المخزن</dt><dd><span class="num">${units.toLocaleString('en-US')}</span></dd></div>
+    ${can('cost') ? `<div><dt>قيمة المخزون بالتكلفة</dt><dd>${money(costVal)}</dd></div>` : ''}
+    <div><dt>قيمته بسعر البيع</dt><dd>${money(saleVal)}</dd></div>
+    <div class="${out.length ? 'neg' : ''}"><dt>نفدت</dt><dd><span class="num">${out.length}</span> خيار</dd></div>
+  </dl>
+  <div class="search" style="margin-top:12px">${icon('search')}<input class="input" id="wq" type="search" placeholder="ابحث عن منتج أو خيار" value="${esc(q)}" aria-label="بحث في المخزون"></div>
+  <div class="chips" role="group" aria-label="تصفية المخزون">${chips.map(([k, l, n]) => `<button class="chip" type="button" data-whf="${k}" aria-pressed="${f === k}">${l}<b class="num">${n}</b></button>`).join('')}</div>
+  ${list.length ? `<div class="list">${list.map(({ p, v }) => `<button class="item" type="button" data-variant="${v.id}">
+    ${tile(p, 'thumb')}
+    <div class="grow"><div class="trunc">${esc(p.name)}</div><div class="meta">${esc(v.label)}${can('cost') ? ` · تكلفة ${money(v.cost)}` : ''}</div></div>
+    <span class="qty-pill num ${v.stock <= 0 ? 'out' : v.stock <= p.low ? 'low' : ''}">${v.stock}</span></button>`).join('')}</div>`
+    : '<div class="list"><div class="empty">لا توجد أصناف هنا.</div></div>'}`;
+}
+
+function whPurchases(s) {
+  const supName = (id) => (s.suppliers.find((x) => x.id === id) || { name: '—' }).name;
+  const list = s.purchases.slice().sort((a, b) => b.at - a.at);
+  return list.length ? `<div class="list">${list.map((pu) => `<button class="item" type="button" data-purchase="${pu.id}">
+    <div class="grow"><div class="trunc">${esc(supName(pu.supplierId))}</div><div class="meta">${dateText(pu.at)} · ${pu.lines.reduce((t, l) => t + l.qty, 0)} قطعة${pu.note ? ' · ' + esc(pu.note) : ''}</div></div>
+    <div style="text-align:left"><div>${money(pu.total)}</div>${pu.total > pu.paid ? `<div class="meta" style="color:var(--bad)">باقي ${money(pu.total - pu.paid)}</div>` : '<div class="meta">مدفوع</div>'}</div></button>`).join('')}</div>`
+    : `<div class="list"><div class="empty">لم تسجّل مشتريات بعد.<br><button class="btn primary" type="button" data-act="new-purchase">استلام بضاعة</button></div></div>`;
+}
+
+function whSuppliers(s) {
+  return `<div class="spread" style="margin-bottom:10px"><span class="sub">الديون تُحسب من المشتريات ناقص ما دفعته.</span><button class="btn" type="button" data-act="new-supplier">${icon('plus')} مورد</button></div>
+  ${s.suppliers.length ? `<div class="list">${s.suppliers.map((x) => { const b = supplierBalance(s, x.id); return `<button class="item" type="button" data-supplier="${x.id}">
+    <div class="grow"><div class="trunc">${esc(x.name)}</div><div class="meta">مشتريات ${money(b.bought)}${x.phone ? ` · <span class="num">${esc(x.phone)}</span>` : ''}</div></div>
+    <div style="text-align:left">${b.owed > 0 ? `<div style="color:var(--bad)">عليك ${money(b.owed)}</div>` : '<div class="meta">لا ديون</div>'}</div></button>`; }).join('')}</div>`
+    : '<div class="list"><div class="empty">لا يوجد موردون بعد. يُضاف المورد تلقائياً عند أول استلام بضاعة.</div></div>'}`;
+}
+
+const KIND_LABEL = { sale: 'بيع', return: 'إرجاع', purchase: 'شراء', adjust: 'تسوية', loss: 'تلف/فقدان', opening: 'رصيد افتتاحي' };
+function whMoves(s) {
+  const list = s.movements.slice().sort((a, b) => b.at - a.at).slice(0, 120);
+  return list.length ? `<div class="list">${list.map((m) => { const f = findVariant(s, m.variantId); return `<div class="item">
+    <div class="grow"><div class="trunc">${f ? esc(f.p.name) + ' — ' + esc(f.v.label) : 'منتج محذوف'}</div><div class="meta">${esc(m.reason)} · ${dateText(m.at)} · ${esc(m.by || '')}</div></div>
+    <span class="tag">${KIND_LABEL[m.kind] || 'حركة'}</span>
+    <b class="num" style="min-width:40px;text-align:left;color:${m.qty < 0 ? 'var(--bad)' : 'var(--good)'}">${m.qty > 0 ? '+' : ''}${m.qty}</b></div>`; }).join('')}</div>`
+    : '<div class="list"><div class="empty">لا توجد حركات بعد.</div></div>';
+}
+
+function variantSheet(vid) {
+  const s = store();
+  const f = findVariant(s, vid);
+  if (!f) return;
+  const { p, v } = f;
+  const moves = s.movements.filter((m) => m.variantId === vid).sort((a, b) => b.at - a.at).slice(0, 15);
+  openSheet(`${sheetHead(`${esc(p.name)} — ${esc(v.label)}`)}
+    <dl class="kv">
+      <dt>الكمية</dt><dd><b class="num">${v.stock}</b> ${v.stock <= p.low ? '<span class="tag warn">قليل</span>' : ''}</dd>
+      <dt>سعر البيع</dt><dd>${money(v.price)}</dd>
+      ${can('cost') ? `<dt>متوسط التكلفة</dt><dd>${money(v.cost)}</dd><dt>قيمة الموجود</dt><dd>${money(v.cost * v.stock)}</dd>` : ''}
+      <dt>تنبيه عند</dt><dd><span class="num">${p.low}</span> قطع</dd>
+    </dl>
+    <div class="actions">
+      <button class="btn primary" type="button" id="vRecv">استلام كمية</button>
+      <button class="btn" type="button" id="vAdj">تسوية / تالف</button>
+    </div>
+    <h2>آخر الحركات</h2>
+    ${moves.length ? `<div class="list">${moves.map((m) => `<div class="item"><div class="grow"><div>${esc(m.reason)}</div><div class="meta">${dateText(m.at)} · ${esc(m.by || '')}</div></div><b class="num" style="color:${m.qty < 0 ? 'var(--bad)' : 'var(--good)'}">${m.qty > 0 ? '+' : ''}${m.qty}</b></div>`).join('')}</div>` : '<p class="sub">لا حركات.</p>'}`,
+  (sh) => {
+    sh.querySelector('#vRecv').addEventListener('click', () => purchaseSheet(vid));
+    sh.querySelector('#vAdj').addEventListener('click', () => adjustSheet(vid));
+  });
+}
+
+function variantOptions(s, selected) {
+  return s.products.map((p) => p.variants.map((v) => `<option value="${v.id}" ${v.id === selected ? 'selected' : ''}>${esc(p.name)} — ${esc(v.label)} (الموجود ${v.stock})</option>`).join('')).join('');
+}
+
+function purchaseSheet(prefVid) {
+  if (!can('warehouse')) return fail('لا تملك صلاحية المخزن');
+  const s = store();
+  if (!s.products.some((p) => p.variants.length)) return fail('أضف منتجاً أولاً من قسم المنتجات');
+  const lines = [];
+  openSheet(`${sheetHead('استلام بضاعة')}
+    <form id="puForm" novalidate>
+      <div class="field"><label for="puSup">المورد</label><input class="input" id="puSup" list="supList" maxlength="80" placeholder="اسم المورد أو التاجر">
+        <datalist id="supList">${s.suppliers.map((x) => `<option value="${esc(x.name)}">`).join('')}</datalist></div>
+      <div class="field"><label for="puVar">الصنف</label><select class="input" id="puVar">${variantOptions(s, prefVid)}</select></div>
+      <div class="grid2">
+        <div class="field"><label for="puQty">الكمية</label><input class="input num" id="puQty" inputmode="numeric" value="1" style="text-align:right"></div>
+        <div class="field"><label for="puCost">تكلفة القطعة (د.ع)</label><input class="input num" id="puCost" inputmode="numeric" style="text-align:right"></div>
+      </div>
+      <button class="btn block" type="button" id="puAdd">+ أضف للفاتورة</button>
+      <div id="puLines" style="margin-top:8px"></div>
+      <div class="grid2" style="margin-top:10px">
+        <div class="field"><label for="puPaid">المدفوع الآن (د.ع)</label><input class="input num" id="puPaid" inputmode="numeric" style="text-align:right"></div>
+        <div class="field"><label for="puNote">ملاحظة</label><input class="input" id="puNote" maxlength="120" placeholder="رقم فاتورة المورد"></div>
+      </div>
+      <div class="tot grand"><span>إجمالي الفاتورة</span><span id="puTotal">${money(0)}</span></div>
+      <div class="tot"><span>يبقى ديناً للمورد</span><span id="puDebt">${money(0)}</span></div>
+      <div id="puErr" class="err" hidden></div>
+      <button class="btn primary block" type="submit" style="margin-top:10px">حفظ واستلام البضاعة</button>
+    </form>`,
+  (sh) => {
+    const n = (id) => Math.max(0, Math.round(Number(String(sh.querySelector(id).value).replace(/[^\d]/g, '')) || 0));
+    const total = () => lines.reduce((t, l) => t + l.qty * l.cost, 0);
+    let paidTouched = false;
+    const setCost = () => { const f = findVariant(s, sh.querySelector('#puVar').value); if (f) sh.querySelector('#puCost').value = f.v.cost || ''; };
+    setCost();
+    const draw = () => {
+      sh.querySelector('#puLines').innerHTML = lines.map((l, i) => { const f = findVariant(s, l.variantId); return `<div class="oline"><div class="grow">${esc(f.p.name)}<div class="sub">${esc(f.v.label)} · <span class="num">${l.qty}</span> × ${money(l.cost)}</div></div><b>${money(l.qty * l.cost)}</b><button class="icon-btn" type="button" data-rmline="${i}" aria-label="حذف" style="width:32px;height:32px">${icon('close')}</button></div>`; }).join('');
+      if (!paidTouched) sh.querySelector('#puPaid').value = total();
+      sh.querySelector('#puTotal').innerHTML = money(total());
+      sh.querySelector('#puDebt').innerHTML = money(Math.max(0, total() - n('#puPaid')));
+    };
+    draw();
+    sh.querySelector('#puVar').addEventListener('change', setCost);
+    sh.querySelector('#puPaid').addEventListener('input', () => { paidTouched = true; draw(); });
+    sh.querySelector('#puAdd').addEventListener('click', () => {
+      const vid = sh.querySelector('#puVar').value, qty = n('#puQty'), cost = n('#puCost');
+      const errEl = sh.querySelector('#puErr');
+      if (qty <= 0 || cost <= 0) { errEl.textContent = 'اكتب كمية وتكلفة أكبر من صفر'; errEl.hidden = false; return; }
+      errEl.hidden = true;
+      const ex = lines.find((l) => l.variantId === vid && l.cost === cost);
+      if (ex) ex.qty += qty; else lines.push({ variantId: vid, qty, cost });
+      sh.querySelector('#puQty').value = 1;
+      draw();
+    });
+    sh.querySelector('#puLines').addEventListener('click', (e) => { const b = e.target.closest('[data-rmline]'); if (b) { lines.splice(+b.dataset.rmline, 1); draw(); } });
+    sh.querySelector('#puForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const errEl = sh.querySelector('#puErr');
+      const supName = sh.querySelector('#puSup').value.trim();
+      const tot = total(), paid = n('#puPaid');
+      let err = '';
+      if (!supName) err = 'اكتب اسم المورد';
+      else if (!lines.length) err = 'أضف صنفاً واحداً على الأقل للفاتورة';
+      else if (paid > tot) err = 'المدفوع أكبر من إجمالي الفاتورة';
+      if (err) { errEl.textContent = err; errEl.hidden = false; return; }
+      let sup = s.suppliers.find((x) => x.name === supName);
+      if (!sup) { sup = { id: uid(), name: supName, phone: '' }; s.suppliers.push(sup); }
+      const by = ROLES[state.role].l, at = Date.now();
+      const pu = { id: uid(), supplierId: sup.id, at, lines: [], total: tot, paid, note: sh.querySelector('#puNote').value.trim() };
+      for (const l of lines) {
+        const { p, v } = findVariant(s, l.variantId);
+        // Weighted average cost keeps profit figures honest when buying prices change.
+        const before = Math.max(0, v.stock);
+        v.cost = before + l.qty > 0 ? Math.round((before * v.cost + l.qty * l.cost) / (before + l.qty)) : l.cost;
+        v.stock += l.qty;
+        pu.lines.push({ variantId: v.id, name: p.name, label: v.label, qty: l.qty, cost: l.cost });
+        s.movements.push({ id: uid(), kind: 'purchase', purchaseId: pu.id, variantId: v.id, qty: l.qty, value: l.qty * l.cost, reason: `استلام من ${sup.name}`, at, by });
+      }
+      s.purchases.push(pu);
+      save(); closeSheet(); toast(`استُلمت ${lines.reduce((t, l) => t + l.qty, 0)} قطعة من ${sup.name}`); render();
+    });
+  });
+}
+
+const ADJ = {
+  damage: { l: 'تالف', sign: -1 },
+  lost:   { l: 'مفقود', sign: -1 },
+  gift:   { l: 'هدية أو عينة', sign: -1 },
+  count:  { l: 'جرد (الكمية الفعلية)', sign: 0 },
+};
+function adjustSheet(prefVid) {
+  if (!can('warehouse')) return fail('لا تملك صلاحية المخزن');
+  const s = store();
+  if (!s.products.some((p) => p.variants.length)) return fail('أضف منتجاً أولاً من قسم المنتجات');
+  openSheet(`${sheetHead('تسوية المخزون')}
+    <form id="adjForm" novalidate>
+      <div class="field"><label for="adjVar">الصنف</label><select class="input" id="adjVar">${variantOptions(s, prefVid)}</select></div>
+      <div class="field"><label for="adjType">نوع التسوية</label><select class="input" id="adjType">${Object.keys(ADJ).map((k) => `<option value="${k}">${ADJ[k].l}</option>`).join('')}</select></div>
+      <div class="field"><label for="adjQty" id="adjQtyLbl">الكمية الناقصة</label><input class="input num" id="adjQty" inputmode="numeric" value="1" style="text-align:right"></div>
+      <div class="field"><label for="adjNote">السبب أو التفاصيل</label><input class="input" id="adjNote" maxlength="120"></div>
+      <p class="sub" id="adjInfo"></p>
+      <div id="adjErr" class="err" hidden></div>
+      <button class="btn primary block" type="submit">حفظ التسوية</button>
+    </form>`,
+  (sh) => {
+    const info = () => {
+      const f = findVariant(s, sh.querySelector('#adjVar').value);
+      const type = sh.querySelector('#adjType').value;
+      sh.querySelector('#adjQtyLbl').textContent = type === 'count' ? 'الكمية الموجودة فعلاً بعد العدّ' : 'الكمية الناقصة';
+      sh.querySelector('#adjInfo').textContent = f ? `الموجود في النظام: ${f.v.stock}. ${type === 'count' ? 'الفرق يُسجّل ربحاً أو خسارة بسعر التكلفة.' : 'تُحسب خسارة بسعر التكلفة في الأرباح والخسائر.'}` : '';
+    };
+    info();
+    sh.querySelector('#adjVar').addEventListener('change', info);
+    sh.querySelector('#adjType').addEventListener('change', () => { const f = findVariant(s, sh.querySelector('#adjVar').value); if (sh.querySelector('#adjType').value === 'count' && f) sh.querySelector('#adjQty').value = f.v.stock; info(); });
+    sh.querySelector('#adjForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const errEl = sh.querySelector('#adjErr');
+      const f = findVariant(s, sh.querySelector('#adjVar').value);
+      const type = sh.querySelector('#adjType').value;
+      const raw = String(sh.querySelector('#adjQty').value).trim();
+      const qty = Math.round(Number(raw.replace(/[^\d]/g, '')));
+      const note = sh.querySelector('#adjNote').value.trim();
+      let diff;
+      if (!raw || !Number.isFinite(qty)) { errEl.textContent = 'اكتب الكمية'; errEl.hidden = false; return; }
+      if (type === 'count') diff = qty - f.v.stock;
+      else {
+        if (qty <= 0) { errEl.textContent = 'اكتب كمية أكبر من صفر'; errEl.hidden = false; return; }
+        if (qty > f.v.stock) { errEl.textContent = `لا يمكن إنقاص أكثر من الموجود (${f.v.stock})`; errEl.hidden = false; return; }
+        diff = -qty;
+      }
+      if (diff === 0) { errEl.textContent = 'الكمية مطابقة، لا يوجد فرق لتسجيله'; errEl.hidden = false; return; }
+      f.v.stock += diff;
+      s.movements.push({ id: uid(), kind: type === 'count' ? 'adjust' : 'loss', variantId: f.v.id, qty: diff, value: diff * f.v.cost,
+        reason: `${ADJ[type].l}${note ? ': ' + note : ''}`, at: Date.now(), by: ROLES[state.role].l });
+      save(); closeSheet(); toast(`سُجّلت التسوية (${diff > 0 ? '+' : ''}${diff})`); render();
+    });
+  });
+}
+
+function purchaseDetail(id) {
+  const s = store();
+  const pu = s.purchases.find((x) => x.id === id);
+  if (!pu) return;
+  const sup = s.suppliers.find((x) => x.id === pu.supplierId);
+  openSheet(`${sheetHead(`فاتورة شراء — ${esc(sup ? sup.name : '')}`)}
+    <p class="sub" style="margin-top:-6px">${dateText(pu.at)}${pu.note ? ' · ' + esc(pu.note) : ''}</p>
+    <table class="lines">${pu.lines.map((l) => `<tr><td>${esc(l.name)}<div class="sub">${esc(l.label)} · <span class="num">${l.qty}</span> × ${money(l.cost)}</div></td><td>${money(l.qty * l.cost)}</td></tr>`).join('')}</table>
+    <div class="tot grand"><span>الإجمالي</span><span>${money(pu.total)}</span></div>
+    <div class="tot"><span>المدفوع عند الاستلام</span><span>${money(pu.paid)}</span></div>
+    ${sup ? `<button class="btn block" type="button" data-supplier="${sup.id}" style="margin-top:12px">حساب المورد</button>` : ''}`);
+}
+
+function supplierSheet(id) {
+  const s = store();
+  const sup = s.suppliers.find((x) => x.id === id);
+  if (!sup) return;
+  const b = supplierBalance(s, id);
+  const pays = s.supplierPayments.filter((p) => p.supplierId === id).sort((x, y) => y.at - x.at);
+  const purs = s.purchases.filter((p) => p.supplierId === id).sort((x, y) => y.at - x.at);
+  openSheet(`${sheetHead(esc(sup.name))}
+    <dl class="money" style="margin-top:0">
+      <div><dt>كل المشتريات</dt><dd>${money(b.bought)}</dd></div>
+      <div><dt>المدفوع</dt><dd>${money(b.paid)}</dd></div>
+      <div class="${b.owed > 0 ? 'neg' : ''}"><dt>الباقي عليك</dt><dd>${money(Math.max(0, b.owed))}</dd></div>
+      <div><dt>عدد الفواتير</dt><dd><span class="num">${purs.length}</span></dd></div>
+    </dl>
+    <form id="spForm" novalidate style="margin-top:12px">
+      <div class="field"><label for="spPhone">هاتف المورد</label><input class="input num" id="spPhone" inputmode="tel" value="${esc(sup.phone || '')}" style="text-align:right"></div>
+      ${b.owed > 0 ? `<div class="grid2"><div class="field"><label for="spAmt">تسديد مبلغ (د.ع)</label><input class="input num" id="spAmt" inputmode="numeric" style="text-align:right" placeholder="${b.owed}"></div>
+      <div class="field"><label for="spNote">ملاحظة</label><input class="input" id="spNote" maxlength="80"></div></div>` : ''}
+      <div id="spErr" class="err" hidden></div>
+      <button class="btn primary block" type="submit">${b.owed > 0 ? 'حفظ وتسجيل الدفعة' : 'حفظ'}</button>
+    </form>
+    <h2>الفواتير والدفعات</h2>
+    <div class="list">${[...purs.map((p) => ({ at: p.at, html: `<button class="item" type="button" data-purchase="${p.id}"><div class="grow"><div>فاتورة شراء</div><div class="meta">${dateText(p.at)}</div></div><div>${money(p.total)}</div></button>` })),
+      ...pays.map((p) => ({ at: p.at, html: `<div class="item"><div class="grow"><div>دفعة${p.note ? ': ' + esc(p.note) : ''}</div><div class="meta">${dateText(p.at)}</div></div><div style="color:var(--good)">${money(p.amount)}</div></div>` }))]
+      .sort((x, y) => y.at - x.at).map((x) => x.html).join('') || '<div class="empty">لا شيء بعد.</div>'}</div>`,
+  (sh) => {
+    sh.querySelector('#spForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const errEl = sh.querySelector('#spErr');
+      const phone = sh.querySelector('#spPhone').value.trim();
+      if (phone && !validPhone(phone)) { errEl.textContent = 'رقم الهاتف يجب أن يكون 11 رقماً ويبدأ بـ 07'; errEl.hidden = false; return; }
+      const amtEl = sh.querySelector('#spAmt');
+      const amt = amtEl ? Math.round(Number(amtEl.value.replace(/[^\d]/g, '')) || 0) : 0;
+      if (amt > b.owed) { errEl.textContent = `المبلغ أكبر من الدين (${moneyText(b.owed)})`; errEl.hidden = false; return; }
+      sup.phone = phone ? normPhone(phone) : '';
+      if (amt > 0) s.supplierPayments.push({ id: uid(), supplierId: sup.id, amount: amt, at: Date.now(), note: sh.querySelector('#spNote').value.trim() });
+      save(); toast(amt > 0 ? `سُجّلت دفعة ${moneyText(amt)}` : 'حُفظ'); render(); supplierSheet(id);
+    });
+  });
+}
+
+function newSupplierSheet() {
+  const s = store();
+  openSheet(`${sheetHead('مورد جديد')}
+    <form id="nsForm" novalidate>
+      <div class="field"><label for="nsName">اسم المورد</label><input class="input" id="nsName" maxlength="80"></div>
+      <div class="field"><label for="nsPhone">الهاتف (اختياري)</label><input class="input num" id="nsPhone" inputmode="tel" style="text-align:right"></div>
+      <div id="nsErr" class="err" hidden></div>
+      <button class="btn primary block" type="submit">إضافة المورد</button>
+    </form>`,
+  (sh) => sh.querySelector('#nsForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const name = sh.querySelector('#nsName').value.trim(), phone = sh.querySelector('#nsPhone').value.trim();
+    const errEl = sh.querySelector('#nsErr');
+    let err = '';
+    if (!name) err = 'اكتب اسم المورد';
+    else if (s.suppliers.some((x) => x.name === name)) err = 'يوجد مورد بنفس الاسم';
+    else if (phone && !validPhone(phone)) err = 'رقم الهاتف يجب أن يكون 11 رقماً ويبدأ بـ 07';
+    if (err) { errEl.textContent = err; errEl.hidden = false; return; }
+    s.suppliers.push({ id: uid(), name, phone: phone ? normPhone(phone) : '' });
+    save(); closeSheet(); toast('أُضيف المورد'); render();
+  }));
+}
+
+function settleSheet() {
+  const s = store();
+  const list = s.orders.filter((o) => o.status === 'delivered' && !o.settledAt).sort((a, b) => statusAt(a, 'delivered') - statusAt(b, 'delivered'));
+  if (!list.length) return;
+  openSheet(`${sheetHead('استلام مبلغ من شركة التوصيل')}
+    <p class="sub" style="margin-top:-6px">أشّر الطلبات التي استلمت مبلغها. المبلغ = قيمة المنتجات بعد الخصم (أجرة التوصيل تبقى عند الشركة).</p>
+    <label class="check-row"><input type="checkbox" id="stAll" checked> <b>تحديد الكل</b></label>
+    <div id="stList">${list.map((o) => `<label class="check-row"><input type="checkbox" data-st="${o.id}" checked>
+      <span class="grow"><span class="num">#${o.no}</span> ${esc(o.customer.name)} <span class="sub">· ${dateText(statusAt(o, 'delivered'))}</span></span><span>${money(settleValue(o))}</span></label>`).join('')}</div>
+    <div class="tot grand"><span>المبلغ المستلم</span><span id="stTotal"></span></div>
+    <button class="btn primary block" type="button" id="stSave" style="margin-top:12px">تسجيل الاستلام في الصندوق</button>`,
+  (sh) => {
+    const boxes = () => $$('[data-st]', sh);
+    const upd = () => {
+      const ids = new Set(boxes().filter((b) => b.checked).map((b) => b.dataset.st));
+      sh.querySelector('#stTotal').innerHTML = money(list.filter((o) => ids.has(o.id)).reduce((t, o) => t + settleValue(o), 0));
+      sh.querySelector('#stSave').disabled = ids.size === 0;
+    };
+    upd();
+    sh.querySelector('#stAll').addEventListener('change', (e) => { boxes().forEach((b) => { b.checked = e.target.checked; }); upd(); });
+    sh.querySelector('#stList').addEventListener('change', upd);
+    sh.querySelector('#stSave').addEventListener('click', () => {
+      const ids = new Set(boxes().filter((b) => b.checked).map((b) => b.dataset.st));
+      const now = Date.now();
+      let sum = 0;
+      for (const o of list) if (ids.has(o.id)) { o.settledAt = now; sum += settleValue(o); }
+      save(); closeSheet(); toast(`دخل الصندوق ${moneyText(sum)}`); render();
+    });
+  });
+}
+
+function cashOpeningSheet() {
+  const s = store();
+  openSheet(`${sheetHead('رصيد بداية الصندوق')}
+    <form id="coForm2" novalidate>
+      <div class="field"><label for="coAmt">المبلغ الذي بدأت به (د.ع)</label><input class="input num" id="coAmt" inputmode="numeric" value="${s.cashOpening}" style="text-align:right"></div>
+      <button class="btn primary block" type="submit">حفظ</button>
+    </form>`,
+  (sh) => sh.querySelector('#coForm2').addEventListener('submit', (e) => {
+    e.preventDefault();
+    s.cashOpening = Math.max(0, Math.round(Number(sh.querySelector('#coAmt').value.replace(/[^\d]/g, '')) || 0));
+    save(); closeSheet(); toast('حُفظ رصيد البداية'); render();
+  }));
+}
+
+function moreSheet() {
+  const items = NAV.filter((n) => n.sideOnly && can(n.id));
+  openSheet(`${sheetHead('المزيد')}<div class="list">${items.map((n) => `<button class="item" type="button" data-nav="${n.id}">${icon(n.id)}<div class="grow">${n.l}</div></button>`).join('')}</div>`);
+}
+
+function exportPL() {
+  const s = store();
+  const key = state.month && periodKeys().includes(state.month) ? state.month : periodKeys()[0];
+  const r = monthReport(s, key);
+  const rows = [['البند', 'المبلغ (د.ع)'], ['المبيعات', r.grossSales], ['الخصومات', -r.discounts], ['صافي المبيعات', r.revenue], ['تكلفة البضاعة المباعة', -r.cogs], ['مجمل الربح', r.gross]];
+  r.byCat.forEach(([c, v]) => rows.push([`مصروف: ${c}`, -v]));
+  rows.push(['تلف وفروقات المخزون', r.stockDiff], [r.net < 0 ? 'صافي الخسارة' : 'صافي الربح', r.net]);
+  downloadCSV(`ارباح-وخسائر-${s.slug}-${key}.csv`, rows);
+}
+function exportOrders() {
+  const s = store();
+  const key = state.month && periodKeys().includes(state.month) ? state.month : periodKeys()[0];
+  const rows = [['رقم الطلب', 'التاريخ', 'الزبون', 'الهاتف', 'المحافظة', 'الحالة', 'المجموع', 'الخصم', 'التوصيل', 'المطلوب من الزبون', 'التكلفة', 'تم التحصيل']];
+  s.orders.filter((o) => inPeriod(o.createdAt, key)).sort((a, b) => a.createdAt - b.createdAt).forEach((o) => rows.push([
+    o.no, dateText(o.createdAt), o.customer.name, normPhone(o.customer.phone), o.customer.city, STATUS[o.status].l,
+    orderSubtotal(o), o.discount || 0, o.delivery || 0, orderTotal(o), orderCost(o), o.settledAt ? 'نعم' : 'لا']));
+  downloadCSV(`طلبات-${s.slug}-${key}.csv`, rows);
+}
+
+function viewSettings() {
+  const s = store();
+  return `
+  <h1>إعدادات المتجر</h1>
+  ${linkCard(s)}
+  <div class="panel row" style="margin-bottom:14px">
+    <div class="store-mark" style="width:64px;height:64px;border-radius:16px;font-size:26px">${s.logo ? `<img data-img="${s.logo}" alt="الشعار">` : esc(s.name.trim().charAt(0))}</div>
+    <div class="grow"><div>شعار المتجر</div><div class="sub">يظهر في أعلى لوحة التحكم وفي صفحة متجرك</div></div>
+    <div class="row" style="flex-direction:column;align-items:stretch;gap:6px">
+      <label class="btn upload">${icon('camera')} ${s.logo ? 'تغيير' : 'رفع شعار'}<input type="file" id="logoFile" accept="image/*" aria-label="رفع شعار المتجر"></label>
+      ${s.logo ? '<button class="btn danger" type="button" data-act="remove-logo">إزالة</button>' : ''}
+    </div>
+  </div>
+  <form class="panel" id="settingsForm" novalidate>
+    <div class="field"><label for="setName">اسم المتجر</label><input class="input" id="setName" value="${esc(s.name)}" maxlength="80" required></div>
+    <div class="field"><label for="setTag">وصف قصير يظهر للزبائن</label><input class="input" id="setTag" value="${esc(s.tagline || '')}" maxlength="120"></div>
+    <div class="grid2">
+      <div class="field"><label for="setPhone">هاتف المتجر</label><input class="input num" id="setPhone" inputmode="tel" value="${esc(s.phone || '')}" style="text-align:right"></div>
+      <div class="field"><label for="setColor">لون المتجر</label><input class="input" id="setColor" type="color" value="${esc(s.color)}" style="padding:4px"></div>
+    </div>
+    <div class="field"><label for="setSlug">اسم الرابط (حروف إنجليزية صغيرة وأرقام وشرطة)</label>
+      <div class="row" dir="ltr"><span class="sub" style="white-space:nowrap">#/s/</span><input class="input" id="setSlug" maxlength="40" value="${esc(s.slug)}" dir="ltr" autocapitalize="off" spellcheck="false"></div>
+      <small class="sub">إذا غيّرته، الرابط القديم يتوقف عن العمل.</small></div>
+    <div id="setErr" class="err" hidden></div>
+    <button class="btn primary block" type="submit">حفظ التغييرات</button>
+  </form>
+
+  <h2>الاشتراك</h2>
+  <div class="panel">
+    <div>الخطة الحالية: ${planBadge(s)}${s.welcome && planOf(s) === 'pro' ? ' <span class="sub">(هدية الترحيب)</span>' : ''}</div>
+    <div class="sub" style="margin:4px 0 10px">${s.planEnds && planOf(s) !== 'free'
+      ? (planOf(s) === 'expired' ? `انتهى الاشتراك في ${dateText(s.planEnds)}.` : `ينتهي في ${dateText(s.planEnds)} (باقي <span class="num">${daysLeft(s)}</span> يوماً).`)
+      : 'خطة مجانية دائمة.'} للتجديد أو الترقية راسل إدارة المنصة على الرقم <b class="num">${ADMIN_PHONE}</b>.</div>
+    <div class="row" style="flex-wrap:wrap">${renewLinks(s)}</div>
+  </div>
+
+  <h2>الموظفون والصلاحيات</h2>
+  <div class="panel">
+    <p style="margin-top:0">جرّب تغيير الدور من أعلى الصفحة لترى ما يراه كل موظف. موظف الطلبات لا يرى سعر التكلفة ولا الأرباح.</p>
+    <p class="sub" style="margin-bottom:0">في النظام الحقيقي تُفرض هذه الصلاحيات في الخادم وقاعدة البيانات، وليس بإخفاء الأزرار فقط.</p>
+  </div>
+
+  <h2>الحساب</h2>
+  <div class="panel spread"><div><div>${esc(currentUser().name)}</div><div class="sub" dir="ltr" style="text-align:right">${esc(currentUser().email)}</div></div>
+    <button class="btn danger" type="button" data-act="logout">تسجيل الخروج</button></div>`;
+}
+
+/* ---------------- sheets ---------------- */
+function orderSheet(id) {
+  const s = store();
+  const o = s.orders.find((x) => x.id === id);
+  if (!o) return;
+  const sub = orderSubtotal(o);
+  const nexts = can('orders.write') ? NEXT[o.status] : [];
+  openSheet(`${sheetHead(`طلب <span class="num">#${o.no}</span> ${badge(o.status)}`)}
+    <div class="cust">
+      <div class="spread"><b>${esc(o.customer.name)}</b><a class="btn" href="tel:${esc(normPhone(o.customer.phone))}" style="min-height:34px;padding:4px 12px">${icon('phone')} اتصال</a></div>
+      <div class="num" style="margin-top:4px">${esc(o.customer.phone)}</div>
+      <div class="sub">${esc(o.customer.city)} — ${esc(o.customer.address)}</div>
+      ${o.note ? `<div class="sub">ملاحظة: ${esc(o.note)}</div>` : ''}
+    </div>
+    <table class="lines">${o.items.map((it) => `<tr><td>${esc(it.name)}<div class="sub">${esc(it.label)} × <span class="num">${it.qty}</span></div></td><td>${money(it.price * it.qty)}</td></tr>`).join('')}</table>
+    <div style="margin-top:8px">
+      <div class="tot"><span>المجموع</span><span>${money(sub)}</span></div>
+      ${o.discount ? `<div class="tot"><span>خصم</span><span>− ${money(o.discount)}</span></div>` : ''}
+      <div class="tot"><span>أجرة التوصيل</span><span>${money(o.delivery)}</span></div>
+      <div class="tot grand"><span>المبلغ المطلوب من الزبون</span><span>${money(orderTotal(o))}</span></div>
+      ${can('cost') ? `<div class="tot"><span>ربح الطلب (قبل المصروفات)</span><span>${money(Math.max(0, sub - o.discount) - orderCost(o))}</span></div>` : ''}
+    </div>
+    ${nexts.length ? `<div class="actions">${nexts.map((t) => `<button class="btn ${t === 'canceled' || t === 'returned' ? 'danger' : 'primary'}" type="button" data-to="${t}">${ACTION_LABEL[t]}</button>`).join('')}</div>` : ''}
+    <div class="actions">
+      <button class="btn" type="button" data-act="copy-order">${icon('copy')} نسخ للواتساب</button>
+      <button class="btn" type="button" data-act="print-order">${icon('print')} طباعة الفاتورة</button>
+    </div>
+    <h2 style="margin-top:20px">سجل الطلب</h2>
+    <ol class="timeline">${o.history.slice().reverse().map((h) => `<li style="--c:${STATUS[h.to].c}">${STATUS[h.to].l}<small>${dateText(h.at)} ${new Date(h.at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })} · ${esc(h.by || '')}</small></li>`).join('')}</ol>
+    <p class="sub">المصدر: ${o.source === 'storefront' ? 'واجهة المتجر' : 'إدخال يدوي'}</p>`,
+  (sh) => {
+    $$('[data-to]', sh).forEach((b) => b.addEventListener('click', async () => {
+      const to = b.dataset.to;
+      if (to === 'canceled' || to === 'returned') {
+        const ok = await confirmSheet(ACTION_LABEL[to], STOCK_OUT.has(o.status) ? 'ستعود الكميات إلى المخزون ويُسجَّل ذلك في حركات المخزون.' : 'لن يمكن التراجع عن هذه الخطوة.', ACTION_LABEL[to], true);
+        if (!ok) { orderSheet(id); return; }
+      }
+      if (changeStatus(o, to)) {
+        toast(`الطلب #${o.no}: ${STATUS[to].l}`);
+        render();
+        orderSheet(id);
+      }
+    }));
+    sh.querySelector('[data-act="copy-order"]').addEventListener('click', async () => {
+      const txt = [`طلب #${o.no} — ${s.name}`, `${o.customer.name} | ${normPhone(o.customer.phone)}`, `${o.customer.city} — ${o.customer.address}`, '',
+        ...o.items.map((it) => `• ${it.name} (${it.label}) × ${it.qty} = ${moneyText(it.price * it.qty)}`), '',
+        o.discount ? `خصم: ${moneyText(o.discount)}` : null, `التوصيل: ${moneyText(o.delivery)}`, `المطلوب: ${moneyText(orderTotal(o))}`].filter((x) => x !== null).join('\n');
+      toast((await copyText(txt)) ? 'نُسخت تفاصيل الطلب' : 'تعذّر النسخ، انسخ يدوياً', false);
+    });
+    sh.querySelector('[data-act="print-order"]').addEventListener('click', () => printOrder(o));
+  });
+}
+
+function printOrder(o) {
+  const s = store();
+  $('#print').innerHTML = `<h2 style="margin:0">${esc(s.name)}</h2><p>${esc(s.phone || '')}</p>
+    <p><b>فاتورة طلب #${o.no}</b> — ${dateText(o.createdAt)}</p>
+    <p>${esc(o.customer.name)} — ${esc(normPhone(o.customer.phone))}<br>${esc(o.customer.city)} — ${esc(o.customer.address)}</p>
+    <table><tr><th>المنتج</th><th>الكمية</th><th>السعر</th><th>المجموع</th></tr>
+    ${o.items.map((it) => `<tr><td>${esc(it.name)} (${esc(it.label)})</td><td>${it.qty}</td><td>${moneyText(it.price)}</td><td>${moneyText(it.price * it.qty)}</td></tr>`).join('')}</table>
+    <p>المجموع: ${moneyText(orderSubtotal(o))}${o.discount ? `<br>خصم: ${moneyText(o.discount)}` : ''}<br>التوصيل: ${moneyText(o.delivery)}<br><b>المطلوب: ${moneyText(orderTotal(o))}</b></p>`;
+  window.print();
+}
+
+function newOrderSheet(prefill) {
+  if (!can('orders.write')) return fail('لا تملك صلاحية إضافة طلبات');
+  const s = store();
+  const draft = { lines: [], discount: 0, delivery: 5000 };
+  const variants = s.products.filter((p) => p.active).flatMap((p) => p.variants.map((v) => ({ p, v })));
+  openSheet(`${sheetHead('طلب جديد')}
+    <form id="orderForm" novalidate>
+      <div class="field"><label for="oPhone">هاتف الزبون</label><input class="input num" id="oPhone" inputmode="tel" placeholder="07XXXXXXXXX" style="text-align:right" value="${esc(prefill ? prefill.phone : '')}"></div>
+      <div class="field"><label for="oName">اسم الزبون</label><input class="input" id="oName" maxlength="80" value="${esc(prefill ? prefill.name : '')}"></div>
+      <div class="grid2">
+        <div class="field"><label for="oCity">المحافظة</label><select class="input" id="oCity">${CITIES.map((c) => `<option ${prefill && prefill.city === c ? 'selected' : ''}>${c}</option>`).join('')}</select></div>
+        <div class="field"><label for="oDelivery">أجرة التوصيل</label><input class="input num" id="oDelivery" inputmode="numeric" value="5000" style="text-align:right"></div>
+      </div>
+      <div class="field"><label for="oAddr">العنوان</label><input class="input" id="oAddr" maxlength="200" placeholder="المنطقة، أقرب نقطة دالة" value="${esc(prefill ? prefill.address : '')}"></div>
+      <div class="field"><label for="oVariant">إضافة منتج</label>
+        <div class="row"><select class="input grow" id="oVariant">${variants.map(({ p, v }) => `<option value="${v.id}" ${v.stock <= 0 ? 'disabled' : ''}>${esc(p.name)} — ${esc(v.label)} (${v.stock > 0 ? `متوفر ${v.stock}` : 'نفد'})</option>`).join('')}</select>
+        <button class="btn" type="button" id="oAdd">إضافة</button></div></div>
+      <div id="oLines"></div>
+      <div class="grid2" style="margin-top:10px">
+        <div class="field"><label for="oDiscount">خصم</label><input class="input num" id="oDiscount" inputmode="numeric" value="0" style="text-align:right"></div>
+        <div class="field"><label for="oNote">ملاحظة</label><input class="input" id="oNote" maxlength="200"></div>
+      </div>
+      <div class="tot grand"><span>المبلغ المطلوب</span><span id="oTotal">${money(0)}</span></div>
+      <div id="oErr" class="err" hidden></div>
+      <button class="btn primary block" type="submit" style="margin-top:12px">حفظ الطلب</button>
+    </form>`,
+  (sh) => {
+    const num = (id) => Math.max(0, Math.round(Number(String(sh.querySelector(id).value).replace(/[^\d]/g, '')) || 0));
+    const draw = () => {
+      sh.querySelector('#oLines').innerHTML = draft.lines.map((l, i) => {
+        const f = findVariant(s, l.variantId);
+        return `<div class="oline"><div class="grow">${esc(f.p.name)}<div class="sub">${esc(f.v.label)} · ${money(f.v.price)}</div></div>
+          <div class="qty"><button type="button" data-dec="${i}" aria-label="إنقاص">−</button><span class="num">${l.qty}</span><button type="button" data-inc="${i}" aria-label="زيادة">+</button></div>
+          <button class="icon-btn" type="button" data-rm="${i}" aria-label="حذف" style="width:32px;height:32px">${icon('close')}</button></div>`;
+      }).join('') || '<p class="sub">لم تُضف منتجات بعد.</p>';
+      const sub = draft.lines.reduce((t, l) => t + findVariant(s, l.variantId).v.price * l.qty, 0);
+      sh.querySelector('#oTotal').innerHTML = money(Math.max(0, sub - num('#oDiscount')) + num('#oDelivery'));
+    };
+    draw();
+    sh.querySelector('#oAdd').addEventListener('click', () => {
+      const vid = sh.querySelector('#oVariant').value;
+      if (!vid) return;
+      const ex = draft.lines.find((l) => l.variantId === vid);
+      if (ex) ex.qty++; else draft.lines.push({ variantId: vid, qty: 1 });
+      draw();
+    });
+    sh.querySelector('#oLines').addEventListener('click', (e) => {
+      const t = e.target.closest('button');
+      if (!t) return;
+      if (t.dataset.inc != null) draft.lines[+t.dataset.inc].qty++;
+      if (t.dataset.dec != null) { const l = draft.lines[+t.dataset.dec]; l.qty = Math.max(1, l.qty - 1); }
+      if (t.dataset.rm != null) draft.lines.splice(+t.dataset.rm, 1);
+      draw();
+    });
+    ['#oDiscount', '#oDelivery'].forEach((id) => sh.querySelector(id).addEventListener('input', draw));
+    sh.querySelector('#oCity').addEventListener('change', (e) => { sh.querySelector('#oDelivery').value = e.target.value === 'بغداد' ? 5000 : 6000; draw(); });
+    sh.querySelector('#oPhone').addEventListener('change', (e) => {
+      const c = customersOf(s).find((x) => x.phone === normPhone(e.target.value));
+      if (!c) return;
+      const n = sh.querySelector('#oName'), a = sh.querySelector('#oAddr');
+      if (!n.value) n.value = c.name;
+      if (!a.value) a.value = c.address;
+      sh.querySelector('#oCity').value = c.city;
+      toast(`زبون سابق: ${c.orders.length} طلب`);
+    });
+    sh.querySelector('#orderForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const errEl = sh.querySelector('#oErr');
+      const phone = sh.querySelector('#oPhone').value, name = sh.querySelector('#oName').value.trim();
+      const address = sh.querySelector('#oAddr').value.trim();
+      let err = '';
+      if (!validPhone(phone)) err = 'رقم الهاتف يجب أن يكون 11 رقماً ويبدأ بـ 07';
+      else if (!name) err = 'اكتب اسم الزبون';
+      else if (!address) err = 'اكتب العنوان';
+      else if (!draft.lines.length) err = 'أضف منتجاً واحداً على الأقل';
+      const sub = draft.lines.reduce((t, l) => t + findVariant(s, l.variantId).v.price * l.qty, 0);
+      if (!err && num('#oDiscount') > sub) err = 'الخصم أكبر من مجموع المنتجات';
+      if (err) { errEl.textContent = err; errEl.hidden = false; return; }
+      const items = draft.lines.map((l) => { const { p, v } = findVariant(s, l.variantId); return { productId: p.id, variantId: v.id, name: p.name, label: v.label, price: v.price, cost: v.cost, qty: l.qty }; });
+      const o = createOrder(s, { customer: { name, phone: normPhone(phone), city: sh.querySelector('#oCity').value, address }, items, discount: num('#oDiscount'), delivery: num('#oDelivery'), note: sh.querySelector('#oNote').value.trim() }, 'manual', ROLES[state.role].l);
+      closeSheet();
+      toast(`سُجّل الطلب #${o.no}`);
+      render();
+    });
+  });
+}
+
+function productSheet(id) {
+  const s = store();
+  const existing = id ? s.products.find((p) => p.id === id) : null;
+  const edit = can('products.write');
+  const showCost = can('cost');
+  const p = existing ? JSON.parse(JSON.stringify(existing)) : { id: null, images: [], name: '', category: '', desc: '', active: true, low: 3, color: TILE_COLORS[s.products.length % TILE_COLORS.length], variants: [{ id: uid(), label: '', price: 0, cost: 0, stock: 0, fresh: true }] };
+  const moves = existing ? s.movements.filter((m) => p.variants.some((v) => v.id === m.variantId)).sort((a, b) => b.at - a.at).slice(0, 12) : [];
+  const vLabel = (vid) => { const v = p.variants.find((x) => x.id === vid); return v ? v.label : ''; };
+  const dis = edit ? '' : 'disabled';
+  openSheet(`${sheetHead(existing ? esc(existing.name) : 'منتج جديد')}
+    <form id="pForm" novalidate>
+      <div class="field"><label>صور المنتج <span class="sub">حتى ${IMG_MAX} صور، الأولى هي الغلاف. تُضغط تلقائياً إلى أقل من 200 KB</span></label>
+        <div class="pimgs" id="pImgs"></div>
+        ${edit ? `<label class="btn upload" id="pUpBtn" style="align-self:flex-start">${icon('camera')} إضافة صور<input type="file" id="pFile" accept="image/*" multiple aria-label="إضافة صور المنتج"></label>` : ''}
+      </div>
+      <div class="field"><label for="pName">اسم المنتج</label><input class="input" id="pName" maxlength="80" value="${esc(p.name)}" ${dis}></div>
+      <div class="grid2">
+        <div class="field"><label for="pCat">التصنيف</label><input class="input" id="pCat" maxlength="40" list="cats" value="${esc(p.category)}" ${dis}>
+          <datalist id="cats">${Array.from(new Set(s.products.map((x) => x.category))).map((c) => `<option value="${esc(c)}">`).join('')}</datalist></div>
+        <div class="field"><label for="pLow">نبّهني عندما يصل المخزون إلى</label><input class="input num" id="pLow" inputmode="numeric" value="${p.low}" style="text-align:right" ${dis}></div>
+      </div>
+      <div class="field"><label for="pDesc">الوصف</label><textarea class="input" id="pDesc" maxlength="500" ${dis}>${esc(p.desc)}</textarea></div>
+      <div class="field"><label>الخيارات (لون، مقاس، حجم)</label>
+        <div class="vrow head"><span>الخيار</span><span>سعر البيع</span><span>${showCost ? 'التكلفة' : ''}</span><span>المخزون</span><span></span></div>
+        <div id="pVars"></div>
+        ${edit ? '<button class="btn" type="button" id="pAddVar" style="margin-top:4px">+ خيار</button>' : ''}
+      </div>
+      <div class="field" id="pReasonWrap" hidden><label for="pReason">سبب تعديل المخزون</label><input class="input" id="pReason" maxlength="120" placeholder="مثال: جرد، تالف، استلام بضاعة"></div>
+      <label class="row" style="margin:6px 0 12px"><input type="checkbox" id="pActive" ${p.active ? 'checked' : ''} ${dis}> يظهر للزبائن في واجهة المتجر</label>
+      <div id="pErr" class="err" hidden></div>
+      ${edit ? `<button class="btn primary block" type="submit">${existing ? 'حفظ التغييرات' : 'إضافة المنتج'}</button>` : '<p class="sub">عرض فقط: دورك لا يسمح بتعديل المنتجات.</p>'}
+    </form>
+    ${moves.length ? `<h2>آخر حركات المخزون</h2><div class="list">${moves.map((m) => `<div class="item"><div class="grow"><div>${esc(m.reason)}</div><div class="meta">${esc(vLabel(m.variantId))} · ${dateText(m.at)} · ${esc(m.by)}</div></div><b class="num" style="color:${m.qty < 0 ? 'var(--bad)' : 'var(--good)'}">${m.qty > 0 ? '+' : ''}${m.qty}</b></div>`).join('')}</div>` : ''}`,
+  (sh) => {
+    const orig = new Map((existing ? existing.variants : []).map((v) => [v.id, v.stock]));
+    const draw = () => {
+      sh.querySelector('#pVars').innerHTML = p.variants.map((v, i) => `<div class="vrow">
+        <input class="input" data-k="label" data-i="${i}" value="${esc(v.label)}" placeholder="مثال: أسود / L" aria-label="اسم الخيار" ${dis}>
+        <input class="input num" data-k="price" data-i="${i}" inputmode="numeric" value="${v.price}" aria-label="سعر البيع" style="text-align:right" ${dis}>
+        ${showCost ? `<input class="input num" data-k="cost" data-i="${i}" inputmode="numeric" value="${v.cost}" aria-label="التكلفة" style="text-align:right" ${dis}>` : '<span></span>'}
+        <input class="input num" data-k="stock" data-i="${i}" inputmode="numeric" value="${v.stock}" aria-label="المخزون" style="text-align:right" ${dis}>
+        ${edit && v.fresh ? `<button class="x" type="button" data-rmv="${i}" aria-label="حذف الخيار">×</button>` : '<span></span>'}
+      </div>`).join('');
+    };
+    if (!Array.isArray(p.images)) p.images = [];
+    const drawImgs = () => {
+      sh.querySelector('#pImgs').innerHTML = p.images.length ? p.images.map((id, i) => `<div class="pimg ${i === 0 ? 'first' : ''}"><img data-img="${id}" alt="صورة ${i + 1}">
+        ${edit ? `<button class="x" type="button" data-rmimg="${i}" aria-label="حذف الصورة">×</button>${i > 0 ? `<button class="cover" type="button" data-cover="${i}">اجعلها الغلاف</button>` : ''}` : ''}</div>`).join('')
+        : '<p class="sub" style="grid-column:1/-1;margin:0">لا توجد صور بعد.</p>';
+      const up = sh.querySelector('#pUpBtn');
+      if (up) up.hidden = p.images.length >= IMG_MAX;
+    };
+    drawImgs();
+    sh.querySelector('#pImgs').addEventListener('click', (e) => {
+      const b = e.target.closest('button');
+      if (!b) return;
+      if (b.dataset.rmimg != null) p.images.splice(+b.dataset.rmimg, 1);
+      if (b.dataset.cover != null) { const [im] = p.images.splice(+b.dataset.cover, 1); p.images.unshift(im); }
+      drawImgs();
+    });
+    const pf = sh.querySelector('#pFile');
+    if (pf) pf.addEventListener('change', async () => {
+      const room = IMG_MAX - p.images.length;
+      if (room <= 0) return;
+      toast('جارِ ضغط الصور ورفعها…');
+      const { ids, skipped, sizes } = await addImages(pf.files, room, 1200);
+      pf.value = '';
+      p.images.push(...ids);
+      drawImgs();
+      const kb = sizes.length ? Math.round(sizes.reduce((x, y) => x + y, 0) / sizes.length / 1024) : 0;
+      toast(skipped ? `أُضيفت ${ids.length} صورة، وتُركت ${skipped} (ليست صورة أو تعذّر رفعها)` : `أُضيفت ${ids.length} صورة · حجم الصورة نحو ${kb} KB`, !!skipped && !ids.length);
+    });
+    const stockChanged = () => p.variants.some((v) => orig.has(v.id) && orig.get(v.id) !== v.stock);
+    draw();
+    sh.querySelector('#pVars').addEventListener('input', (e) => {
+      const t = e.target;
+      if (t.dataset.i == null) return;
+      const v = p.variants[+t.dataset.i];
+      v[t.dataset.k] = t.dataset.k === 'label' ? t.value : Math.max(0, Math.round(Number(t.value.replace(/[^\d]/g, '')) || 0));
+      sh.querySelector('#pReasonWrap').hidden = !stockChanged();
+    });
+    sh.querySelector('#pVars').addEventListener('click', (e) => {
+      const t = e.target.closest('[data-rmv]');
+      if (!t || p.variants.length <= 1) return;
+      p.variants.splice(+t.dataset.rmv, 1);
+      draw();
+    });
+    const add = sh.querySelector('#pAddVar');
+    if (add) add.addEventListener('click', () => { p.variants.push({ id: uid(), label: '', price: p.variants[0] ? p.variants[0].price : 0, cost: p.variants[0] ? p.variants[0].cost : 0, stock: 0, fresh: true }); draw(); });
+    sh.querySelector('#pForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      if (!edit) return;
+      const errEl = sh.querySelector('#pErr');
+      const name = sh.querySelector('#pName').value.trim();
+      const reason = sh.querySelector('#pReason').value.trim();
+      let err = '';
+      if (!name) err = 'اكتب اسم المنتج';
+      else if (p.variants.some((v) => !v.label.trim())) err = 'اكتب اسماً لكل خيار';
+      else if (new Set(p.variants.map((v) => v.label.trim())).size !== p.variants.length) err = 'يوجد خياران بنفس الاسم';
+      else if (p.variants.some((v) => v.price <= 0)) err = 'سعر البيع يجب أن يكون أكبر من صفر';
+      else if (showCost && p.variants.some((v) => v.cost > v.price)) err = 'التكلفة أكبر من سعر البيع في أحد الخيارات';
+      else if (stockChanged() && !reason) err = 'اكتب سبب تعديل المخزون';
+      if (err) { errEl.textContent = err; errEl.hidden = false; return; }
+      const by = ROLES[state.role].l;
+      const now = Date.now();
+      const clean = { ...p, name, category: sh.querySelector('#pCat').value.trim() || 'عام', desc: sh.querySelector('#pDesc').value.trim(), low: Math.max(0, Math.round(Number(sh.querySelector('#pLow').value) || 0)), active: sh.querySelector('#pActive').checked };
+      clean.variants = p.variants.map((v) => {
+        const before = orig.has(v.id) ? orig.get(v.id) : 0;
+        const diff = v.stock - before;
+        if (diff !== 0) s.movements.push({ id: uid(), kind: orig.has(v.id) ? 'adjust' : 'opening', variantId: v.id, qty: diff, value: diff * v.cost, reason: orig.has(v.id) ? `تعديل يدوي: ${reason}` : 'رصيد افتتاحي', at: now, by });
+        return { id: v.id, label: v.label.trim(), price: v.price, cost: showCost ? v.cost : (existing && existing.variants.find((x) => x.id === v.id) || { cost: 0 }).cost, stock: v.stock };
+      });
+      clean.images = p.images.slice();
+      const dropped = ((existing && existing.images) || []).filter((im) => !clean.images.includes(im));
+      if (dropped.length) imgDel(dropped);
+      if (existing) { Object.assign(existing, clean); } else { clean.id = uid(); s.products.push(clean); }
+      save();
+      closeSheet();
+      toast(existing ? 'حُفظت التغييرات' : 'أُضيف المنتج');
+      render();
+    });
+  });
+}
+
+function customerSheet(phone) {
+  const s = store();
+  const c = customersOf(s).find((x) => x.phone === phone);
+  if (!c) return;
+  openSheet(`${sheetHead(esc(c.name))}
+    <div class="cust"><div class="num">${esc(c.phone)}</div><div class="sub">${esc(c.city)} — ${esc(c.address)}</div></div>
+    <dl class="money" style="margin-top:0">
+      <div><dt>عدد الطلبات</dt><dd><span class="num">${c.orders.length}</span></dd></div>
+      <div><dt>مشتريات مُسلَّمة</dt><dd>${money(c.spent)}</dd></div>
+      <div><dt>مرتجعة</dt><dd><span class="num">${c.orders.filter((o) => o.status === 'returned').length}</span></dd></div>
+      <div><dt>آخر طلب</dt><dd style="font-size:15px">${ago(c.last)}</dd></div>
+    </dl>
+    <div class="field" style="margin-top:14px"><label for="cNote">ملاحظات عن الزبون (تظهر لموظفي المتجر فقط)</label>
+      <textarea class="input" id="cNote" maxlength="500" ${can('orders.write') ? '' : 'disabled'}>${esc(s.notes[c.phone] || '')}</textarea></div>
+    ${can('orders.write') ? '<button class="btn" type="button" id="cSave">حفظ الملاحظة</button> <button class="btn primary" type="button" id="cOrder">طلب جديد لهذا الزبون</button>' : ''}
+    <h2>طلباته</h2>${orderList(c.orders.slice().sort((a, b) => b.createdAt - a.createdAt))}`,
+  (sh) => {
+    const sv = sh.querySelector('#cSave');
+    if (sv) sv.addEventListener('click', () => { s.notes[c.phone] = sh.querySelector('#cNote').value.trim(); save(); toast('حُفظت الملاحظة'); });
+    const no = sh.querySelector('#cOrder');
+    if (no) no.addEventListener('click', () => newOrderSheet({ phone: c.phone, name: c.name, city: c.city, address: c.address }));
+  });
+}
+
+function expenseSheet() {
+  if (!can('reports')) return;
+  const s = store();
+  openSheet(`${sheetHead('مصروف جديد')}
+    <form id="eForm" novalidate>
+      <div class="grid2">
+        <div class="field"><label for="eCat">النوع</label><input class="input" id="eCat" list="ecats" maxlength="40" placeholder="إعلانات">
+          <datalist id="ecats"><option value="إعلانات"><option value="إيجار"><option value="رواتب"><option value="تغليف"><option value="أخرى"></datalist></div>
+        <div class="field"><label for="eAmt">المبلغ (د.ع)</label><input class="input num" id="eAmt" inputmode="numeric" style="text-align:right"></div>
+      </div>
+      <div class="field"><label for="eNote">تفاصيل</label><input class="input" id="eNote" maxlength="120"></div>
+      <div id="eErr" class="err" hidden></div>
+      <button class="btn primary block" type="submit">إضافة المصروف</button>
+    </form>`,
+  (sh) => {
+    sh.querySelector('#eForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const cat = sh.querySelector('#eCat').value.trim();
+      const amt = Math.round(Number(sh.querySelector('#eAmt').value.replace(/[^\d]/g, '')) || 0);
+      const errEl = sh.querySelector('#eErr');
+      if (!cat || amt <= 0) { errEl.textContent = !cat ? 'اختر نوع المصروف' : 'اكتب مبلغاً أكبر من صفر'; errEl.hidden = false; return; }
+      s.expenses.push({ id: uid(), category: cat, amount: amt, at: Date.now(), note: sh.querySelector('#eNote').value.trim() });
+      state.month = monthKey(Date.now());
+      save(); closeSheet(); toast('أُضيف المصروف'); render();
+    });
+  });
+}
+
+/* ---------------- public catalog (what the shared link shows) ----------------
+   Only products, prices and descriptions. No stock numbers, costs, orders or customer data. */
+let sfStore = null;   // the store whose public page is open
+let sfPublic = false; // true when opened from a public /s/slug link (no login)
+let sfCat = 'all';
+function priceText(p) {
+  const ps = p.variants.map((v) => v.price);
+  const lo = Math.min(...ps), hi = Math.max(...ps);
+  return lo === hi ? money(lo) : `من ${money(lo)}`;
+}
+function openStorefront(target, isPublic) {
+  const s = target || store();
+  if (sfStore !== s) sfCat = 'all';
+  sfStore = s; sfPublic = !!isPublic;
+  if (s.color) document.documentElement.style.setProperty('--brand', s.color);
+  const sf = $('#storefront');
+  const suspended = statusOf(s) === 'suspended';
+  const all = suspended ? [] : s.products.filter((p) => p.active && p.variants.length);
+  const cats = Array.from(new Set(all.map((p) => p.category)));
+  const items = sfCat === 'all' ? all : all.filter((p) => p.category === sfCat);
+  sf.innerHTML = `
+    <div class="sf-url"><span class="num trunc" dir="ltr">${esc(publicLink(s))}</span>
+      ${sfPublic ? '<button type="button" data-act="close-storefront">دخول أصحاب المتاجر</button>'
+        : '<span class="row" style="gap:6px"><button type="button" data-act="copy-link">نسخ الرابط</button><button type="button" data-act="close-storefront">رجوع للوحة التحكم</button></span>'}</div>
+    <div class="sf-hero">${s.logo ? `<div class="sf-logo"><img data-img="${s.logo}" alt="شعار ${esc(s.name)}"></div>` : ''}<h2>${esc(s.name)}</h2><p>${suspended ? 'هذا المتجر متوقف مؤقتاً' : esc(s.tagline || 'أهلاً بك في متجرنا')}</p></div>
+    ${cats.length > 1 ? `<div class="chips" style="max-width:900px;margin:14px auto 0;padding:0 16px" role="group" aria-label="التصنيفات">
+      <button class="chip" type="button" data-sfcat="all" aria-pressed="${sfCat === 'all'}">الكل</button>
+      ${cats.map((c) => `<button class="chip" type="button" data-sfcat="${esc(c)}" aria-pressed="${sfCat === c}">${esc(c)}</button>`).join('')}</div>` : ''}
+    <div class="sf-grid">${items.length ? items.map((p) => `<button class="sf-card" type="button" data-sfp="${p.id}">${tile(p, 'pic')}
+        <div class="txt"><div class="trunc">${esc(p.name)}</div><div class="sub">${priceText(p)}</div></div></button>`).join('')
+      : '<p class="sub">لا توجد منتجات معروضة بعد.</p>'}</div>
+    <p class="sub" style="text-align:center;padding:10px 16px 40px">متجر على منصة <b style="color:var(--rw)">رواج</b></p>`;
+  sf.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function publicLink(s) { return `${SITE_URL || location.href.split('#')[0]}#/s/${s.slug}`; }
+function closeStorefront() {
+  $('#storefront').classList.remove('open');
+  document.body.style.overflow = '';
+  sfStore = null; sfPublic = false;
+  if (location.hash.startsWith('#/s/')) history.replaceState(null, '', location.href.split('#')[0]);
+  render();
+}
+// Public store page: anyone with the link sees it without logging in (public_store returns names, prices and images only).
+async function routePublic() {
+  const m = /^#\/s\/([a-z0-9-]+)$/.exec(location.hash);
+  if (!m) return false;
+  const { data, error } = await sb.rpc('public_store', { p_slug: m[1] });
+  if (error || !data) { toast(error ? 'تعذّر تحميل المتجر، تحقق من الإنترنت' : 'لا يوجد متجر بهذا الرابط', true); return false; }
+  const s = Object.assign({ status: 'active', color: TILE_COLORS[0] }, data);
+  s.products = (data.products || []).map((p) => ({ ...p, active: true, images: p.images || [], variants: (p.variants || []).map((v) => ({ ...v, price: Number(v.price) || 0 })) }));
+  openStorefront(s, true);
+  return true;
+}
+function sfProductSheet(id) {
+  const s = sfStore;
+  const p = s.products.find((x) => x.id === id);
+  if (!p) return;
+  const multi = p.variants.length > 1;
+  openSheet(`${sheetHead(esc(p.name))}
+    ${p.images && p.images.length ? `<div class="gal-main"><img id="galMain" data-img="${p.images[0]}" alt="${esc(p.name)}"></div>
+      ${p.images.length > 1 ? `<div class="gal-thumbs">${p.images.map((im, i) => `<button type="button" data-gal="${im}" aria-pressed="${i === 0}" aria-label="صورة ${i + 1}"><img data-img="${im}" alt=""></button>`).join('')}</div>` : ''}`
+      : `<div class="pic" style="background:${p.color};aspect-ratio:16/9;border-radius:14px;display:grid;place-items:center;color:#fff;font-size:48px;font-weight:600">${esc(p.name.charAt(0))}</div>`}
+    <div class="sf-price">${priceText(p)}</div>
+    ${p.desc ? `<p style="white-space:pre-line">${esc(p.desc)}</p>` : ''}
+    ${multi ? `<div class="sub">الخيارات والأسعار</div><table class="var-table">${p.variants.map((v) => `<tr><td>${esc(v.label)}</td><td>${money(v.price)}</td></tr>`).join('')}</table>` : ''}`,
+  (sh) => {
+    $$('[data-gal]', sh).forEach((b) => b.addEventListener('click', () => {
+      const main = sh.querySelector('#galMain');
+      main.removeAttribute('src');
+      main.dataset.img = b.dataset.gal;
+      hydrateImages(sh);
+      $$('[data-gal]', sh).forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+    }));
+  });
+}
+
+/* ---------------- events ---------------- */
+document.addEventListener('click', (e) => {
+  const t = e.target.closest('button, [data-act]');
+  if (!t) return;
+  if (t.dataset.astore) { adminStoreSheet(t.dataset.astore); return; }
+  if (t.dataset.af) { state.af = t.dataset.af; state.aLimit = 50; save(); renderAdmin(); return; }
+  if (t.dataset.tab) { authTab = t.dataset.tab; renderAuth(); window.scrollTo(0, 0); return; }
+  if (t.dataset.nav) { closeSheet(); go(t.dataset.nav); return; }
+  if (t.dataset.filter) {
+    state.orderFilter = t.dataset.filter; state.q = '';
+    if (state.view !== 'orders') { state.view = 'orders'; }
+    save(); render(); return;
+  }
+  if (t.dataset.order) { orderSheet(t.dataset.order); return; }
+  if (t.dataset.product && !t.closest('#storefront')) { productSheet(t.dataset.product); return; }
+  if (t.dataset.customer) { customerSheet(t.dataset.customer); return; }
+  if (t.dataset.sfp) { sfProductSheet(t.dataset.sfp); return; }
+  if (t.dataset.sfcat) { sfCat = t.dataset.sfcat; openStorefront(sfStore, sfPublic); return; }
+  if (t.dataset.acctab) { state.accTab = t.dataset.acctab; save(); render(); return; }
+  if (t.dataset.whtab) { state.whTab = t.dataset.whtab; save(); render(); return; }
+  if (t.dataset.whf) { state.whFilter = t.dataset.whf; save(); render(); return; }
+  if (t.dataset.variant) { variantSheet(t.dataset.variant); return; }
+  if (t.dataset.purchase) { purchaseDetail(t.dataset.purchase); return; }
+  if (t.dataset.supplier) { supplierSheet(t.dataset.supplier); return; }
+  if (t.dataset.delexp) {
+    const s = store();
+    const ex = s.expenses.find((x) => x.id === t.dataset.delexp);
+    if (ex) confirmSheet('حذف المصروف', `${ex.category}: ${moneyText(ex.amount)}`, 'حذف', true).then((ok) => { if (ok) { s.expenses = s.expenses.filter((x) => x !== ex); save(); render(); toast('حُذف المصروف'); } });
+    return;
+  }
+  switch (t.dataset.act) {
+    case 'close-sheet': closeSheet(); break;
+    case 'new-order': newOrderSheet(); break;
+    case 'new-product': productSheet(null); break;
+    case 'new-expense': expenseSheet(); break;
+    case 'open-storefront': openStorefront(); break;
+    case 'logout': signOut(); break;
+    case 'admin-exit': { const s = store(); syncNow().then(() => { state.adminAs = null; if (s) logAdmin('خروج من إدارة متجر', s); saveUI(); render(); window.scrollTo(0, 0); }); break; }
+    case 'admin-refresh': loadAdminData().then(() => { renderAdmin(); toast('حُدّثت البيانات'); }, () => toast('تعذّر التحديث، تحقق من الإنترنت', true)); break;
+    case 'admin-more': state.aLimit = (state.aLimit || 50) + 50; save(); renderAdmin(); break;
+    case 'copy-link': { const ls = sfStore || store(); if (ls) copyText(publicLink(ls)).then((ok) => toast(ok ? 'نُسخ رابط المتجر، أرسله لزبائنك' : 'تعذّر النسخ', !ok)); break; }
+    case 'share-link': { const ls = sfStore || store(); if (ls) shareLink(ls); break; }
+    case 'remove-logo': { const ls = store(); if (ls && ls.logo) { imgDel([ls.logo]); ls.logo = null; save(); render(); toast('حُذف الشعار'); } break; }
+    case 'close-storefront': closeStorefront(); break;
+    case 'more': moreSheet(); break;
+    case 'new-purchase': purchaseSheet(); break;
+    case 'adjust-stock': adjustSheet(); break;
+    case 'new-supplier': newSupplierSheet(); break;
+    case 'settle': settleSheet(); break;
+    case 'cash-opening': cashOpeningSheet(); break;
+    case 'export-pl': exportPL(); break;
+    case 'export-orders': exportOrders(); break;
+    default: break;
+  }
+});
+
+$('#scrim').addEventListener('click', closeSheet);
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && $('#sheet').classList.contains('open')) closeSheet(); });
+
+$('#roleSelect').addEventListener('change', (e) => {
+  state.role = e.target.value;
+  save(); render(); toast(`تعرض الآن كـ ${ROLES[state.role].l}`);
+});
+
+// Search inputs: re-render the list but keep focus and caret in the box.
+document.addEventListener('input', (e) => {
+  const id = e.target.id;
+  if (!['q', 'pq', 'cq', 'aq', 'wq'].includes(id)) return;
+  state[id] = e.target.value;
+  const pos = e.target.selectionStart;
+  if (id === 'aq') { state.aLimit = 50; renderAdmin(); } else render();
+  const el = document.getElementById(id);
+  if (el) { el.focus(); try { el.setSelectionRange(pos, pos); } catch (err) { /* type=search */ } }
+});
+document.addEventListener('change', async (e) => {
+  if (e.target.id === 'monthSel') { state.month = e.target.value; save(); render(); }
+  if (e.target.id === 'logoFile' && e.target.files.length) {
+    const s = store();
+    toast('جارِ تجهيز الشعار…');
+    const { ids } = await addImages(e.target.files, 1, 400);
+    if (!ids.length) { toast('تعذّر قراءة الصورة، جرّب صورة أخرى', true); return; }
+    if (s.logo) imgDel([s.logo]);
+    s.logo = ids[0];
+    save(); render(); toast('حُفظ الشعار');
+  }
+});
+document.addEventListener('submit', async (e) => {
+  if (e.target.id !== 'settingsForm') return;
+  e.preventDefault();
+  const s = store();
+  const name = $('#setName').value.trim();
+  const phone = $('#setPhone').value.trim();
+  const errEl = $('#setErr');
+  if (!name) { errEl.textContent = 'اكتب اسم المتجر'; errEl.hidden = false; return; }
+  if (phone && !validPhone(phone)) { errEl.textContent = 'رقم الهاتف يجب أن يكون 11 رقماً ويبدأ بـ 07'; errEl.hidden = false; return; }
+  const slug = $('#setSlug').value.trim().toLowerCase();
+  if (!/^[a-z0-9][a-z0-9-]{1,38}[a-z0-9]$/.test(slug)) { errEl.textContent = 'اسم الرابط من 3 إلى 40 حرفاً إنجليزياً صغيراً أو رقماً أو شرطة، ولا يبدأ أو ينتهي بشرطة'; errEl.hidden = false; return; }
+  if (RESERVED.has(slug)) { errEl.textContent = 'اسم الرابط محجوز، اختر اسماً آخر'; errEl.hidden = false; return; }
+  if (slug !== s.slug) {
+    const { data: free, error } = await sb.rpc('slug_available', { p_slug: slug });
+    if (error) { errEl.textContent = 'تعذّر التحقق من الرابط، تحقق من الإنترنت'; errEl.hidden = false; return; }
+    if (!free) { errEl.textContent = 'اسم الرابط مستخدم، اختر اسماً آخر'; errEl.hidden = false; return; }
+  }
+  s.slug = slug;
+  s.name = name; s.tagline = $('#setTag').value.trim(); s.phone = phone ? normPhone(phone) : ''; s.color = $('#setColor').value;
+  save(); render(); toast('حُفظت التغييرات');
+});
+
+window.addEventListener('hashchange', () => {
+  routePublic().then((ok) => { if (!ok && $('#storefront').classList.contains('open') && sfPublic) closeStorefront(); });
+});
+sb.auth.onAuthStateChange((event) => {
+  if (event === 'SIGNED_OUT' && state.session) { state = freshState(); loadUI(); renderAuth(); }
+});
+(async function boot() {
+  loadUI();
+  renderLoading();
+  try {
+    const { data } = await sb.auth.getSession();
+    if (data && data.session) await loadAccount(data.session.user);
+  } catch (e) {
+    toast('تعذّر الاتصال بالسيرفر، تحقق من الإنترنت', true);
+  }
+  render();
+  routePublic();
+})();
+</script>
+</body>
+</html>
