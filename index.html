@@ -416,6 +416,54 @@ main.enter > *{animation:viewIn .22s ease both}
 .link-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:12px 14px;margin-bottom:14px}
 .link-card .url{direction:ltr;text-align:left;font-size:13.5px;background:var(--sunk);border-radius:8px;padding:8px 10px;margin:6px 0 10px;word-break:break-all}
 
+
+/* Dashboard */
+main[data-view="home"]{max-width:1200px}
+.dash-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:2px 0 14px}
+.dash-hi{font-size:21px;font-weight:700;letter-spacing:-.3px}
+.dash-link{display:flex;align-items:center;gap:6px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:5px 5px 5px 6px;box-shadow:var(--shadow-sm);max-width:100%}
+.dash-link-url{font-weight:600;font-size:14px;padding:0 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;color:var(--brand)}
+.dash-link .icon-btn{width:36px;height:36px;border-radius:10px}
+.dash-link .icon-btn svg{width:18px;height:18px}
+@media (max-width:640px){.dash-link{width:100%}.dash-link-url{flex:1}}
+.kpis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+@media (min-width:900px){.kpis{grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}}
+.kpi{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:14px;box-shadow:var(--shadow-sm);min-width:0}
+.kpi-i{position:absolute;top:12px;inset-inline-end:12px;width:34px;height:34px;border-radius:11px;display:grid;place-items:center;background:var(--brand-soft);color:var(--brand)}
+.kpi-i svg{width:19px;height:19px}
+.kpi-l{font-size:13px;color:var(--muted);padding-inline-end:40px}
+.kpi-v{font-size:20px;font-weight:700;margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media (min-width:900px){.kpi-v{font-size:24px}}
+.kpi.neg .kpi-v{color:var(--bad)}
+.kpi-d{display:block;font-size:12px;color:var(--faint);margin-top:4px}
+.kpi-d.up{color:var(--good)}.kpi-d.down{color:var(--bad)}
+.alerts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:10px}
+@media (min-width:900px){.alerts{grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-top:14px}}
+.alert{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:start;border:1px solid var(--line);border-inline-start:4px solid var(--c);background:var(--surface);border-radius:14px;padding:10px 12px;min-width:0}
+.alert b{font-size:17px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.alert span{font-size:12.5px;color:var(--muted)}
+.alert.hot{background:color-mix(in srgb,var(--c) 9%,var(--surface))}
+.alert.hot b{color:var(--c)}
+.dash-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:14px;margin-top:4px}
+@media (min-width:1000px){.dash-grid{grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);align-items:start}}
+.dash-grid > section > h2:first-child,.dash-grid .spread h2{margin-top:6px}
+.vbars{display:flex;align-items:stretch;gap:5px;height:170px;margin-top:12px}
+.vbar{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;min-width:0}
+.vbar i{display:block;width:100%;max-width:34px;background:color-mix(in srgb,var(--brand) 55%,transparent);border-radius:6px 6px 2px 2px}
+.vbar.today i{background:var(--brand)}
+.vbar-v{font-size:10px;color:var(--muted);margin-bottom:3px;white-space:nowrap}
+.vbar-x{font-size:10.5px;color:var(--faint);margin-top:5px}
+.flow{display:grid;gap:8px}
+.flow-row{display:grid;grid-template-columns:86px 1fr 34px;align-items:center;gap:10px;border:0;background:none;padding:2px 0;text-align:start;font-size:13.5px}
+.flow-row b{text-align:left;color:var(--c)}
+.flow-bar{display:block;height:9px;border-radius:99px;background:var(--sunk);overflow:hidden}
+.flow-bar i{display:block;height:100%;border-radius:99px;background:var(--c,var(--brand))}
+.gov{display:grid;grid-template-columns:86px 1fr 30px;align-items:center;gap:10px;font-size:13.5px;padding:5px 0}
+.gov b{text-align:left}
+.rank{width:22px;height:22px;border-radius:7px;background:var(--sunk);display:grid;place-items:center;font-size:12px;font-weight:600;flex:none;color:var(--muted)}
+@media (min-width:920px){.fab-home{display:none}}
+nav.side{height:calc(100vh - 59px)}
+
 /* Auth */
 .auth{min-height:100vh;display:grid;place-items:center;padding:24px 16px}
 .auth-box{width:100%;max-width:400px}
@@ -585,12 +633,13 @@ const ICONS = {
   chat: '<path d="M4 20l1.3-3.9A8 8 0 1112 20a8 8 0 01-3.6-.9z"/>',
   check: '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
   minus: '<path d="M5 12h14"/>',
+  store: '<path d="M4 9l1.5-5h13L20 9"/><path d="M4 9a2.7 2.7 0 005.3 0 2.7 2.7 0 005.4 0 2.7 2.7 0 005.3 0"/><path d="M5 11v9h14v-9"/><path d="M10 20v-5h4v5"/>',
 };
 const NAV = [
   { id: 'home', l: 'الرئيسية' },
   { id: 'orders', l: 'الطلبات' },
   { id: 'products', l: 'المنتجات' },
-  { id: 'warehouse', l: 'المخزن' },
+  { id: 'warehouse', l: 'المخزن', sideOnly: true },
   { id: 'reports', l: 'الحسابات' },
   { id: 'customers', l: 'الزبائن', sideOnly: true },
   { id: 'settings', l: 'الإعدادات', sideOnly: true },
@@ -671,15 +720,19 @@ function ensureShape(s) {
   if (!s.notes) s.notes = {};
   return s;
 }
+// New stores get a short link: the Latin name if it is short, otherwise 4 random letters/digits.
+const SLUG_CHARS = 'abcdefghjkmnpqrstuvwxyz23456789';
+const randSlug = (n) => Array.from({ length: n }, () => SLUG_CHARS[Math.floor(Math.random() * SLUG_CHARS.length)]).join('');
 async function uniqueSlug(name) {
-  const latin = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 30).replace(/-+$/, '');
-  const base = latin.length >= 3 && !RESERVED.has(latin) ? latin : 'store';
-  for (let i = 0; i < 6; i++) {
-    const slug = base === 'store' || i > 0 ? `${base}-${Math.floor(1000 + Math.random() * 9000)}` : base;
+  const latin = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 12).replace(/-+$/, '');
+  const tries = [];
+  if (latin.length >= 3 && !RESERVED.has(latin) && SLUG_RE.test(latin)) tries.push(latin);
+  for (let i = 0; i < 5; i++) tries.push(randSlug(i < 3 ? 4 : 5));
+  for (const slug of tries) {
     const { data, error } = await sb.rpc('slug_available', { p_slug: slug });
     if (!error && data === true) return slug;
   }
-  return `store-${Date.now().toString(36)}`;
+  return randSlug(6);
 }
 const currentUser = () => (state.session ? state.users.find((u) => u.id === state.session) : null);
 
@@ -1505,7 +1558,7 @@ function adminStoreSheet(id) {
       <dt>الحالة</dt><dd>${susp ? '<span class="st-susp">معلّق</span>' : 'نشط'}</dd>
       <dt>الخطة</dt><dd>${planBadge(s)} ${s.planEnds && planOf(s) !== 'free' ? `<span class="sub">حتى ${dateText(s.planEnds)}</span>` : ''}</dd>
       <dt>المالك</dt><dd>${owner ? `${esc(owner.name)}<br><span dir="ltr">${esc(owner.email)}</span>` : '—'}</dd>
-      <dt>الرابط</dt><dd dir="ltr" style="text-align:right">${esc(publicLink(s))}</dd>
+      <dt>الرابط</dt><dd dir="ltr" style="text-align:right">${esc(shortLink(s))}</dd>
       <dt>أُنشئ</dt><dd>${dateText(s.createdAt)}</dd>
       <dt>المنتجات</dt><dd><span class="num">${s.products.length}</span></dd>
       <dt>الطلبات</dt><dd><span class="num">${s.orders.length}</span>${last ? ` · آخر طلب ${ago(last)}` : ''}</dd>
@@ -1601,7 +1654,7 @@ function adminStoreSheet(id) {
 function linkCard(s) {
   return `<section class="link-card" aria-label="رابط متجرك">
     <div class="spread"><b>رابط متجرك</b><span class="sub">أرسله لزبائنك أو ضعه في البايو</span></div>
-    <div class="url">${esc(publicLink(s))}</div>
+    <div class="url" style="font-weight:600;font-size:15px">${esc(shortLink(s))}</div>
     <div class="row" style="flex-wrap:wrap">
       <button class="btn" type="button" data-act="copy-link">${icon('copy')} نسخ</button>
       <button class="btn" type="button" data-act="share-link">${icon('share')} مشاركة</button>
@@ -1622,79 +1675,125 @@ function viewHome() {
   for (const k of Object.keys(STATUS)) counts[k] = 0;
   for (const o of s.orders) counts[o.status]++;
   const flow = ['new', 'confirmed', 'preparing', 'shipped', 'delivered'];
+  const now = Date.now();
+  const today = startOfDay(now);
+  const live = (o) => o.status !== 'canceled' && o.status !== 'returned';
+  const value = (o) => Math.max(0, orderSubtotal(o) - (o.discount || 0));
+  const d = new Date(now);
+  const m0 = new Date(d.getFullYear(), d.getMonth(), 1).getTime();
+  const pm0 = new Date(d.getFullYear(), d.getMonth() - 1, 1).getTime();
+  const pmCut = pm0 + (now - m0); // same point of last month, for a fair comparison
+  const inMonth = s.orders.filter((o) => o.createdAt >= m0 && live(o));
+  const inPrev = s.orders.filter((o) => o.createdAt >= pm0 && o.createdAt < Math.min(pmCut, m0) && live(o));
+  const sales = inMonth.reduce((t, o) => t + value(o), 0);
+  const salesPrev = inPrev.reduce((t, o) => t + value(o), 0);
+  const avg = inMonth.length ? sales / inMonth.length : 0;
+  const rep = monthReport(s, monthKey(now));
   const cod = s.orders.filter((o) => o.status === 'shipped').reduce((t, o) => t + orderTotal(o), 0);
-  const today = startOfDay(Date.now());
-  const todays = s.orders.filter((o) => o.createdAt >= today).length;
-  const rep = monthReport(s, monthKey(Date.now()));
+  const owed = s.orders.filter((o) => o.status === 'delivered' && !o.settledAt).reduce((t, o) => t + settleValue(o), 0);
   const low = s.products.filter(isLow);
+  const todays = s.orders.filter((o) => o.createdAt >= today);
+  const todaysSales = todays.filter(live).reduce((t, o) => t + value(o), 0);
+  const delta = (a, b) => {
+    if (!b) return a ? '<span class="kpi-d up">جديد</span>' : '';
+    const p = Math.round(((a - b) / b) * 100);
+    return `<span class="kpi-d ${p >= 0 ? 'up' : 'down'}"><span class="num">${p >= 0 ? '+' : ''}${p}%</span> عن الشهر الماضي</span>`;
+  };
+  // Last 14 days: order value per day.
   const days = [];
   for (let i = 13; i >= 0; i--) {
-    const d0 = today - i * DAY;
-    days.push(s.orders.filter((o) => o.createdAt >= d0 && o.createdAt < d0 + DAY).length);
+    const a = today - i * DAY;
+    const list = s.orders.filter((o) => o.createdAt >= a && o.createdAt < a + DAY && live(o));
+    days.push({ at: a, n: list.length, v: list.reduce((t, o) => t + value(o), 0) });
   }
-  const max = Math.max(1, ...days);
-  const recent = s.orders.slice().sort((a, b) => b.createdAt - a.createdAt).slice(0, 5);
-
-  const now = new Date();
+  const maxV = Math.max(1, ...days.map((x) => x.v));
+  const sum14 = days.reduce((t, x) => t + x.v, 0);
+  // Best sellers and governorates this month (orders placed).
+  const tops = new Map(), govs = new Map();
+  for (const o of inMonth) {
+    govs.set(o.customer.city, (govs.get(o.customer.city) || 0) + 1);
+    for (const it of o.items) {
+      const c = tops.get(it.productId) || { id: it.productId, name: it.name, qty: 0, v: 0 };
+      c.qty += it.qty; c.v += it.price * it.qty; tops.set(it.productId, c);
+    }
+  }
+  const top = Array.from(tops.values()).sort((a, b) => b.qty - a.qty || b.v - a.v).slice(0, 5);
+  const gov = Array.from(govs.entries()).sort((a, b) => b[1] - a[1]).slice(0, 5);
+  const recent = s.orders.slice().sort((a, b) => b.createdAt - a.createdAt).slice(0, 6);
   const who = (currentUser().name || '').trim().split(/\s+/)[0];
-  const todaysSales = s.orders.filter((o) => o.createdAt >= today && o.status !== 'canceled').reduce((t, o) => t + Math.max(0, orderSubtotal(o) - (o.discount || 0)), 0);
   let dateStr = '';
-  try { dateStr = now.toLocaleDateString('ar-IQ-u-nu-latn', { weekday: 'long', day: 'numeric', month: 'long' }); } catch (e) { dateStr = dateText(now.getTime()); }
+  try { dateStr = d.toLocaleDateString('ar-IQ-u-nu-latn', { weekday: 'long', day: 'numeric', month: 'long' }); } catch (e) { dateStr = dateText(now); }
   const quick = [
     can('orders.write') && `<button type="button" data-act="new-order"><span class="qi">${icon('plus')}</span>طلب جديد</button>`,
     can('products.write') && `<button type="button" data-act="new-product"><span class="qi">${icon('products')}</span>منتج جديد</button>`,
     can('warehouse') && `<button type="button" data-act="new-purchase"><span class="qi">${icon('warehouse')}</span>استلام بضاعة</button>`,
     can('reports') && `<button type="button" data-act="new-expense"><span class="qi">${icon('reports')}</span>مصروف</button>`,
-    `<button type="button" data-act="share-link"><span class="qi">${icon('share')}</span>رابط متجري</button>`,
-  ].filter(Boolean).slice(0, 4);
+  ].filter(Boolean);
+  const pName = (id, name) => { const p = s.products.find((x) => x.id === id); return p ? p : { name, color: TILE_COLORS[0], images: [] }; };
+  const fmtK = (n) => Math.round(n / 1000).toLocaleString('en-US'); // bar labels in thousands
   return `
-  <h1 class="sr-only">${esc(s.name)}</h1>
-  <section class="hello" aria-label="ملخص اليوم">
-    <div class="hello-greet">${now.getHours() < 12 ? 'صباح الخير' : 'مساء الخير'}${who ? '، ' + esc(who) : ''}</div>
-    <div class="hello-date">${esc(dateStr)}</div>
-    <div class="hello-stats">
-      <div><span>طلبات اليوم</span><b class="num">${todays}</b></div>
-      <div><span>مبيعات اليوم</span><b>${money(todaysSales)}</b></div>
-      <div><span>تنتظر التأكيد</span><b class="num">${counts.new}</b></div>
+  <h1 class="sr-only">لوحة التحكم — ${esc(s.name)}</h1>
+  <div class="dash-head">
+    <div><div class="dash-hi">${d.getHours() < 12 ? 'صباح الخير' : 'مساء الخير'}${who ? '، ' + esc(who) : ''}</div><div class="sub">${esc(dateStr)} · اليوم <span class="num">${todays.length}</span> طلب بقيمة ${money(todaysSales)}</div></div>
+    <div class="dash-link">
+      <span class="dash-link-url" dir="ltr">${esc(shortLink(s))}</span>
+      <button class="icon-btn" type="button" data-act="copy-link" aria-label="نسخ رابط المتجر">${icon('copy')}</button>
+      <button class="icon-btn" type="button" data-act="share-link" aria-label="مشاركة رابط المتجر">${icon('share')}</button>
+      <button class="icon-btn" type="button" data-act="open-storefront" aria-label="فتح صفحة المتجر">${icon('store')}</button>
     </div>
-  </section>
-  <div class="quick">${quick.join('')}</div>
-  <section class="pipeline" aria-label="مسار الطلبات">
-    <div class="pipe-track">
-      ${flow.map((k) => `<button class="stop ${counts[k] && k !== 'delivered' ? 'hot' : ''}" type="button" style="--c:${STATUS[k].c}" data-filter="${k}">
-        <div class="dot"><span class="num">${counts[k]}</span></div><span>${STATUS[k].l}</span></button>`).join('')}
-    </div>
-    <div class="pipe-foot">
-      <span>ملغى <b class="num">${counts.canceled}</b></span>
-      <span>مرتجع <b class="num">${counts.returned}</b></span>
-    </div>
-  </section>
-
-  <dl class="money">
-    <div class="cod"><dt>مبالغ عند شركة التوصيل</dt><dd>${money(cod)}</dd></div>
-    <div><dt>بذمّتها وتم التسليم</dt><dd>${money(s.orders.filter((o) => o.status === 'delivered' && !o.settledAt).reduce((t, o) => t + settleValue(o), 0))}</dd></div>
-    ${can('reports') ? `<div class="${rep.net < 0 ? 'neg' : ''}"><dt>صافي ربح ${MONTHS[new Date().getMonth()]}</dt><dd>${money(rep.net)}</dd></div>` : `<div><dt>تم التسليم هذا الشهر</dt><dd><span class="num">${rep.delivered.length}</span></dd></div>`}
-    <div><dt>منتجات قاربت على النفاد</dt><dd><span class="num">${low.length}</span></dd></div>
-  </dl>
-
-  <h2>الطلبات آخر 14 يوماً</h2>
-  <div class="panel">
-    <div class="bars" role="img" aria-label="عدد الطلبات يومياً لآخر 14 يوماً">
-      ${days.map((n, i) => `<div class="${i === 13 ? 'today' : ''}" style="height:${(n / max) * 100}%" title="${n} طلب"></div>`).join('')}
-    </div>
-    <div class="bars-x"><span>قبل 13 يوماً</span><span>اليوم</span></div>
   </div>
 
-  <div class="spread"><h2>أحدث الطلبات</h2><button class="btn" type="button" data-nav="orders">كل الطلبات</button></div>
-  ${orderList(recent)}
+  <div class="kpis">
+    <div class="kpi"><span class="kpi-i">${icon('cash')}</span><div class="kpi-l">مبيعات ${MONTHS[d.getMonth()]}</div><div class="kpi-v">${money(sales)}</div>${delta(sales, salesPrev)}</div>
+    <div class="kpi"><span class="kpi-i">${icon('orders')}</span><div class="kpi-l">طلبات الشهر</div><div class="kpi-v num">${inMonth.length}</div>${delta(inMonth.length, inPrev.length)}</div>
+    ${can('reports') ? `<div class="kpi ${rep.net < 0 ? 'neg' : ''}"><span class="kpi-i">${icon('reports')}</span><div class="kpi-l">صافي الربح</div><div class="kpi-v">${money(rep.net)}</div><span class="kpi-d">من الطلبات المسلَّمة</span></div>` : ''}
+    <div class="kpi"><span class="kpi-i">${icon('bag')}</span><div class="kpi-l">متوسط الطلب</div><div class="kpi-v">${money(avg)}</div><span class="kpi-d">لكل طلب هذا الشهر</span></div>
+  </div>
 
-  ${low.length ? `<h2>يحتاج إعادة تعبئة</h2><div class="list">${low.map((p) => `
-    <button class="item" type="button" data-product="${p.id}">
-      ${tile(p, 'thumb')}
-      <div class="grow"><div class="trunc">${esc(p.name)}</div>
-      <div class="meta">${p.variants.filter((v) => v.stock <= p.low).map((v) => `${esc(v.label)}: <span class="num">${v.stock}</span>`).join(' ، ')}</div></div>
-      <span class="tag warn">قليل</span></button>`).join('')}</div>` : ''}
-  ${can('orders.write') ? `<button class="btn primary fab" type="button" data-act="new-order">${icon('plus')} طلب جديد</button>` : ''}`;
+  <div class="alerts">
+    <button type="button" class="alert ${counts.new ? 'hot' : ''}" data-filter="new" style="--c:var(--new)"><b class="num">${counts.new}</b><span>تنتظر التأكيد</span></button>
+    <button type="button" class="alert" data-filter="shipped" style="--c:var(--shipped)"><b>${money(cod)}</b><span>عند شركة التوصيل</span></button>
+    <button type="button" class="alert" data-nav="reports" style="--c:var(--good)"><b>${money(owed)}</b><span>تم التسليم ولم يُستلم</span></button>
+    <button type="button" class="alert ${low.length ? 'hot' : ''}" data-nav="${can('warehouse') ? 'warehouse' : 'products'}" style="--c:var(--warn)"><b class="num">${low.length}</b><span>منتجات قاربت على النفاد</span></button>
+  </div>
+
+  ${quick.length ? `<div class="quick">${quick.join('')}</div>` : ''}
+
+  <div class="dash-grid">
+    <section class="panel dash-chart" aria-label="المبيعات آخر 14 يوماً">
+      <div class="spread"><div><h2 style="margin:0">المبيعات آخر 14 يوماً</h2><span class="sub">الأرقام بالألف دينار</span></div><b>${money(sum14)}</b></div>
+      <div class="vbars" role="img" aria-label="قيمة الطلبات يومياً لآخر 14 يوماً">
+        ${days.map((x, i) => `<div class="vbar ${i === 13 ? 'today' : ''}" title="${dateText(x.at)}: ${x.n} طلب، ${moneyText(x.v)}"><span class="vbar-v">${x.v ? fmtK(x.v) : ''}</span><i style="height:${Math.max(2, (x.v / maxV) * 100)}%"></i><span class="vbar-x num">${new Date(x.at).getDate()}</span></div>`).join('')}
+      </div>
+    </section>
+
+    <section class="panel" aria-label="مسار الطلبات">
+      <h2 style="margin:0 0 12px">مسار الطلبات</h2>
+      <div class="flow">${flow.map((k) => `<button type="button" class="flow-row" data-filter="${k}" style="--c:${STATUS[k].c}">
+        <span class="flow-l">${STATUS[k].l}</span><span class="flow-bar"><i style="width:${s.orders.length ? Math.max(counts[k] ? 4 : 0, (counts[k] / s.orders.length) * 100) : 0}%"></i></span><b class="num">${counts[k]}</b></button>`).join('')}</div>
+      <div class="pipe-foot"><span>ملغى <b class="num">${counts.canceled}</b></span><span>مرتجع <b class="num">${counts.returned}</b></span><span>الكل <b class="num">${s.orders.length}</b></span></div>
+    </section>
+
+    <section class="dash-recent">
+      <div class="spread"><h2>أحدث الطلبات</h2><button class="btn" type="button" data-nav="orders">كل الطلبات</button></div>
+      ${orderList(recent)}
+    </section>
+
+    <section>
+      <h2>الأكثر طلباً هذا الشهر</h2>
+      ${top.length ? `<div class="list">${top.map((t, i) => `<button class="item" type="button" ${s.products.some((x) => x.id === t.id) ? `data-product="${t.id}"` : ''}>
+        <span class="rank num">${i + 1}</span>${tile(pName(t.id, t.name), 'thumb')}
+        <div class="grow"><div class="trunc">${esc(t.name)}</div><div class="meta"><span class="num">${t.qty}</span> قطعة</div></div><div>${money(t.v)}</div></button>`).join('')}</div>`
+        : '<div class="list"><div class="empty">لا توجد طلبات هذا الشهر بعد.</div></div>'}
+      ${gov.length ? `<h2>الطلبات حسب المحافظة</h2><div class="panel">${gov.map(([c, n]) => `<div class="gov"><span>${esc(c)}</span><span class="flow-bar"><i style="width:${(n / gov[0][1]) * 100}%"></i></span><b class="num">${n}</b></div>`).join('')}</div>` : ''}
+      ${low.length ? `<h2>يحتاج إعادة تعبئة</h2><div class="list">${low.slice(0, 6).map((p) => `
+        <button class="item" type="button" data-product="${p.id}">${tile(p, 'thumb')}
+          <div class="grow"><div class="trunc">${esc(p.name)}</div>
+          <div class="meta">${p.variants.filter((v) => v.stock <= p.low).map((v) => `${esc(v.label || 'المخزون')}: <span class="num">${v.stock}</span>`).join(' ، ')}</div></div>
+          <span class="tag warn">قليل</span></button>`).join('')}</div>` : ''}
+    </section>
+  </div>
+  ${can('orders.write') ? `<button class="btn primary fab fab-home" type="button" data-act="new-order">${icon('plus')} طلب جديد</button>` : ''}`;
 }
 
 function orderList(orders) {
@@ -2284,7 +2383,7 @@ function viewSettings() {
       <div class="field"><label for="setDelO">التوصيل لباقي المحافظات</label><input class="input num" id="setDelO" inputmode="numeric" value="${deliveryOf(s, '')}" style="text-align:right"></div>
     </div>
     <div class="field"><label for="setSlug">اسم الرابط (حروف إنجليزية صغيرة وأرقام وشرطة)</label>
-      <div class="row" dir="ltr"><span class="sub" style="white-space:nowrap">#/s/</span><input class="input" id="setSlug" maxlength="40" value="${esc(s.slug)}" dir="ltr" autocapitalize="off" spellcheck="false"></div>
+      <div class="row" dir="ltr"><span class="sub" style="white-space:nowrap">${esc(siteBase().replace(/^https?:\/\//, ''))}${/^https?:/.test(siteBase()) ? '' : '#'}</span><input class="input" id="setSlug" maxlength="40" value="${esc(s.slug)}" dir="ltr" autocapitalize="off" spellcheck="false"></div>
       <small class="sub">إذا غيّرته، الرابط القديم يتوقف عن العمل.</small></div>
     <div id="setErr" class="err" hidden></div>
     <button class="btn primary block" type="submit">حفظ التغييرات</button>
@@ -2778,19 +2877,33 @@ function sfQuickAdd(pid) {
   cartAdd(p.id, p.variants[0].id, 1);
   toast(`أُضيف «${p.name}» إلى السلة`);
 }
-function publicLink(s) { return `${SITE_URL || location.href.split('#')[0]}#/s/${s.slug}`; }
+// Short store links: <site>/<slug> (404.html on GitHub Pages forwards it to <site>/#<slug>).
+function siteBase() {
+  if (SITE_URL) return SITE_URL.replace(/\/?$/, '/');
+  return location.href.split('#')[0].split('?')[0].replace(/[^/]*$/, '');
+}
+function publicLink(s) { const b = siteBase(); return /^https?:/.test(b) ? b + s.slug : `${b}#${s.slug}`; }
+const shortLink = (s) => publicLink(s).replace(/^https?:\/\//, '');
+const SLUG_RE = /^[a-z0-9][a-z0-9-]{1,38}[a-z0-9]$/;
+function slugFromLocation() {
+  const h = location.hash.replace(/^#\/?(s\/)?/, '');
+  if (h && SLUG_RE.test(h)) return h;
+  const q = new URLSearchParams(location.search).get('s');
+  return q && SLUG_RE.test(q) ? q : null;
+}
 function closeStorefront() {
   $('#storefront').classList.remove('open');
   closeSheet();
   document.body.style.overflow = '';
   sfStore = null; sfPublic = false;
-  if (location.hash.startsWith('#/s/')) history.replaceState(null, '', location.href.split('#')[0]);
+  if (slugFromLocation()) history.replaceState(null, '', location.href.split('#')[0].split('?')[0]);
   render();
 }
 // Public store page: anyone with the link sees it without logging in (public_store returns names, prices and images only).
 async function routePublic() {
-  const m = /^#\/s\/([a-z0-9-]+)$/.exec(location.hash);
-  if (!m) return false;
+  const slug = slugFromLocation();
+  if (!slug) return false;
+  const m = [null, slug];
   const sf = $('#storefront');
   if (!sf.classList.contains('open')) { sf.innerHTML = '<div class="sf-skel"></div><div class="sf-skel" style="height:220px"></div>'; sf.classList.add('open'); document.body.style.overflow = 'hidden'; }
   const { data, error } = await sb.rpc('public_store', { p_slug: m[1] });
