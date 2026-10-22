@@ -2127,6 +2127,13 @@ function viewHome() {
   const fmtK = (n) => Math.round(n / 1000).toLocaleString('en-US'); // bar labels in thousands
   return `
   <h1 class="sr-only">لوحة التحكم — ${esc(s.name)}</h1>
+  <section class="panel ai-box" style="margin-bottom:14px">
+    <div><b>رواج الذكي</b><div class="sub">اسأل عن مبيعات متجرك ومنتجاتك وطلباتك، أو اطلب فاتورة لزبون. يقرأ بيانات متجرك بس.</div></div>
+    <form id="aiForm" novalidate style="margin-top:10px">
+      <div class="row"><input class="input grow" id="aiQ" maxlength="800" placeholder="مثال: شنو أكثر منتج انباع اليوم؟" aria-label="سؤالك لرواج الذكي"><button class="btn primary" type="submit" id="aiBtn">اسأل</button></div>
+    </form>
+    <div id="aiOut" class="sub" style="margin-top:10px;white-space:pre-wrap" hidden></div>
+  </section>
   <div class="dash-head">
     <div><div class="dash-hi">${d.getHours() < 12 ? 'صباح الخير' : 'مساء الخير'}${who ? '، ' + esc(who) : ''}</div><div class="sub">${esc(dateStr)} · اليوم <span class="num">${todays.length}</span> طلب بقيمة ${money(todaysSales)}</div></div>
     <div class="dash-link">
@@ -3828,6 +3835,28 @@ document.addEventListener('change', async (e) => {
     if (s.logo) imgDel([s.logo]);
     s.logo = ids[0];
     save(); render(); toast('حُفظ الشعار');
+  }
+});
+document.addEventListener('submit', async (e) => {
+  if (e.target.id !== 'aiForm') return;
+  e.preventDefault();
+  const q = $('#aiQ').value.trim();
+  const out = $('#aiOut'), btn = $('#aiBtn');
+  if (!q) return;
+  out.hidden = false; out.textContent = 'جارِ التفكير…';
+  btn.disabled = true;
+  try {
+    const { data } = await sb.auth.getSession();
+    const tok = data && data.session && data.session.access_token;
+    if (!tok) throw new Error('سجّل دخول من جديد');
+    const res = await fetch(SUPA_URL + '/functions/v1/rawaj-ai', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + tok, apikey: SUPA_KEY }, body: JSON.stringify({ question: q }) });
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(j.error === 'no_key' ? 'رواج الذكي مو مفعّل بعد' : 'تعذّر الجواب، جرّب مرة ثانية');
+    out.textContent = j.answer;
+  } catch (err) {
+    out.textContent = err.message || 'تعذّر الجواب';
+  } finally {
+    btn.disabled = false;
   }
 });
 document.addEventListener('submit', async (e) => {
