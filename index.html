@@ -504,6 +504,30 @@ nav.side{height:calc(100vh - 59px)}
 .feat-ico svg{width:26px;height:26px}
 .feat-steps{margin:12px 0 0;padding-inline-start:20px;color:var(--muted);font-size:14px;display:grid;gap:4px}
 
+
+.redeem .row .input{letter-spacing:1px;text-align:left}
+.invite .url{direction:ltr;text-align:left;font-size:14px;font-weight:600;background:var(--sunk);border-radius:8px;padding:8px 10px;margin:6px 0 10px;word-break:break-all;color:var(--brand)}
+.ref-progress{margin-top:14px;padding-top:12px;border-top:1px dashed var(--line)}
+.ref-list{display:grid;gap:6px;margin-top:10px}
+.ref-row{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:14px}
+.wa-missing{display:flex;align-items:center;gap:12px;width:100%;text-align:start;border:1px solid color-mix(in srgb,var(--warn) 40%,transparent);background:color-mix(in srgb,var(--warn) 9%,var(--surface));border-radius:14px;padding:12px 14px;margin-bottom:12px;color:var(--ink)}
+.wa-missing svg{width:26px;height:26px;color:var(--warn);flex:none}
+.ref-admin .item{align-items:flex-start}
+.ref-admin a{word-break:break-all}
+
+
+.price-card{gap:6px}
+.pc-feats{list-style:none;margin:2px 0 8px;padding:0;display:grid;gap:4px;font-size:12.5px;color:var(--muted)}
+.pc-feats li{position:relative;padding-inline-start:16px}
+.pc-feats li::before{content:"✓";position:absolute;inset-inline-start:0;color:var(--good);font-weight:700}
+.price-card .btn + .btn{margin-top:0}
+.tier-chip{display:inline-block;font-size:12px;font-weight:600;border-radius:999px;padding:1px 9px;background:var(--sunk);border:1px solid var(--line);color:var(--muted);margin-inline-start:4px}
+.tier-chip.pro{background:var(--brand);border-color:var(--brand);color:var(--brand-ink)}
+.limit-bar{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 12px;margin-bottom:12px}
+.limit-bar .btn{min-height:34px;padding:5px 12px;font-size:13px}
+.limit-bar .flow-bar{margin-top:8px}
+.limit-bar.full{border-color:color-mix(in srgb,var(--warn) 45%,transparent)}
+
 /* Auth */
 .auth{min-height:100vh;display:grid;place-items:center;padding:24px 16px}
 .auth-box{width:100%;max-width:400px}
@@ -730,40 +754,47 @@ function monthLabel(key) { const [y, m] = key.split('-').map(Number); return `${
 
 const WELCOME_DAYS = 30;
 const ADMIN_PHONE = '07801691548';
-const PRICE_MONTH = 4900, PRICE_YEAR = 50000;
+// Two versions: عادي (up to 8 published products) and برو (unlimited).
+const BASIC_LIMIT = 8;
+const PRICES = { basic: { m: 4900, y: 50000 }, pro: { m: 6900, y: 76000 } };
+const TIER_NAME = { basic: 'عادي', pro: 'برو' };
+const PRICE_MONTH = PRICES.basic.m, PRICE_YEAR = PRICES.basic.y;
 const fmtPrice = (n) => n.toLocaleString('en-US');
-// Subscribing happens on WhatsApp with the platform admin; the message names the store and the plan.
-function subscribeUrl(s, plan) {
-  const what = plan === 'yearly' ? `الاشتراك السنوي (${moneyText(PRICE_YEAR)})` : plan === 'monthly' ? `الاشتراك الشهري (${moneyText(PRICE_MONTH)})` : 'الاشتراك';
+// Subscribing happens on WhatsApp with the platform admin; the message names the store, version and period.
+function subscribeUrl(s, tier = 'basic', period = 'm') {
+  const what = `اشتراك ${TIER_NAME[tier]} ${period === 'y' ? 'السنوي' : 'الشهري'} (${moneyText(PRICES[tier][period])})`;
   return `https://wa.me/964${ADMIN_PHONE.slice(1)}?text=${encodeURIComponent(`مرحباً، أريد ${what} لمتجر "${s.name}" — الرابط: ${s.slug}`)}`;
 }
 function renewLinks(s, compact) {
-  if (compact) return `<a class="btn" href="${subscribeUrl(s, 'monthly')}" target="_blank" rel="noopener">${icon('chat')} اشترك الآن</a>`;
+  if (compact) return `<a class="btn" href="${subscribeUrl(s, ['pro_monthly', 'pro_yearly'].includes(s.plan) ? 'pro' : 'basic', 'm')}" target="_blank" rel="noopener">${icon('chat')} اشترك الآن</a>`;
   return `<a class="btn" href="tel:${ADMIN_PHONE}">${icon('phone')} اتصال <span class="num">${ADMIN_PHONE}</span></a>`;
 }
 function priceCards(s) {
+  const card = (tier, feats, best) => `<div class="price-card ${best ? 'best' : ''}">
+      ${best ? '<span class="pc-tag">الأكثر طلباً</span>' : ''}
+      <span class="pc-name">نسخة ${TIER_NAME[tier]}</span>
+      <span class="pc-price"><b class="num">${fmtPrice(PRICES[tier].m)}</b> د.ع</span><span class="pc-per">شهرياً · أو <b class="num">${fmtPrice(PRICES[tier].y)}</b> سنوياً</span>
+      <ul class="pc-feats">${feats.map((f) => `<li>${f}</li>`).join('')}</ul>
+      <a class="btn primary block" href="${subscribeUrl(s, tier, 'm')}" target="_blank" rel="noopener">${icon('chat')} شهري</a>
+      <a class="btn block" href="${subscribeUrl(s, tier, 'y')}" target="_blank" rel="noopener">سنوي · توفّر <span class="num">${fmtPrice(PRICES[tier].m * 12 - PRICES[tier].y)}</span></a>
+    </div>`;
   return `<div class="price-cards">
-    <a class="price-card" href="${subscribeUrl(s, 'monthly')}" target="_blank" rel="noopener">
-      <span class="pc-name">الاشتراك الشهري</span>
-      <span class="pc-price"><b class="num">${fmtPrice(PRICE_MONTH)}</b> د.ع</span><span class="pc-per">كل شهر</span>
-      <span class="btn primary block">${icon('chat')} اشترك الآن</span></a>
-    <a class="price-card best" href="${subscribeUrl(s, 'yearly')}" target="_blank" rel="noopener">
-      <span class="pc-tag">الأوفر</span>
-      <span class="pc-name">الاشتراك السنوي</span>
-      <span class="pc-price"><b class="num">${fmtPrice(PRICE_YEAR)}</b> د.ع</span><span class="pc-per">سنة كاملة · توفّر <span class="num">${(PRICE_MONTH * 12 - PRICE_YEAR).toLocaleString('en-US')}</span> د.ع</span>
-      <span class="btn primary block">${icon('chat')} اشترك الآن</span></a>
+    ${card('basic', [`حتى <b class="num">${BASIC_LIMIT}</b> منتجات منشورة`, 'الطلبات والمخزن والحسابات', 'رابط متجرك ورسائل واتساب'])}
+    ${card('pro', ['<b>منتجات بلا حدود</b>', 'كل ميزات العادي', 'مناسبة للمتاجر الكبيرة والمتنوعة'], true)}
   </div>`;
 }
 const daysLeft = (s) => (s.planEnds ? Math.ceil((s.planEnds - Date.now()) / DAY) : Infinity);
 const PLANS = {
-  trial:    { l: 'شهر مجاني', price: 0 },
-  monthly:  { l: 'شهري',      price: PRICE_MONTH, days: 30 },
-  yearly:   { l: 'سنوي',      price: PRICE_YEAR, days: 365, perYear: true },
-  free:     { l: 'مجانية دائمة', price: 0 },
+  trial:       { l: 'شهر مجاني',   price: 0 },
+  monthly:     { l: 'عادي شهري',   price: PRICES.basic.m, days: 30 },
+  yearly:      { l: 'عادي سنوي',   price: PRICES.basic.y, days: 365, perYear: true },
+  pro_monthly: { l: 'برو شهري',    price: PRICES.pro.m, days: 30 },
+  pro_yearly:  { l: 'برو سنوي',    price: PRICES.pro.y, days: 365, perYear: true },
+  free:        { l: 'مجانية دائمة', price: 0 },
   // older plans, kept so existing stores still display correctly
   basic:    { l: 'أساسية',    price: 15000, legacy: true },
-  pro:      { l: 'احترافية',  price: 35000, legacy: true },
-  business: { l: 'أعمال',     price: 75000, legacy: true },
+  pro:      { l: 'برو',       price: 35000, legacy: true },
+  business: { l: 'برو',       price: 75000, legacy: true },
 };
 const statusOf = (s) => s.status || 'active';
 function planOf(s) {
@@ -771,7 +802,11 @@ function planOf(s) {
   if (pl !== 'free' && s.planEnds && s.planEnds < Date.now()) return 'expired';
   return pl;
 }
-const isPaid = (s) => ['monthly', 'yearly', 'basic', 'pro', 'business'].includes(planOf(s)) && !s.welcome;
+const isPaid = (s) => ['monthly', 'yearly', 'pro_monthly', 'pro_yearly', 'basic', 'pro', 'business'].includes(planOf(s)) && !s.welcome;
+// The free month, the permanent free plan and older pro/business plans have no product limit (same rule as the server).
+const isProPlan = (plan) => ['trial', 'pro_monthly', 'pro_yearly', 'free', 'pro', 'business'].includes(plan);
+const isPro = (s) => isProPlan(planOf(s));
+const publishedLimit = (s) => (isPro(s) ? Infinity : BASIC_LIMIT);
 function planBadge(s) {
   const pl = planOf(s);
   if (pl === 'expired') return '<span class="plan expired">منتهي</span>';
@@ -927,7 +962,7 @@ function saveUI() {
   try { const ui = {}; for (const k of UI_FIELDS) ui[k] = state[k]; localStorage.setItem(UI_KEY, JSON.stringify(ui)); } catch (e) { /* ignore */ }
 }
 
-const SERVER_KEYS = new Set(['id', 'slug', 'status', 'plan', 'planEnds', 'welcome', 'ownerId', 'createdAt', '_version', '_synced']);
+const SERVER_KEYS = new Set(['id', 'slug', 'status', 'plan', 'planEnds', 'welcome', 'ownerId', 'createdAt', 'refCode', 'referredBy', 'socialUrl', 'refStatus', 'refRewards', '_version', '_synced']);
 function toData(s) { const d = {}; for (const k of Object.keys(s)) if (!SERVER_KEYS.has(k)) d[k] = s[k]; return d; }
 // What the server must match: the business data plus the store link.
 const fingerprint = (s) => JSON.stringify([s.slug, toData(s)]);
@@ -936,6 +971,7 @@ function fromRow(r) {
   s.id = r.id; s.slug = r.slug; s.status = r.status; s.plan = r.plan;
   s.planEnds = r.plan_ends ? Date.parse(r.plan_ends) : null; s.welcome = r.welcome; s.ownerId = r.owner_id;
   s.createdAt = Date.parse(r.created_at); s._version = r.version;
+  s.refCode = r.ref_code || ''; s.referredBy = r.referred_by || null; s.socialUrl = r.social_url || ''; s.refStatus = r.ref_status || 'none'; s.refRewards = r.ref_rewards || 0;
   if (!s.name) s.name = 'متجري';
   if (!s.color) s.color = TILE_COLORS[0];
   ensureShape(s);
@@ -1073,10 +1109,11 @@ async function loadAccount(user) {
 }
 async function loadAdminData() {
   const me = currentUser();
-  const [st, pr, au] = await Promise.all([
+  const [st, pr, au, cd] = await Promise.all([
     sb.from('stores').select('*').order('created_at', { ascending: false }),
     sb.from('profiles').select('id,name,email,is_admin'),
     sb.from('admin_audit').select('*').order('at', { ascending: false }).limit(50),
+    sb.from('sub_codes').select('code,months,tier,redeemed_at').order('created_at', { ascending: true }),
   ]);
   if (st.error) throw st.error;
   const stores = (st.data || []).map(fromRow);
@@ -1084,13 +1121,16 @@ async function loadAdminData() {
   state.stores = stores;
   state.users = (pr.data || []).map((p) => ({ id: p.id, name: p.name, email: emailToDisplay(p.email), isAdmin: p.is_admin, storeId: byOwner.get(p.id) || null }));
   if (!state.users.some((u) => u.id === me.id)) state.users.push(me);
+  state.codes = cd && cd.data ? cd.data : null; // null: codes not installed in the database yet
   state.audit = (au.data || []).map((a) => ({ at: Date.parse(a.at), action: a.action, store: a.store_name || '', detail: a.detail || '' }));
 }
 async function createStore(name) {
   const me = currentUser();
   for (let attempt = 0; attempt < 3; attempt++) {
     const slug = await uniqueSlug(name);
-    const { data: row, error } = await sb.from('stores').insert({ owner_id: me.id, slug, data: emptyStore(name) }).select('*').single();
+    const data = emptyStore(name);
+    if (validPhone(me.email)) data.phone = normPhone(me.email); // registered with a phone: orders go to that WhatsApp
+    const { data: row, error } = await sb.from('stores').insert({ owner_id: me.id, slug, data }).select('*').single();
     if (!error) {
       const s = fromRow(row);
       state.stores.push(s);
@@ -1350,7 +1390,7 @@ function render() {
   const expired = planOf(s0) === 'expired';
   if (!u.isAdmin && (expired || (left <= 7 && (s0.plan || 'trial') !== 'free'))) {
     pb.className = `on ${expired ? 'bad' : 'warn'}`;
-    pb.innerHTML = `<span>${expired ? 'انتهى اشتراك متجرك.' : `${s0.welcome ? 'شهرك المجاني' : 'اشتراكك'} ينتهي ${left <= 0 ? 'اليوم' : left === 1 ? 'غداً' : `بعد ${left} أيام`}.`} اشترك بـ <b class="num">${fmtPrice(PRICE_MONTH)}</b> د.ع شهرياً أو <b class="num">${fmtPrice(PRICE_YEAR)}</b> د.ع سنوياً:</span><span class="row">${renewLinks(s0, true)}</span>`;
+    pb.innerHTML = `<span>${expired ? 'انتهى اشتراك متجرك.' : `${s0.welcome ? 'شهرك المجاني' : 'اشتراكك'} ينتهي ${left <= 0 ? 'اليوم' : left === 1 ? 'غداً' : `بعد ${left} أيام`}.`} اشترك من <b class="num">${fmtPrice(PRICES.basic.m)}</b> د.ع شهرياً:</span><span class="row">${renewLinks(s0, true)}</span>`;
   } else { pb.className = ''; pb.innerHTML = ''; }
   if (!can(state.view)) state.view = 'home';
   renderChrome();
@@ -1360,6 +1400,7 @@ function render() {
   const changed = v.dataset.view !== state.view;
   v.innerHTML = views[state.view]();
   v.dataset.view = state.view;
+  if (state.view === 'settings') fillReferrals(s0).catch(() => {});
   if (changed) { v.classList.remove('enter'); void v.offsetWidth; v.classList.add('enter'); }
   const fab = $('.fab');
   if (fab) fab.blur();
@@ -1374,6 +1415,26 @@ function go(view) {
 
 /* ---------------- sign in / create account ---------------- */
 let authTab = 'login';
+// Invite links: ?ref=<code>. Kept in the browser until the new store is created.
+const REF_RE = /^[a-z0-9]{6}$/;
+const SOCIAL_RE = /^(https?:\/\/)?(www\.|m\.|web\.)?(instagram\.com|facebook\.com|fb\.com|tiktok\.com)\/[A-Za-z0-9_.@%-]{2,}(\/[A-Za-z0-9_.@%=-]+)*\/?(\?.*)?$/i;
+function pendingRef() { try { const r = localStorage.getItem('rawaj-ref'); return r && REF_RE.test(r) ? r : null; } catch (e) { return null; } }
+(function captureRef() {
+  const r = (new URLSearchParams(location.search).get('ref') || '').toLowerCase();
+  if (REF_RE.test(r)) { try { localStorage.setItem('rawaj-ref', r); } catch (e) { /* ignore */ } authTab = 'register'; }
+})();
+const REF_ERRORS = { BAD_SOCIAL: 'رابط الصفحة غير صحيح. ضع رابط صفحتك على انستغرام أو فيسبوك أو تيك توك', SOCIAL_USED: 'هذه الصفحة مسجّلة لمتجر آخر', BAD_REF: 'رابط الدعوة غير صالح', ALREADY_SET: 'الدعوة مسجّلة من قبل', TOO_LATE: 'انتهت مدة تسجيل الدعوة' };
+async function applyPendingReferral() {
+  const ref = pendingRef();
+  let social = null;
+  try { social = localStorage.getItem('rawaj-ref-social'); } catch (e) { /* ignore */ }
+  if (!ref || !social || !store()) return;
+  const { data, error } = await sb.rpc('set_referral', { p_ref: ref, p_social: social });
+  if (error) return; // try again next sign-in
+  try { localStorage.removeItem('rawaj-ref'); localStorage.removeItem('rawaj-ref-social'); } catch (e) { /* ignore */ }
+  if (data && data.ok) await reloadStore(store().id);
+  else if (data) toast(REF_ERRORS[data.error] || 'تعذّر تسجيل الدعوة', true);
+}
 function normId(v) {
   const s = String(v || '').trim();
   if (s.includes('@')) return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s) ? s.toLowerCase() : null;
@@ -1402,7 +1463,9 @@ function renderAuth() {
       ${reg ? `
         <div class="field"><label for="aName">اسمك</label><input class="input" id="aName" maxlength="80" autocomplete="name"></div>
         <div class="field"><label for="aStore">اسم متجرك</label><input class="input" id="aStore" maxlength="80" placeholder="مثال: عطور الأنبار"></div>
-        <div class="hint" style="margin:0 0 12px">متجرك الجديد يحصل على <b>شهر كامل مجاناً</b>، وبعدها <b class="num">${fmtPrice(PRICE_MONTH)}</b> د.ع شهرياً أو <b class="num">${fmtPrice(PRICE_YEAR)}</b> د.ع سنوياً.</div>` : ''}
+        ${pendingRef() ? `<div class="hint ref-hint" style="margin:0 0 12px">جيت من رابط دعوة 🎁 ضع رابط صفحة متجرك على انستغرام أو فيسبوك أو تيك توك، نتحقق منها حتى تنحسب الدعوة لصاحبها.</div>
+        <div class="field"><label for="aSocial">رابط صفحتك (انستغرام / فيسبوك / تيك توك)</label><input class="input" id="aSocial" maxlength="200" dir="ltr" style="text-align:left" placeholder="instagram.com/your.shop" autocapitalize="off" spellcheck="false"></div>` : ''}
+        <div class="hint" style="margin:0 0 12px">متجرك الجديد يحصل على <b>شهر كامل مجاناً</b>، وبعدها نسخة عادي <b class="num">${fmtPrice(PRICES.basic.m)}</b> د.ع أو برو <b class="num">${fmtPrice(PRICES.pro.m)}</b> د.ع شهرياً.</div>` : ''}
       <div class="field"><label for="aId">البريد الإلكتروني أو رقم الهاتف</label><input class="input" id="aId" maxlength="120" autocomplete="username" dir="ltr" style="text-align:right"></div>
       <div class="field"><label for="aPw">كلمة المرور</label><input class="input" id="aPw" type="password" maxlength="200" autocomplete="${reg ? 'new-password' : 'current-password'}">${reg ? '<small class="sub">8 أحرف على الأقل</small>' : ''}</div>
       <div id="aErr" class="err" hidden></div>
@@ -1447,6 +1510,12 @@ async function onAuthSubmit(e) {
     if (!storeName) return showErr('اكتب اسم متجرك');
     if (!id) return showErr('اكتب بريداً صحيحاً أو رقم هاتف من 11 رقماً يبدأ بـ 07');
     if (pw.length < 8) return showErr('كلمة المرور 8 أحرف على الأقل');
+    const socialEl = $('#aSocial');
+    if (socialEl) {
+      const soc = socialEl.value.trim();
+      if (!SOCIAL_RE.test(soc)) return showErr(REF_ERRORS.BAD_SOCIAL);
+      try { localStorage.setItem('rawaj-ref-social', soc); } catch (err) { /* ignore */ }
+    }
     btn.disabled = true; btn.textContent = 'جارِ إنشاء متجرك…';
     const { data, error } = await sb.auth.signUp({ email: idToEmail(id), password: pw, options: { data: { name } } });
     if (error) return showErr(authError(error));
@@ -1456,6 +1525,7 @@ async function onAuthSubmit(e) {
       return showErr('أُنشئ الحساب. أكّد بريدك من الرسالة التي وصلتك ثم سجّل الدخول');
     }
     try { await loadAccount(data.user); if (!store()) await createStore(storeName); } catch (err) { return showErr('أُنشئ الحساب لكن تعذّر إنشاء المتجر. سجّل الدخول لإكماله'); }
+    await applyPendingReferral().catch(() => {});
     afterSignIn('home');
     welcomeSheet();
     return;
@@ -1468,7 +1538,7 @@ async function onAuthSubmit(e) {
   let pending = null;
   try { pending = localStorage.getItem('rawaj-pending-store'); } catch (err) { /* ignore */ }
   if (pending && !store() && !currentUser().isAdmin) {
-    try { await createStore(pending); localStorage.removeItem('rawaj-pending-store'); afterSignIn('home'); welcomeSheet(); return; } catch (err) { /* user can create it from the next screen */ }
+    try { await createStore(pending); localStorage.removeItem('rawaj-pending-store'); await applyPendingReferral().catch(() => {}); afterSignIn('home'); welcomeSheet(); return; } catch (err) { /* user can create it from the next screen */ }
   }
   afterSignIn('home');
 }
@@ -1497,7 +1567,9 @@ function welcomeSheet() {
       <p class="welcome-lead">حصلت على <b>اشتراك شهري مجاني</b> لمتجر «${esc(s.name)}»</p>
       <div class="welcome-days">مجاناً حتى <b>${s.planEnds ? dateText(s.planEnds) : ''}</b></div>
       <div class="welcome-link"><span class="sub">رابط متجرك</span><b dir="ltr">${esc(shortLink(s))}</b></div>
-      <p class="sub" style="margin:14px 0 8px">بعد الشهر المجاني:</p>
+      ${s.refStatus === 'pending' ? '<p class="sub" style="margin:10px 0 0">سجّلنا دعوتك، وراح نتحقق من صفحتك قريباً.</p>' : ''}
+      <p class="sub" style="margin:10px 0 0">خلال الشهر المجاني تشتغل بنسخة <b>برو</b> كاملة: منتجات بلا حدود.</p>
+      <p class="sub" style="margin:14px 0 8px">بعد الشهر المجاني اختر نسختك:</p>
       ${priceCards(s)}
       <div class="actions"><button class="btn primary" type="button" id="wStart">${icon('plus')} أضف أول منتج</button><button class="btn" type="button" data-act="close-sheet">لاحقاً</button></div>
     </div>`, (sh) => sh.querySelector('#wStart').addEventListener('click', () => { closeSheet(); go('products'); setTimeout(() => productSheet(null), 50); }));
@@ -1522,7 +1594,7 @@ function renderNoStore() {
     const errEl = $('#nsErr');
     if (!name) { errEl.textContent = 'اكتب اسم المتجر'; errEl.hidden = false; return; }
     $('#nsBtn').disabled = true;
-    try { await createStore(name); afterSignIn('home'); welcomeSheet(); }
+    try { await createStore(name); await applyPendingReferral().catch(() => {}); afterSignIn('home'); welcomeSheet(); }
     catch (err) { errEl.textContent = 'تعذّر إنشاء المتجر، تحقق من الإنترنت وحاول مجدداً'; errEl.hidden = false; $('#nsBtn').disabled = false; }
   });
 }
@@ -1616,6 +1688,8 @@ function renderAdmin() {
     ${list.length > limit ? `<button class="btn block" type="button" data-act="admin-more" style="margin-top:10px">عرض المزيد (${list.length - limit} متبقي)</button>` : ''}`
     : '<div class="list"><div class="empty">لا توجد متاجر تطابق البحث.</div></div>'}
 
+    ${state.stores.some((x) => x.refCode) ? adminReferrals() : ''}
+    ${state.codes ? adminCodes() : ''}
     <h2>سجل عمليات الإدارة</h2>
     ${(state.audit || []).length ? `<div class="list">${state.audit.slice(0, 25).map((a) => `<div class="item"><div class="grow"><div>${esc(a.action)}${a.store ? ` — ${esc(a.store)}` : ''}</div>${a.detail ? `<div class="meta">${esc(a.detail)}</div>` : ''}</div><div class="meta">${ago(a.at)}</div></div>`).join('')}</div>`
       : '<div class="list"><div class="empty">لم تُسجَّل أي عملية بعد.</div></div>'}
@@ -1633,6 +1707,41 @@ async function adminUpdate(s, patch, action, detail) {
   logAdmin(action, s, detail);
   return true;
 }
+function adminReferrals() {
+  const pend = state.stores.filter((x) => x.refStatus === 'pending');
+  const byId = new Map(state.stores.map((x) => [x.id, x]));
+  const owners = new Map(state.users.filter((u) => u.storeId).map((u) => [u.storeId, u]));
+  return `<h2>دعوات بانتظار التحقق <span class="sub">(<span class="num">${pend.length}</span>)</span></h2>
+  ${pend.length ? `<div class="list ref-admin">${pend.map((x) => { const inv = byId.get(x.referredBy); const o = owners.get(x.id);
+    return `<div class="item"><div class="grow">
+      <div><b>${esc(x.name)}</b> <span class="sub">· ${o ? esc(o.name) + ' · <span dir="ltr">' + esc(o.email) + '</span>' : ''}</span></div>
+      <div class="meta">دعاه: ${inv ? esc(inv.name) : '—'} · أُنشئ ${ago(x.createdAt)} · منتجات: <span class="num">${x.products.length}</span></div>
+      <a href="${esc(x.socialUrl)}" target="_blank" rel="noopener noreferrer" dir="ltr">${esc(x.socialUrl)}</a></div>
+      <div class="row" style="flex-direction:column;gap:6px"><button class="btn primary" type="button" data-refok="${x.id}">قبول</button><button class="btn danger" type="button" data-refno="${x.id}">رفض</button></div></div>`; }).join('')}</div>
+    <p class="note">افتح الصفحة وتأكد أنها حقيقية وتخص صاحب المتجر (منشورات، متابعين، ليست جديدة أو فارغة). كل 5 دعوات مقبولة تعطي صاحب الرابط شهراً مجانياً تلقائياً.</p>`
+    : '<div class="list"><div class="empty">لا توجد دعوات تنتظر التحقق.</div></div>'}`;
+}
+function adminCodes() {
+  const codes = state.codes || [];
+  const t = (tier, m) => { const l = codes.filter((c) => (c.tier || 'basic') === tier && c.months === m); return `${l.filter((c) => c.redeemed_at).length} / ${l.length}`; };
+  return `<h2>رموز الاشتراك</h2>
+  <div class="panel">
+    <dl class="kv">${['basic', 'pro'].map((tier) => `<dt>${TIER_NAME[tier]}</dt><dd>شهر <span class="num">${t(tier, 1)}</span> · 6 أشهر <span class="num">${t(tier, 6)}</span> · سنة <span class="num">${t(tier, 12)}</span> <span class="sub">(مستخدم / الكل)</span></dd>`).join('')}</dl>
+    <div class="row" style="flex-wrap:wrap;margin-top:10px">
+      <select class="input" id="cTier" style="width:auto"><option value="basic">عادي</option><option value="pro">برو</option></select>
+      <select class="input" id="cMonths" style="width:auto"><option value="1">شهر</option><option value="6">6 أشهر</option><option value="12">سنة</option></select>
+      <input class="input num" id="cCount" type="number" min="1" max="500" value="10" style="width:90px">
+      <button class="btn primary" type="button" data-act="make-codes">إنشاء رموز</button>
+      <button class="btn" type="button" data-act="export-codes">تنزيل الرموز غير المستخدمة</button>
+    </div></div>`;
+}
+function downloadCodes(list, name) {
+  const lbl = { 1: 'شهر', 6: '6 أشهر', 12: 'سنة' };
+  const csv = '\ufeffالرمز,النسخة,المدة,الحالة\n' + list.map((c) => `${c.code},${TIER_NAME[c.tier || 'basic']},${lbl[c.months]},${c.redeemed_at ? 'مستخدم' : 'غير مستخدم'}`).join('\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+  a.download = name; document.body.appendChild(a); a.click(); a.remove();
+}
 function adminStoreSheet(id) {
   const s = state.stores.find((x) => x.id === id);
   if (!s) return;
@@ -1648,12 +1757,14 @@ function adminStoreSheet(id) {
       <dt>المالك</dt><dd>${owner ? `${esc(owner.name)}<br><span dir="ltr">${esc(owner.email)}</span>` : '—'}</dd>
       <dt>الرابط</dt><dd dir="ltr" style="text-align:right">${esc(shortLink(s))}</dd>
       <dt>أُنشئ</dt><dd>${dateText(s.createdAt)}</dd>
+      ${s.referredBy ? `<dt>الدعوة</dt><dd>${{ pending: 'بانتظار التحقق', approved: 'مقبولة', rejected: 'مرفوضة' }[s.refStatus] || ''}${s.socialUrl ? `<br><a href="${esc(s.socialUrl)}" target="_blank" rel="noopener noreferrer" dir="ltr">${esc(s.socialUrl)}</a>` : ''}</dd>` : ''}
+      <dt>دعوات مقبولة</dt><dd><span class="num">${state.stores.filter((x) => x.referredBy === s.id && x.refStatus === 'approved').length}</span> · أشهر مكتسبة <span class="num">${s.refRewards || 0}</span></dd>
       <dt>المنتجات</dt><dd><span class="num">${s.products.length}</span></dd>
       <dt>الطلبات</dt><dd><span class="num">${s.orders.length}</span>${last ? ` · آخر طلب ${ago(last)}` : ''}</dd>
       <dt>مبيعات الشهر</dt><dd>${money(sales)}</dd>
     </dl>
     <div class="field"><label for="aPlan">تغيير الخطة</label>
-      <div class="row"><select class="input grow" id="aPlan">${['monthly', 'yearly', 'trial', 'free'].map((k) => `<option value="${k}" ${(s.plan || 'trial') === k ? 'selected' : ''}>${PLANS[k].l}${PLANS[k].price ? ` — ${PLANS[k].price.toLocaleString('en-US')} د.ع` : ''}${PLANS[k].days ? ` (${PLANS[k].days} يوماً)` : ''}</option>`).join('')}</select>
+      <div class="row"><select class="input grow" id="aPlan">${['monthly', 'yearly', 'pro_monthly', 'pro_yearly', 'trial', 'free'].map((k) => `<option value="${k}" ${(s.plan || 'trial') === k ? 'selected' : ''}>${PLANS[k].l}${PLANS[k].price ? ` — ${PLANS[k].price.toLocaleString('en-US')} د.ع` : ''}${PLANS[k].days ? ` (${PLANS[k].days} يوماً)` : ''}</option>`).join('')}</select>
       <button class="btn primary" type="button" id="aPlanBtn">تفعيل</button></div>
       <small class="sub">في المرحلة الأولى يُفعَّل الاشتراك يدوياً بعد استلام التحويل.</small></div>
     <div class="actions">
@@ -1739,6 +1850,36 @@ function adminStoreSheet(id) {
 }
 
 /* ---------------- views ---------------- */
+const inviteLink = (s) => `${siteBase()}?ref=${s.refCode}`;
+function inviteCard(s) {
+  if (!s.refCode) return '';
+  return `<section class="panel invite">
+    <p style="margin-top:0">كل <b>5 متاجر جديدة</b> تنفتح من رابطك ونتحقق منها، تحصل على <b>شهر مجاني</b> يضاف لاشتراكك.</p>
+    <div class="url" dir="ltr">${esc(inviteLink(s).replace(/^https?:\/\//, ''))}</div>
+    <div class="row" style="flex-wrap:wrap"><button class="btn" type="button" data-act="copy-invite">${icon('copy')} نسخ رابط الدعوة</button><button class="btn" type="button" data-act="share-invite">${icon('share')} مشاركة</button></div>
+    <div id="refProgress" class="ref-progress"><span class="sub">جارِ تحميل دعواتك…</span></div>
+    <p class="note">حتى تنحسب الدعوة: صاحب المتجر الجديد يضيف رابط صفحته على انستغرام أو فيسبوك أو تيك توك، ونتحقق منها يدوياً أنها صفحة حقيقية. الحسابات المكررة أو الوهمية ما تنحسب.</p>
+  </section>`;
+}
+async function fillReferrals(s) {
+  const box = $('#refProgress');
+  if (!box) return;
+  let list = [], rewards = s.refRewards || 0;
+  if (currentUser().isAdmin) list = state.stores.filter((x) => x.referredBy === s.id).map((x) => ({ name: x.name, status: x.refStatus }));
+  else {
+    const { data, error } = await sb.rpc('my_referrals');
+    if (error || !data) { box.innerHTML = '<span class="sub">تعذّر تحميل الدعوات.</span>'; return; }
+    list = data.list || []; rewards = data.rewards || 0;
+  }
+  if (!$('#refProgress')) return;
+  const ok = list.filter((x) => x.status === 'approved').length;
+  const pend = list.filter((x) => x.status === 'pending').length;
+  const step = ok - rewards * 5;
+  const label = { approved: ['تم التحقق', 'var(--good)'], pending: ['بانتظار التحقق', 'var(--warn)'], rejected: ['مرفوضة', 'var(--bad)'] };
+  box.innerHTML = `<div class="spread"><b>الدعوة القادمة: <span class="num">${Math.max(0, Math.min(5, step))}</span> / 5</b><span class="sub">ربحت <b class="num">${rewards}</b> شهر${pend ? ` · <span class="num">${pend}</span> بانتظار التحقق` : ''}</span></div>
+    <div class="flow-bar" style="margin:8px 0 4px"><i style="width:${Math.max(0, Math.min(5, step)) * 20}%;--c:var(--brand)"></i></div>
+    ${list.length ? `<div class="ref-list">${list.slice(0, 20).map((x) => `<div class="ref-row"><span class="trunc">${esc(x.name || 'متجر')}</span><span class="badge" style="--c:${(label[x.status] || label.pending)[1]}">${(label[x.status] || label.pending)[0]}</span></div>`).join('')}</div>` : '<div class="sub">ما أحد سجّل من رابطك بعد.</div>'}`;
+}
 function linkCard(s) {
   return `<section class="link-card" aria-label="رابط متجرك">
     <div class="spread"><b>رابط متجرك</b><span class="sub">أرسله لزبائنك أو ضعه في البايو</span></div>
@@ -1831,6 +1972,7 @@ function viewHome() {
     </div>
   </div>
 
+  ${validPhone(s.phone || '') ? '' : `<button type="button" class="wa-missing" data-nav="settings">${icon('chat')}<span><b>أضف رقم واتساب متجرك</b><br><span class="sub">حتى تصلك طلبات الزبائن ورسائلهم على رقمك أنت</span></span></button>`}
   <div class="kpis">
     <div class="kpi"><span class="kpi-i">${icon('cash')}</span><div class="kpi-l">مبيعات ${MONTHS[d.getMonth()]}</div><div class="kpi-v">${money(sales)}</div>${delta(sales, salesPrev)}</div>
     <div class="kpi"><span class="kpi-i">${icon('orders')}</span><div class="kpi-l">طلبات الشهر</div><div class="kpi-v num">${inMonth.length}</div>${delta(inMonth.length, inPrev.length)}</div>
@@ -1921,6 +2063,7 @@ function viewProducts() {
   const list = s.products.filter((p) => !q || p.name.includes(q) || p.category.includes(q));
   return `
   <div class="spread"><h1>المنتجات</h1>${can('products.write') ? `<button class="btn primary" type="button" data-act="new-product">${icon('plus')} منتج جديد</button>` : ''}</div>
+  ${isPro(s) ? '' : (() => { const n = s.products.filter((x) => x.active).length; return `<div class="limit-bar ${n >= BASIC_LIMIT ? 'full' : ''}"><div class="spread"><span>نسخة عادي: <b class="num">${Math.min(n, BASIC_LIMIT)}</b> / <span class="num">${BASIC_LIMIT}</span> منتجات منشورة</span><button class="btn" type="button" data-nav="settings">رقِّ لبرو</button></div><div class="flow-bar"><i style="width:${Math.min(100, (n / BASIC_LIMIT) * 100)}%;--c:${n >= BASIC_LIMIT ? 'var(--warn)' : 'var(--brand)'}"></i></div>${n > BASIC_LIMIT ? `<div class="sub" style="margin-top:6px">يظهر للزبائن أول ${BASIC_LIMIT} منتجات فقط.</div>` : ''}</div>`; })()}
   <div class="search">${icon('search')}<input class="input" id="pq" type="search" placeholder="اسم المنتج أو التصنيف" value="${esc(q)}" aria-label="بحث في المنتجات"></div>
   ${list.length ? `<div class="pgrid">${list.map((p) => {
     const prices = p.variants.map((v) => v.price);
@@ -2487,8 +2630,9 @@ function viewSettings() {
   <form class="panel" id="settingsForm" novalidate>
     <div class="field"><label for="setName">اسم المتجر</label><input class="input" id="setName" value="${esc(s.name)}" maxlength="80" required></div>
     <div class="field"><label for="setTag">وصف قصير يظهر للزبائن</label><input class="input" id="setTag" value="${esc(s.tagline || '')}" maxlength="120"></div>
+    <div class="field"><label for="setPhone">رقم واتساب المتجر</label><input class="input num" id="setPhone" inputmode="tel" placeholder="07XXXXXXXXX" value="${esc(s.phone || '')}" style="text-align:right">
+      <small class="sub">على هذا الرقم تصلك طلبات زبائنك ورسائلهم من صفحة متجرك.</small></div>
     <div class="grid2">
-      <div class="field"><label for="setPhone">هاتف المتجر</label><input class="input num" id="setPhone" inputmode="tel" value="${esc(s.phone || '')}" style="text-align:right"></div>
       <div class="field"><label for="setColor">لون المتجر</label><input class="input" id="setColor" type="color" value="${esc(s.color)}" style="padding:4px"></div>
     </div>
     <div class="grid2">
@@ -2504,10 +2648,18 @@ function viewSettings() {
 
   <h2>الاشتراك</h2>
   <div class="panel">
-    <div class="spread"><div>اشتراكك: ${planBadge(s)}</div>${s.planEnds && planOf(s) !== 'free' ? `<span class="sub">${planOf(s) === 'expired' ? `انتهى في ${dateText(s.planEnds)}` : `باقي <b class="num">${daysLeft(s)}</b> يوماً · حتى ${dateText(s.planEnds)}`}</span>` : ''}</div>
+    <div class="spread"><div>اشتراكك: ${planBadge(s)} <span class="tier-chip ${isPro(s) ? 'pro' : ''}">${isPro(s) ? 'برو' : 'عادي'}</span></div>${s.planEnds && planOf(s) !== 'free' ? `<span class="sub">${planOf(s) === 'expired' ? `انتهى في ${dateText(s.planEnds)}` : `باقي <b class="num">${daysLeft(s)}</b> يوماً · حتى ${dateText(s.planEnds)}`}</span>` : ''}</div>
     ${planOf(s) === 'free' ? '<p class="sub" style="margin-bottom:0">خطة مجانية دائمة.</p>' : `<p class="sub" style="margin:8px 0 12px">اختر اشتراكك وراسلنا على واتساب، نفعّله لك مباشرة.</p>${priceCards(s)}
     <div class="row" style="flex-wrap:wrap;margin-top:10px">${renewLinks(s)}</div>`}
   </div>
+  ${s.refCode ? `<form class="panel redeem" id="redeemForm" novalidate style="margin-top:12px">
+    <div><b>عندك رمز اشتراك؟</b><div class="sub">اكتب الرمز وفعّله، تنضاف مدته لاشتراكك مباشرة.</div></div>
+    <div class="row" style="margin-top:10px"><input class="input num grow" id="redeemCode" placeholder="XX-XXXX-XXXX" maxlength="20" dir="ltr" autocapitalize="characters" autocomplete="off" spellcheck="false" aria-label="رمز الاشتراك">
+      <button class="btn primary" type="submit" id="redeemBtn">تفعيل الرمز</button></div>
+    <div id="redeemMsg" class="err" hidden style="margin:8px 0 0"></div>
+  </form>` : ''}
+
+  ${s.refCode ? `<h2>ادعُ أصحاب المتاجر واحصل على شهر مجاني</h2>${inviteCard(s)}` : ''}
 
   <h2>الموظفون والصلاحيات</h2>
   <div class="panel">
@@ -2773,6 +2925,8 @@ function productSheet(id) {
       else if (p.variants.some((v) => v.price <= 0)) err = 'سعر البيع يجب أن يكون أكبر من صفر';
       else if (showCost && p.variants.some((v) => v.cost > v.price)) err = 'التكلفة أكبر من سعر البيع في أحد الخيارات';
       else if (stockChanged() && !reason) err = 'اكتب سبب تعديل المخزون';
+      else if (sh.querySelector('#pActive').checked && !(existing && existing.active) && s.products.filter((x) => x.active).length >= publishedLimit(s))
+        err = `نسخة عادي تسمح بـ ${BASIC_LIMIT} منتجات منشورة فقط. ألغِ «يظهر للزبائن» لحفظه مخفياً، أو رقِّ لنسخة برو لمنتجات بلا حدود.`;
       if (err) { errEl.textContent = err; errEl.hidden = false; return; }
       const by = ROLES[state.role].l;
       const now = Date.now();
@@ -2862,7 +3016,11 @@ function priceText(p) {
   return lo === hi ? money(lo) : `من ${money(lo)}`;
 }
 const showLabel = (p, v) => p.variants.length > 1 || (v.label && !/^(افتراضي|default|-)$/i.test(v.label.trim()));
-function sfItems() { return statusOf(sfStore) === 'suspended' ? [] : sfStore.products.filter((p) => p.active && p.variants.length); }
+function sfItems() {
+  if (statusOf(sfStore) === 'suspended') return [];
+  const all = sfStore.products.filter((p) => p.active && p.variants.length);
+  return sfPublic || !sfStore.plan ? all : all.slice(0, publishedLimit(sfStore)); // public data is already limited by the server
+}
 function cartLines() {
   const out = [];
   for (const c of cart) {
@@ -3232,8 +3390,8 @@ function sfDoneSheet(o, cust, address) {
     </div>
     <p class="sub" style="margin:0 0 4px">سيتصل بك المتجر على <span class="num">${esc(cust.phone)}</span> لتأكيد الطلب وموعد التوصيل.</p>
     <div class="actions">
-      ${phone ? `<a class="btn" href="https://wa.me/964${phone.slice(1)}?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener">${icon('chat')} أرسل الطلب على واتساب</a>` : ''}
-      <button class="btn primary" type="button" data-act="close-sheet">متابعة التسوق</button>
+      ${phone ? `<a class="btn primary" href="https://wa.me/964${phone.slice(1)}?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener">${icon('chat')} أرسل طلبك لصاحب المتجر على واتساب</a>` : ''}
+      <button class="btn ${phone ? '' : 'primary'}" type="button" data-act="close-sheet">متابعة التسوق</button>
     </div>`);
 }
 function sfTrackSheet() {
@@ -3280,6 +3438,19 @@ document.addEventListener('click', (e) => {
   const t = e.target.closest('button, [data-act]');
   if (!t) return;
   if (t.dataset.astore) { adminStoreSheet(t.dataset.astore); return; }
+  if (t.dataset.refok || t.dataset.refno) {
+    const sid = t.dataset.refok || t.dataset.refno, ok = !!t.dataset.refok;
+    const st = state.stores.find((x) => x.id === sid);
+    confirmSheet(ok ? 'قبول الدعوة' : 'رفض الدعوة', ok ? `تأكدت أن صفحة «${st ? st.name : ''}» حقيقية؟ تنحسب الدعوة لصاحب الرابط.` : 'ما تنحسب هذه الدعوة لصاحب الرابط.', ok ? 'قبول' : 'رفض', !ok).then(async (yes) => {
+      if (!yes) return;
+      const { data, error } = await sb.rpc('review_referral', { p_store: sid, p_approve: ok });
+      if (error || !data || !data.ok) { toast('تعذّر الحفظ', true); return; }
+      logAdmin(ok ? 'قبول دعوة' : 'رفض دعوة', st, st ? st.socialUrl : '');
+      await loadAdminData(); renderAdmin();
+      toast(data.rewarded ? 'قُبلت، وصاحب الرابط حصل على شهر مجاني' : ok ? 'قُبلت الدعوة' : 'رُفضت الدعوة');
+    });
+    return;
+  }
   if (t.dataset.af) { state.af = t.dataset.af; state.aLimit = 50; save(); renderAdmin(); return; }
   if (t.dataset.tab) { authTab = t.dataset.tab; renderAuth(); window.scrollTo(0, 0); return; }
   if (t.dataset.nav) { closeSheet(); go(t.dataset.nav); return; }
@@ -3315,11 +3486,24 @@ document.addEventListener('click', (e) => {
     case 'logout': signOut(); break;
     case 'admin-exit': { const s = store(); syncNow().then(() => { state.adminAs = null; if (s) logAdmin('خروج من إدارة متجر', s); saveUI(); render(); window.scrollTo(0, 0); }); break; }
     case 'admin-refresh': loadAdminData().then(() => { renderAdmin(); toast('حُدّثت البيانات'); }, () => toast('تعذّر التحديث، تحقق من الإنترنت', true)); break;
+    case 'make-codes': {
+      const m = Number($('#cMonths').value), n = Math.max(1, Math.min(500, Number($('#cCount').value) || 0)), tier = $('#cTier').value;
+      sb.rpc('make_sub_codes', { p_months: m, p_count: n, p_tier: tier }).then(async ({ data, error }) => {
+        if (error || !Array.isArray(data)) { toast('تعذّر إنشاء الرموز', true); return; }
+        downloadCodes(data.map((code) => ({ code, months: m, tier })), `rawaj-codes-${tier}-${m}m-${Date.now()}.csv`);
+        logAdmin('إنشاء رموز اشتراك', null, `${n} × ${TIER_NAME[tier]} ${m} شهر`);
+        await loadAdminData(); renderAdmin(); toast(`أُنشئ ${data.length} رمزاً ونزل الملف`);
+      });
+      break;
+    }
+    case 'export-codes': downloadCodes((state.codes || []).filter((c) => !c.redeemed_at), `rawaj-codes-${Date.now()}.csv`); break;
     case 'admin-more': state.aLimit = (state.aLimit || 50) + 50; save(); renderAdmin(); break;
     case 'copy-link': { const ls = sfStore || store(); if (ls) copyText(publicLink(ls)).then((ok) => toast(ok ? 'نُسخ رابط المتجر، أرسله لزبائنك' : 'تعذّر النسخ', !ok)); break; }
     case 'share-link': { const ls = sfStore || store(); if (ls) shareLink(ls); break; }
     case 'remove-logo': { const ls = store(); if (ls && ls.logo) { imgDel([ls.logo]); ls.logo = null; save(); render(); toast('حُذف الشعار'); } break; }
     case 'close-storefront': closeStorefront(); break;
+    case 'copy-invite': { const ls = store(); if (ls) copyText(inviteLink(ls)).then((ok) => toast(ok ? 'نُسخ رابط الدعوة' : 'تعذّر النسخ', !ok)); break; }
+    case 'share-invite': { const ls = store(); if (!ls) break; const url = inviteLink(ls); const text = 'سوّي متجرك أونلاين على رواج: طلبات ومخزن وأرباح ورابط لمتجرك، وأول شهر مجاني'; if (navigator.share) navigator.share({ title: 'رواج', text, url }).catch(() => {}); else copyText(url).then((ok) => toast(ok ? 'نُسخ رابط الدعوة' : 'تعذّر النسخ', !ok)); break; }
     case 'sf-cart': sfCartSheet(); break;
     case 'sf-track': sfTrackSheet(); break;
     case 'more': moreSheet(); break;
@@ -3389,6 +3573,25 @@ document.addEventListener('submit', async (e) => {
   save(); render(); toast('حُفظت التغييرات');
 });
 
+const REDEEM_ERRORS = { BAD_CODE: 'الرمز غير صحيح، تأكد منه وحاول مرة ثانية', USED_CODE: 'هذا الرمز مستخدم من قبل', TOO_MANY_TRIES: 'محاولات خاطئة كثيرة. حاول بعد ساعة', NO_STORE: 'ما عندك متجر', NOT_SIGNED_IN: 'سجّل الدخول أولاً' };
+document.addEventListener('submit', async (e) => {
+  if (e.target.id !== 'redeemForm') return;
+  e.preventDefault();
+  const s = store(), msg = $('#redeemMsg'), btn = $('#redeemBtn');
+  const code = $('#redeemCode').value.trim();
+  const show = (t, good) => { msg.textContent = t; msg.hidden = false; msg.style.color = good ? 'var(--good)' : ''; };
+  if (!code) return show('اكتب رمز الاشتراك');
+  if (state.adminAs) return show('الرمز يفعّله صاحب المتجر من حسابه. من لوحة الإدارة غيّر الخطة مباشرة.');
+  btn.disabled = true; btn.textContent = 'جارِ التفعيل…';
+  const { data, error } = await sb.rpc('redeem_code', { p_code: code });
+  btn.disabled = false; btn.textContent = 'تفعيل الرمز';
+  if (error || !data) return show('تعذّر الاتصال، تحقق من الإنترنت');
+  if (!data.ok) return show(REDEEM_ERRORS[data.error] || 'تعذّر تفعيل الرمز');
+  await syncNow();
+  await reloadStore(s.id);
+  const m = data.months;
+  toast(`تم التفعيل: نسخة ${TIER_NAME[data.tier || 'basic']} — ${m === 12 ? 'سنة كاملة' : m === 6 ? '6 أشهر' : 'شهر'} أضيفت لاشتراكك`);
+});
 document.addEventListener('input', (e) => { if (e.target.id === 'featText') { const c = $('#featCount'); if (c) c.textContent = e.target.value.length; } });
 document.addEventListener('submit', (e) => {
   if (e.target.id !== 'featForm') return;
