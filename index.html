@@ -2915,6 +2915,13 @@ function viewSettings() {
       ${s.logo ? '<button class="btn danger" type="button" data-act="remove-logo">إزالة</button>' : ''}
     </div>
   </div>
+  <div class="panel row" style="margin-bottom:14px">
+    <div class="grow"><div>اللغة</div><div class="sub">العربية أو English</div></div>
+    <div class="row" style="gap:6px">
+      <button class="btn" type="button" data-lang="ar">العربية</button>
+      <button class="btn" type="button" data-lang="en">English</button>
+    </div>
+  </div>
   <form class="panel" id="settingsForm" novalidate>
     <div class="field"><label for="setName">اسم المتجر</label><input class="input" id="setName" value="${esc(s.name)}" maxlength="80" required></div>
     <div class="field"><label for="setTag">وصف قصير يظهر للزبائن</label><input class="input" id="setTag" value="${esc(s.tagline || '')}" maxlength="120"></div>
@@ -4051,6 +4058,318 @@ sb.auth.onAuthStateChange((event) => {
   }
   render();
   await pub;
+})();
+</script>
+<script>
+/* ---- Language switch: Arabic (default) or English, chosen in Settings. Visible text and placeholders are translated in place from DICT; text not in DICT stays as written. ---- */
+(() => {
+  const DICT = {
+    "رواج": "Rawaj", "رواج الذكي": "Rawaj AI", "رواج · لوحة الإدارة": "Rawaj · Admin panel", "رواج — متجرك وحساباته في جيبك": "Rawaj — your store and accounts in your pocket",
+    "متجرك وطلباته وحساباته… في جيبك": "Your store, orders and accounts… in your pocket", "صباح الخير": "Good morning", "مساء الخير": "Good evening",
+    "أهلاً، أنا رواج الذكي": "Hi, I'm Rawaj AI", "سؤالك لرواج الذكي": "Ask Rawaj AI", "اكتب سؤالك…": "Type your question…", "يفكّر…": "Thinking…",
+    "تعذّر الجواب": "Couldn't get an answer", "الجواب تأخر كثير، جرّب مرة ثانية": "The answer is taking too long, try again",
+    "الخدمة مزدحمة الحين، جرّب بعد لحظات.": "The service is busy right now, try again in a moment.",
+    "خلصت أسئلتك اليوم. ارجع بكرة، أو رقِّ لسوبر برو بلا حد.": "You've used today's questions. Come back tomorrow, or upgrade to Super Pro for unlimited.",
+    "هذي الميزة لبرو وسوبر برو بس.": "This feature is for Pro and Super Pro only.", "رواج الذكي مو مفعّل بعد": "Rawaj AI isn't enabled yet",
+    "الرئيسية": "Home", "الطلبات": "Orders", "المنتجات": "Products", "المخزن": "Warehouse", "الحسابات": "Accounts", "الزبائن": "Customers",
+    "الإعدادات": "Settings", "إعدادات المتجر": "Store settings", "كوبونات الخصم": "Discount coupons", "كوبونات خصم": "Discount coupons", "كوبون الخصم": "Discount coupon",
+    "طلب ميزة": "Feature request", "طلب ميزة خاصة بمتجرك": "Request a feature for your store", "اشرح الميزة اللي تريدها": "Describe the feature you want",
+    "الموردون": "Suppliers", "المصروفات": "Expenses", "المشتريات": "Purchases", "الأقسام": "Categories", "المبيعات": "Sales", "المتاجر": "Stores",
+    "المستخدمون": "Users", "الموظفون والصلاحيات": "Staff & permissions", "الاشتراك": "Subscription", "اشتراكك": "Your subscription", "الخطة": "Plan",
+    "الحساب": "Account", "الدعوة": "Invite", "الدعوات": "Invites", "الصندوق": "Cash box", "الطلبات والمخزن والموردون في مكان واحد": "Orders, warehouse and suppliers in one place",
+    "تسجيل الدخول": "Sign in", "تسجيل الخروج": "Sign out", "خروج": "Sign out", "دخول": "Sign in", "سجّل الدخول": "Sign in", "سجّل دخول من جديد": "Sign in again",
+    "دخول أصحاب المتاجر": "Store owner sign-in", "دخول لإدارة متجر": "Sign in to manage a store", "عندي حساب، أريد تسجيل الدخول": "I have an account, sign in",
+    "إنشاء الحساب والمتجر": "Create account & store", "إنشاء المتجر": "Create store", "إنشاء متجر جديد": "Create a new store", "أنشئ متجرك": "Create your store",
+    "أنشئ متجرك خلال دقيقة": "Create your store in a minute", "سوّي متجرك أونلاين على رواج: طلبات ومخزن وأرباح ورابط لمتجرك، وأول شهر مجاني": "Build your online store on Rawaj: orders, warehouse, profit and a store link, with the first month free",
+    "نسيت كلمة المرور؟": "Forgot password?", "استعادة كلمة المرور": "Reset password", "كلمة المرور": "Password", "كلمة المرور الجديدة": "New password",
+    "أعد كتابة كلمة المرور": "Re-enter password", "كلمة المرور المؤقتة": "Temporary password", "كلمة مرور مؤقتة": "Temporary password", "كلمة مرور مؤقتة للمالك": "Temporary password for the owner",
+    "إنشاء كلمة مؤقتة": "Create temporary password", "حفظ كلمة المرور": "Save password", "حفظ كلمة المرور الجديدة": "Save new password", "تغيير كلمة المرور": "Change password",
+    "تم تغيير كلمة المرور": "Password changed", "تم تغيير كلمة المرور. سجّل الدخول بالكلمة الجديدة": "Password changed. Sign in with the new password",
+    "اختر كلمة مرور جديدة": "Choose a new password", "كلمتا المرور غير متطابقتين": "Passwords don't match",
+    "كلمة المرور 8 أحرف على الأقل، وبيها حروف وأرقام": "Password: at least 8 characters, with letters and numbers", "8 أحرف على الأقل، حروف وأرقام": "At least 8 characters, letters and numbers",
+    "8 أحرف على الأقل، وبيها حروف وأرقام.": "At least 8 characters, with letters and numbers.", "كلمة المرور ضعيفة، استخدم 8 أحرف على الأقل": "Weak password, use at least 8 characters",
+    "البريد الإلكتروني": "Email", "البريد الإلكتروني أو رقم الهاتف": "Email or phone number", "اكتب البريد الإلكتروني للحساب، وأرسل لك رابط لتغيير كلمة المرور.": "Enter your account email and we'll send you a password reset link.",
+    "أرسل رابط التغيير": "Send reset link", "البريد أو رقم الهاتف أو كلمة المرور غير صحيحة": "Email, phone or password is incorrect",
+    "هذا الحساب مسجّل مسبقاً، سجّل الدخول بدلاً من ذلك": "This account already exists, sign in instead", "لم يُؤكَّد البريد بعد. افتح رسالة التأكيد ثم سجّل الدخول": "Email not confirmed yet. Open the confirmation email, then sign in",
+    "بقيت خطوة واحدة: أرسلنا رسالة تأكيد إلى": "One step left: we sent a confirmation email to", "تم إنشاء حسابك 🎉": "Your account is created 🎉",
+    "حسابك جاهز. اكتب اسم متجرك لنبدأ، ومعه شهر كامل مجاناً.": "Your account is ready. Type your store name to start, with a full month free.",
+    "اسمك": "Your name", "الاسم": "Name", "اسم متجرك": "Your store name", "اسم المتجر": "Store name", "اكتب اسمك": "Enter your name", "اكتب اسم متجرك": "Enter your store name",
+    "جارِ الدخول…": "Signing in…", "جارِ إنشاء متجرك…": "Creating your store…", "جارِ التفعيل…": "Activating…", "جارِ التحميل…": "Loading…", "جارِ الحفظ…": "Saving…",
+    "جارِ الحذف…": "Deleting…", "جارِ الإرسال…": "Sending…", "جارِ إرسال الطلب…": "Sending order…", "جارِ تحميل دعواتك…": "Loading your invites…", "جارٍ إرسال الطلب…": "Sending order…",
+    "جارِ ضغط الصور ورفعها…": "Compressing and uploading photos…", "جارِ تجهيز الشعار…": "Preparing logo…", "يتم": "Processing",
+    "حفظ": "Save", "حفظ التغييرات": "Save changes", "حُفظت التغييرات": "Changes saved", "حُفظ": "Saved", "حُدّثت البيانات": "Data updated", "حفظ الطلب": "Save order",
+    "حفظ الملاحظة": "Save note", "حفظ التسوية": "Save adjustment", "حفظ واستلام البضاعة": "Save and receive goods", "حفظ وتسجيل الدفعة": "Save and record payment",
+    "حفظ رصيد البداية": "Save opening balance", "حُفظت الملاحظة": "Note saved", "حُفظ الشعار": "Logo saved", "حُفظ الكوبون": "Coupon saved", "لم يُحفظ بعد": "Not saved yet",
+    "إضافة": "Add", "إضافة منتج": "Add product", "منتج جديد": "New product", "إضافة المنتج": "Add product", "إضافة المورد": "Add supplier", "مورد جديد": "New supplier",
+    "إضافة المصروف": "Add expense", "مصروف جديد": "New expense", "أُضيف المنتج": "Product added", "أُضيف المورد": "Supplier added", "أُضيف المصروف": "Expense added",
+    "إضافة صور": "Add photos", "إضافة صور المنتج": "Add product photos", "إضافة صور المنتج": "Add product photos", "صور المنتج": "Product photos", "صورة": "Photo",
+    "تعديل": "Edit", "تعديل الكوبون": "Edit coupon", "تعديل يدوي": "Manual edit", "حذف": "Delete", "حذف نهائي": "Delete permanently", "حذف الصورة": "Delete photo",
+    "حذف المنتج": "Delete product", "حُذف المنتج": "Product deleted", "حذف الخيار": "Delete option", "حذف المصروف": "Delete expense", "حُذف المصروف": "Expense deleted",
+    "حذف الكوبون": "Delete coupon", "حُذف الكوبون": "Coupon deleted", "حذف متجر": "Delete store", "حذف المتجر نهائياً": "Delete store permanently", "حُذف المتجر": "Store deleted",
+    "إغلاق": "Close", "تطبيق": "Apply", "تم": "Done", "تحديث": "Update", "تحديد الكل": "Select all", "إرسال": "Send", "نسخ": "Copy", "نسخ الرابط": "Copy link",
+    "نسخ رابط المتجر": "Copy store link", "نسخ رابط الدعوة": "Copy invite link", "نسخ نص للنشر": "Copy post text", "نُسخ رابط الدعوة": "Invite link copied",
+    "نُسخ رابط المتجر، أرسله لزبائنك": "Store link copied, send it to your customers", "نُسخت": "Copied", "نُسخت تفاصيل الطلب": "Order details copied",
+    "مشاركة رابط المتجر": "Share store link", "قبول": "Accept", "رفض": "Decline", "قبول الدعوة": "Accept invite", "رفض الدعوة": "Decline invite",
+    "قبول دعوة": "Accept invite", "رفض دعوة": "Decline invite", "قُبلت الدعوة": "Invite accepted", "رُفضت الدعوة": "Invite declined", "قُبلت": "Accepted",
+    "إزالة": "Remove", "رفع شعار": "Upload logo", "رفع شعار المتجر": "Upload store logo", "تغيير": "Change", "شعار المتجر": "Store logo", "شعار": "Logo",
+    "إرجاع": "Return", "رجوع": "Back", "إلغاء الطلب": "Cancel order", "إكمال الطلب": "Complete order", "إتمام الطلب": "Checkout", "تأكيد الطلب": "Confirm order",
+    "إنشاء رموز": "Create codes", "إنشاء رموز اشتراك": "Create subscription codes", "تفعيل": "Activate", "تفعيل الرمز": "Activate code", "عرض السلة": "View cart",
+    "عرض حالة الطلب": "View order status", "تتبّع طلبك": "Track your order", "تعذّر تفعيل الرمز": "Couldn't activate code", "إعادة تفعيل متجر": "Reactivate store",
+    "إعادة تفعيل المتجر": "Reactivate store", "إعادة التفعيل": "Reactivate", "تعليق": "Suspend", "تعليق المتجر": "Suspend store", "تعليق متجر": "Suspend store",
+    "معاينة صفحة متجرك كما يراها الزبون": "Preview your store page as customers see it", "فتح صفحة المتجر": "Open store page", "فتح المتجر": "Open store",
+    "تدير الآن متجر": "Now managing store", "خروج من إدارة متجر": "Exit store management", "لا يوجد متجر بهذا الرابط": "No store with this link",
+    "المتجر غير موجود": "Store not found", "المتجر لا يستقبل طلبات حالياً": "Store isn't accepting orders right now", "المتجر لا يستقبل طلبات حالياً.": "The store isn't accepting orders right now.",
+    "المتجر لا يستقبل طلبات حالياً. حاول لاحقاً.": "The store isn't accepting orders right now. Try again later.", "المتجر يستقبل طلبات كثيرة الآن، حاول بعد دقائق": "The store is receiving many orders right now, try again in a few minutes",
+    "هذا المتجر متوقف مؤقتاً": "This store is temporarily paused", "هذا المتجر معلّق من إدارة المنصة. بياناتك محفوظة ولم يُحذف شيء.": "This store is suspended by the platform admin. Your data is saved and nothing was deleted.",
+    "انتهى اشتراك متجرك.": "Your store subscription has ended.", "تواصل مع إدارة المنصة لإعادة التفعيل.": "Contact the platform admin to reactivate.",
+    "عُلّق المتجر": "Store suspended", "سيُحذف متجر": "Store will be deleted", "لن يمكن التراجع عن هذه الخطوة.": "This step can't be undone.",
+    "سيعود المالك والموظفون للعمل، وتظهر صفحة المتجر للزبائن.": "The owner and staff will be back at work, and the store page will be visible to customers.",
+    "لن يستطيع المالك والموظفون العمل، وتختفي منتجات المتجر من صفحته العامة. لا يُحذف أي شيء.": "The owner and staff won't be able to work, and the store's products will be hidden from its public page. Nothing is deleted.",
+    "وكل منتجاته وطلباته وصوره وحساب مالكه. لا يمكن التراجع.": "along with all its products, orders, photos and owner account. This can't be undone.",
+    "للتأكيد اكتب رابط المتجر:": "To confirm, type the store link:", "لا يوجد زبائن بعد.": "No customers yet.", "لا توجد متاجر تطابق البحث.": "No stores match the search.",
+    "الطلب": "Order", "طلب": "Order", "طلب جديد": "New order", "طلب جديد لهذا الزبون": "New order for this customer", "سجّل طلباً": "Record an order", "سجل الطلب": "Order log",
+    "رقم الطلب": "Order no.", "رقم الطلب، اسم الزبون أو الهاتف": "Order no., customer name or phone", "رقم طلبك": "Your order no.", "طلبك": "Your order",
+    "بحث في الطلبات": "Search orders", "بحث في الزبائن": "Search customers", "بحث في المنتجات": "Search products", "بحث في المتاجر": "Search stores", "بحث في المخزون": "Search inventory",
+    "ابحث عن منتج": "Search product", "ابحث عن منتج أو خيار": "Search product or option", "بدء التجهيز": "Start preparing", "قيد التجهيز": "Preparing",
+    "طلبات في الطريق": "Out for delivery", "تم التسليم": "Delivered", "تم التسليم للزبون": "Delivered to customer", "تم التسليم ولم يُستلم": "Delivered but not received",
+    "تسليم لشركة التوصيل": "Handed to delivery company", "عند شركة التوصيل": "With delivery company", "عند التوصيل": "On delivery", "ملغى": "Cancelled", "ملغى.": "Cancelled.",
+    "مرتجعة": "Returned", "مرتجع": "Returned", "مرفوضة": "Rejected", "مقبولة": "Accepted", "تنتظر التأكيد": "Awaiting confirmation", "مؤكد": "Confirmed",
+    "تم تأكيد طلبك.": "Your order is confirmed.", "تم إرسال طلبك": "Your order was sent", "وصل طلبك وسيتصل بك المتجر للتأكيد.": "Your order arrived; the store will call you to confirm.",
+    "تم تسليم طلبك. شكراً لك!": "Your order was delivered. Thank you!", "طلبك قيد التجهيز.": "Your order is being prepared.",
+    "طلبك مع شركة التوصيل في الطريق إليك.": "Your order is with the delivery company on its way to you.", "نراجع طلبك ونرد عليك بالتفاصيل والوقت.": "We'll review your order and get back to you with details and timing.",
+    "لتأكيد الطلب وموعد التوصيل.": "To confirm the order and delivery time.", "كل الطلبات": "All orders", "طلبات الشهر": "Orders this month", "لا توجد طلبات هذا الشهر بعد.": "No orders this month yet.",
+    "لا توجد طلبات هنا.": "No orders here.", "لم نجد طلباً بهذا الرقم وهذا الهاتف": "No order found with this number and phone", "أحدث الطلبات": "Latest orders",
+    "آخر طلب": "Last order", "مسار الطلبات": "Order flow", "تُعرض أحدث 80 نتيجة. استخدم البحث للوصول لطلب أقدم.": "Showing the latest 80 results. Use search to find an older order.",
+    "طلب ميزة": "Feature request", "أرسلت طلبات كثيرة خلال وقت قصير. انتظر قليلاً أو تواصل مع المتجر": "Too many orders in a short time. Wait a moment or contact the store.",
+    "تم التحصيل": "Collected", "طلبات لم تُحصَّل": "Uncollected orders", "بذمّة شركة التوصيل (مُسلَّم)": "With the delivery company (delivered)",
+    "أشّر الطلبات التي استلمت مبلغها. المبلغ = قيمة المنتجات بعد الخصم (أجرة التوصيل تبقى عند الشركة).": "Mark the orders whose amount you received. Amount = product value after discount (the delivery fee stays with the company).",
+    "الزبون": "Customer", "الزبائن": "Customers", "اسم الزبون": "Customer name", "هاتف الزبون": "Customer phone", "اكتب اسم الزبون": "Enter customer name",
+    "الهاتف": "Phone", "الهاتف (اختياري)": "Phone (optional)", "رقم الهاتف": "Phone number", "رقم الهاتف يجب أن يكون 11 رقماً ويبدأ بـ 07": "Phone number must be 11 digits and start with 07",
+    "اكتب بريداً صحيحاً أو رقم هاتف من 11 رقماً يبدأ بـ 07": "Enter a valid email or an 11-digit phone number starting with 07",
+    "العنوان": "Address", "اكتب العنوان": "Enter address", "اكتب العنوان بالتفصيل": "Enter the full address", "المحافظة": "Governorate", "اختر المحافظة": "Choose governorate",
+    "المنطقة والشارع": "Area & street", "المنطقة، أقرب نقطة دالة": "Area, nearest landmark", "أقرب نقطة دالة (اختياري)": "Nearest landmark (optional)",
+    "أجرة التوصيل": "Delivery fee", "أجرة التوصيل رقم بين 0 و 100,000": "Delivery fee is a number between 0 and 100,000", "أجرة التوصيل تُحسب حسب المحافظة في الخطوة التالية.": "Delivery fee is calculated by governorate in the next step.",
+    "التوصيل": "Delivery", "التوصيل داخل بغداد": "Delivery inside Baghdad", "التوصيل لباقي المحافظات": "Delivery to other governorates", "توصيل لكل المحافظات": "Delivery to all governorates",
+    "المجموع": "Subtotal", "مجموع المنتجات": "Products total", "المجموع الكلي": "Grand total", "إجمالي الفاتورة": "Invoice total", "المبلغ المطلوب": "Amount due",
+    "المبلغ المطلوب من الزبون": "Amount due from customer", "المبلغ المستلم": "Amount received", "المدفوع": "Paid", "مدفوع": "Paid", "المدفوع الآن (د.ع)": "Paid now (IQD)",
+    "المدفوع عند الاستلام": "Paid on delivery", "المطلوب عند الاستلام": "Due on delivery", "المطلوب من الزبون": "Due from customer", "الباقي عليك": "Balance due",
+    "المدفوع أكبر من إجمالي الفاتورة": "Paid amount is more than the invoice total", "الخصم": "Discount", "الخصم أكبر من مجموع المنتجات": "Discount is more than the products total",
+    "خصم": "Discount", "خصم الكوبون": "Coupon discount", "قيمة الخصم": "Discount value", "نوع الخصم": "Discount type", "نسبة %": "Percent %", "مبلغ ثابت (د.ع)": "Fixed amount (IQD)",
+    "رمز الكوبون": "Coupon code", "الكوبون غير صحيح": "Invalid coupon", "تعذّر التحقق من الكوبون": "Couldn't verify the coupon", "انتهت صلاحية الكوبون": "Coupon has expired",
+    "انتهى عدد استخدامات هذا الكوبون": "This coupon has reached its usage limit", "عدد مرات الاستخدام (اختياري)": "Usage limit (optional)", "ينتهي بتاريخ (اختياري)": "Ends on (optional)",
+    "ملاحظات للطلب (اختياري)": "Order notes (optional)", "ملاحظة": "Note", "ملاحظات عن الزبون (تظهر لموظفي المتجر فقط)": "Customer notes (visible to store staff only)",
+    "الشعار": "Logo", "لون المتجر": "Store color", "وصف قصير يظهر للزبائن": "Short description shown to customers", "يظهر للزبائن في واجهة المتجر": "Shown to customers in the storefront",
+    "رابط متجرك": "Your store link", "رابط متجرك ورسائل واتساب": "Your store link and WhatsApp messages", "متجري": "My store", "متجر": "Store",
+    "واجهة المتجر": "Storefront", "واجهة المتجر للزبائن": "Storefront for customers", "متجر على منصة": "Store on the platform",
+    "رقم واتساب المتجر": "Store WhatsApp number", "على هذا الرقم تصلك طلبات زبائنك ورسائلهم من صفحة متجرك.": "Your customers' orders and messages from your store page arrive on this number.",
+    "أضف رقم واتساب متجرك": "Add your store WhatsApp number", "صفحات التواصل": "Social pages", "رابط صفحتك (انستغرام / فيسبوك / تيك توك)": "Your page link (Instagram / Facebook / TikTok)",
+    "اسم الرابط (حروف إنجليزية صغيرة وأرقام وشرطة)": "Link name (lowercase English letters, numbers and dashes)", "إذا غيّرته، الرابط القديم يتوقف عن العمل.": "If you change it, the old link stops working.",
+    "انستغرام": "Instagram", "فيسبوك": "Facebook", "تيك توك": "TikTok", "يوتيوب": "YouTube", "سناب شات": "Snapchat", "تيليغرام": "Telegram", "واتساب": "WhatsApp",
+    "نبّهني عندما يصل المخزون إلى": "Alert me when stock reaches", "التاريخ": "Date", "الفترة": "Period", "الحالة": "Status", "الكل": "All", "عام": "General",
+    "المخزون": "Stock", "المخزن": "Warehouse", "في المخزن": "In stock", "نفد": "Out of stock", "نفدت": "Sold out", "قارب على النفاد": "Running low", "قليل": "Low",
+    "منتجات قاربت على النفاد": "Products running low", "منتجات راكدة": "Slow-moving products", "راكد": "Slow", "الأكثر طلباً": "Best seller",
+    "الأكثر طلباً هذا الشهر": "Best sellers this month", "جديد": "New", "مخفي عن الزبائن": "Hidden from customers", "منتج": "Product", "منتجات": "Products",
+    "منتج محذوف": "Deleted product", "منتجات بلا حدود": "Unlimited products", "منتجات منشورة": "Published products", "منتجات أخرى": "Other products", "متاجر بلا منتجات": "Stores without products",
+    "لم تضف أي منتج بعد.": "You haven't added any product yet.", "لم تُضف منتجات بعد.": "No products added yet.", "لا توجد منتجات بهذا الاسم.": "No products with this name.",
+    "لا توجد منتجات معروضة بعد.": "No products shown yet.", "أضف أول منتج": "Add your first product", "أضف منتجاً أولاً من قسم المنتجات": "Add a product first from the Products section",
+    "أضف منتجاً واحداً على الأقل": "Add at least one product", "اسم المنتج": "Product name", "اكتب اسم المنتج": "Enter product name", "الوصف": "Description",
+    "التصنيف": "Category", "اكتب اسم المنتج أو التصنيف": "Enter product name or category", "اسم المنتج أو التصنيف": "Product name or category", "الصنف": "Item",
+    "الخيار": "Option", "خيار": "Option", "الخيارات (لون، مقاس، حجم)": "Options (color, size, volume)", "اسم الخيار": "Option name", "اكتب اسماً لكل خيار": "Enter a name for each option",
+    "يوجد خياران بنفس الاسم": "Two options have the same name", "اختر النوع أو المقاس": "Choose type or size", "اختر النوع أو المقاس أولاً": "Choose type or size first",
+    "السعر": "Price", "سعر البيع": "Sale price", "سعر البيع يجب أن يكون أكبر من صفر": "Sale price must be greater than zero", "تكلفة القطعة (د.ع)": "Unit cost (IQD)",
+    "التكلفة": "Cost", "التكلفة أكبر من سعر البيع في أحد الخيارات": "Cost is higher than sale price in one of the options", "الكمية": "Quantity", "اكتب الكمية": "Enter quantity",
+    "اكتب كمية أكبر من صفر": "Enter a quantity greater than zero", "اكتب كمية وتكلفة أكبر من صفر": "Enter a quantity and cost greater than zero", "الكمية غير صحيحة": "Quantity is invalid",
+    "الكمية الموجودة فعلاً بعد العدّ": "Actual quantity after counting", "الكمية الناقصة": "Missing quantity", "الكمية مطابقة، لا يوجد فرق لتسجيله": "Quantity matches, no difference to record",
+    "تسوية المخزون": "Stock adjustment", "تسوية": "Adjustment", "تسوية / تالف": "Adjustment / damaged", "نوع التسوية": "Adjustment type", "تالف": "Damaged",
+    "تالف وفروقات المخزون": "Damaged & stock differences", "تلف/فقدان": "Damaged/lost", "تلف وفروقات المخزون": "Damaged & stock differences", "جرد (الكمية الفعلية)": "Count (actual quantity)",
+    "استلام بضاعة": "Receive goods", "استلام كمية": "Receive quantity", "استلمت مبلغاً من شركة التوصيل": "Received an amount from the delivery company", "استلام مبلغ من شركة التوصيل": "Receive amount from delivery company",
+    "سبب تعديل المخزون": "Reason for stock change", "اكتب سبب تعديل المخزون": "Enter reason for stock change", "ستعود الكميات إلى المخزون ويُسجَّل ذلك في حركات المخزون.": "Quantities will return to stock and be recorded in stock movements.",
+    "آخر حركات المخزون": "Recent stock movements", "آخر الحركات": "Recent movements", "الحركات": "Movements", "حركة": "Movement", "حركة الصندوق": "Cash movement",
+    "لا توجد حركات بعد.": "No movements yet.", "لا توجد حركة بعد.": "No movement yet.", "لا حركات.": "No movements.", "كل المنتجات تتحرك.": "All products are moving.",
+    "لا توجد أصناف هنا.": "No items here.", "قطعة": "Piece", "قطع": "Pieces", "قطع في المخزن": "Pieces in stock", "يحتاج إعادة تعبئة": "Needs restocking",
+    "عدد الطلبات": "Orders count", "عدد الفواتير": "Invoices count", "متوسط الطلب": "Average order", "متوسط التكلفة": "Average cost", "قيمة المخزون بالتكلفة": "Inventory value at cost",
+    "قيمة الموجود": "Value on hand", "الموجود في النظام": "On hand in system", "في النظام": "In system", "قيمته بسعر البيع": "Its value at sale price", "الأرباح والخسائر": "Profit & loss",
+    "صافي الربح": "Net profit", "صافي الخسارة": "Net loss", "صافي المبيعات": "Net sales", "مجمل الربح": "Gross profit", "صافي الربح آخر 6 أشهر": "Net profit, last 6 months",
+    "صافي الربح أو الخسارة لكل شهر خلال آخر 6 أشهر": "Net profit or loss per month, last 6 months", "نسبة صافي الربح من المبيعات:": "Net profit margin on sales:",
+    "تكلفة البضاعة المباعة": "Cost of goods sold", "ربح الطلب (قبل المصروفات)": "Order profit (before expenses)", "ربحت": "Profit", "ربح": "Profit",
+    "الأرقام بالألف دينار": "Figures in thousands of IQD", "الأخضر ربح والأحمر خسارة.": "Green is profit, red is loss.", "تُحسب خسارة بسعر التكلفة في الأرباح والخسائر.": "Loss is counted at cost price in profit & loss.",
+    "الفرق يُسجّل ربحاً أو خسارة بسعر التكلفة.": "The difference is recorded as profit or loss at cost price.", "تعرف ربحك الحقيقي كل يوم": "Know your real profit every day",
+    "مبيعات الشهر": "Sales this month", "مبيعات المتاجر هذا الشهر": "Store sales this month", "مبيعات": "Sales", "المبيعات آخر 14 يوماً": "Sales in the last 14 days",
+    "قيمة الطلبات يومياً لآخر 14 يوماً": "Daily order value, last 14 days", "الطلبات حسب المحافظة": "Orders by governorate", "عن الشهر الماضي": "vs last month",
+    "إيراد الاشتراكات الشهري": "Monthly subscription revenue", "متجرك الجديد يحصل على": "Your new store gets", "شهر كامل مجاناً": "a full month free",
+    "الحسابات": "Accounts", "الديون تُحسب من المشتريات ناقص ما دفعته.": "Debts are calculated as purchases minus what you paid.", "لا ديون": "No debt",
+    "الباقي عليك": "Balance due", "ديون للموردين": "Owed to suppliers", "يبقى ديناً للمورد": "Remains a debt to the supplier", "يبقى ديناً للمورد ": "Remains a debt to the supplier ",
+    "المورد": "Supplier", "اسم المورد": "Supplier name", "اكتب اسم المورد": "Enter supplier name", "هاتف المورد": "Supplier phone", "رقم فاتورة المورد": "Supplier invoice no.",
+    "حساب المورد": "Supplier account", "اسم المورد أو التاجر": "Supplier or merchant name", "اسم المورد أو التاجر ": "Supplier or merchant name ",
+    "لا يوجد موردون بعد. يُضاف المورد تلقائياً عند أول استلام بضاعة.": "No suppliers yet. A supplier is added automatically on the first goods receipt.",
+    "يوجد مورد بنفس الاسم": "A supplier with this name already exists", "نوع المصروف": "Expense type", "اختر نوع المصروف": "Choose expense type",
+    "إيجار": "Rent", "رواتب": "Salaries", "تغليف": "Packaging", "إعلانات": "Ads", "أخرى": "Other", "مصروف": "Expense", "المصروفات": "Expenses", "لا مصروفات مسجّلة في هذه الفترة.": "No expenses recorded in this period.",
+    "شراء": "Purchase", "مشتريات": "Purchases", "كل المشتريات": "All purchases", "مشتريات مُسلَّمة": "Delivered purchases", "لم تسجّل مشتريات بعد.": "No purchases recorded yet.",
+    "فاتورة شراء": "Purchase invoice", "الفواتير والدفعات": "Invoices & payments", "لم تُسجَّل أي عملية بعد.": "No transactions recorded yet.",
+    "المبلغ (د.ع)": "Amount (IQD)", "تسديد مبلغ (د.ع)": "Pay amount (IQD)", "المبلغ الذي بدأت به (د.ع)": "Starting amount (IQD)", "رصيد افتتاحي": "Opening balance",
+    "رصيد البداية": "Opening balance", "رصيد بداية الصندوق": "Opening cash balance", "رصيد الصندوق الآن": "Current cash balance", "رصيد افتتاحي ": "Opening balance ",
+    "يدخل الصندوق: ما تستلمه من شركة التوصيل. يخرج منه: المصروفات، ودفعات المشتريات والموردين.": "Cash in: what you receive from the delivery company. Cash out: expenses and purchase and supplier payments.",
+    "الصندوق": "Cash box", "رصيد": "Balance", "المصروفات والصندوق": "Expenses & cash box",
+    "الشهري": "Monthly", "السنوي": "Yearly", "شهري": "Monthly", "سنوي": "Yearly", "سنوياً": "Yearly", "شهرياً": "Monthly", "شهرياً.": "Monthly.",
+    "برو": "Pro", "سوبر": "Super", "سوبر برو": "Super Pro", "عادي": "Basic", "أساسية": "Basic", "برو شهري": "Pro monthly", "برو سنوي": "Pro yearly",
+    "عادي شهري": "Basic monthly", "عادي سنوي": "Basic yearly", "سوبر برو شهري": "Super Pro monthly", "سوبر برو سنوي": "Super Pro yearly", "برو سنوي ": "Pro yearly ",
+    "كل ميزات العادي": "All Basic features", "كل ميزات برو": "All Pro features", "كل ميزات برو ": "All Pro features ", "كاملة: منتجات بلا حدود.": "Full: unlimited products.",
+    "ميزة خاصة ببرو وسوبر برو": "Feature for Pro and Super Pro", "ميزة خاصة بنسخة برو": "Feature for the Pro plan", "ميزة خاصة بمتجرك": "Feature for your store",
+    "برو يعطيك أسئلة يومية، وسوبر برو يعطيك أسئلة بلا حد. الخانة تظهر لك، بس ما تقدر تستخدمها على الخطة العادية.": "Pro gives you daily questions, and Super Pro gives you unlimited questions. The box shows for you, but you can't use it on the Basic plan.",
+    "مشتركي برو يگدرون يطلبون ميزات خاصة بمتجرهم ونضيفها لهم.": "Pro subscribers can request features for their store and we'll add them.",
+    "نقدر نضيف لمتجرك ميزة تناسب شغلك: قسم جديد، تقرير خاص، طريقة دفع أو توصيل، أو أي شي يسهّل عملك.": "We can add a feature to your store that suits your work: a new section, a custom report, a payment or delivery method, or anything that makes your work easier.",
+    "اكتب الميزة اللي تريدها بالمربع اللي تحت.": "Write the feature you want in the box below.", "اكتب شرح الميزة أولاً": "Write the feature description first",
+    "تحتاج ميزة خاصة بمتجرك؟": "Need a feature for your store?", "سؤالك": "Your question",
+    "الخطة": "Plan", "تغيير الخطة": "Change plan", "رقِّ لبرو": "Upgrade to Pro", "رقِّ متجرك": "Upgrade your store", "رقِّ متجرك لبرو": "Upgrade your store to Pro",
+    "رمز الاشتراك": "Subscription code", "رموز الاشتراك": "Subscription codes", "اكتب رمز الاشتراك": "Enter subscription code", "اكتب الرمز وفعّله، تنضاف مدته لاشتراكك مباشرة.": "Enter the code and activate it, its duration is added to your subscription right away.",
+    "الرمز يفعّله صاحب المتجر من حسابه. من لوحة الإدارة غيّر الخطة مباشرة.": "The store owner activates the code from their account. From the admin panel, change the plan directly.",
+    "عندك رمز اشتراك؟": "Have a subscription code?", "عندك كوبون خصم؟": "Have a discount coupon?", "ما عندك كوبونات بعد.": "You have no coupons yet.",
+    "سوّي أول كوبون": "Create your first coupon", "رمز الكوبون ": "Coupon code ", "تنزيل الرموز غير المستخدمة": "Download unused codes", "غير مستخدم": "Unused", "مستخدم": "Used",
+    "استُخدم": "Used", "استُخدم ": "Used ", "مرة": "time", "مرات": "times", "يوم": "day", "أيام": "days", "أشهر": "months", "أشهر مكتسبة": "earned months", "6 أشهر": "6 months",
+    "سنة": "year", "سنة كاملة": "full year", "شهر": "month", "مجاناً": "Free", "مجاناً حتى": "Free until", "مجانية دائمة": "Permanent free", "خطة مجانية دائمة.": "Permanently free plan.",
+    "اشتراك شهري مجاني": "Free monthly subscription", "شهر مجاني": "Free month", "شهرك المجاني": "Your free month", "بعد الشهر المجاني اختر نسختك:": "After the free month, choose your plan:",
+    "خلال الشهر المجاني تشتغل بنسخة": "During the free month you work with a", "اختر اشتراكك وراسلنا على واتساب، نفعّله لك مباشرة.": "Choose your plan and message us on WhatsApp, we'll activate it for you right away.",
+    "في المرحلة الأولى يُفعَّل الاشتراك يدوياً بعد استلام التحويل.": "In the first phase, the subscription is activated manually after the transfer is received.",
+    "اشتراكات مدفوعة": "Paid subscriptions", "اشتراكات منتهية": "Expired subscriptions", "منتهي": "Expired", "منتهي منذ": "Expired since", "منتهي منذ ": "Expired since ", "انتهى في": "Ended on",
+    "معلّق": "Suspended", "معلّقة": "Suspended", "معلّق ": "Suspended ", "موقوف": "Paused", "فعّال": "Active", "نشط": "Active", "بانتظار التحقق": "Awaiting verification",
+    "تنتظر": "Waiting", "نشط ": "Active ", "حتى": "until", "باقي": "left", "يضاف لاشتراكك.": "Added to your subscription.", "بصلاحية مدير المنصة": "With platform admin rights",
+    "حتى ": "until ", "عادي": "Basic", "ميزة": "Feature", "دعوات مقبولة": "Accepted invites", "دعوات بانتظار التحقق": "Invites awaiting verification",
+    "لا توجد دعوات تنتظر التحقق.": "No invites awaiting verification.", "تعذّر تحميل الدعوات.": "Couldn't load invites.", "الدعوة مسجّلة من قبل": "Invite already registered",
+    "رابط الدعوة غير صالح": "Invalid invite link", "رُفضت الدعوة ": "Invite declined ", "انتهت مدة تسجيل الدعوة": "Invite registration period has ended",
+    "ادعُ أصحاب المتاجر واحصل على شهر مجاني": "Invite store owners and get a free month", "جيت من رابط دعوة 🎁 ضع رابط صفحة متجرك على انستغرام أو فيسبوك أو تيك توك، نتحقق منها حتى تنحسب الدعوة لصاحبها.": "You came from an invite link 🎁 Put your store page link on Instagram, Facebook or TikTok, we'll verify it so the invite counts for its owner.",
+    "رابط الصفحة غير صحيح. ضع رابط صفحتك على انستغرام أو فيسبوك أو تيك توك": "Invalid page link. Put your page link on Instagram, Facebook or TikTok",
+    "سجّلنا دعوتك، وراح نتحقق من صفحتك قريباً.": "We've registered your invite, and we'll verify your page soon.", "تنفتح من رابطك ونتحقق منها، تحصل على": "Opened from your link and verified, you get",
+    "حصلت على": "You got", "قُبلت، وصاحب الرابط حصل على شهر مجاني": "Accepted, and the link owner got a free month", "ما أحد سجّل من رابطك بعد.": "Nobody has signed up from your link yet.",
+    "الدعوة القادمة:": "Next invite:", "دعاه": "Invited by", "أُنشئ": "Created", "المالك": "Owner", "بلا مالك": "No owner", "موظف طلبات": "Orders staff", "موظف مخزون": "Inventory staff",
+    "الموظفون": "Staff", "تجربة الصلاحيات": "Permissions preview", "سجل عمليات الإدارة": "Admin activity log", "خروج": "Sign out",
+    "أضف للسلة": "Add to cart", "السلة": "Cart", "السلة فارغة": "Cart is empty", "سلتك فارغة. اختر منتجاً وأضفه للسلة.": "Your cart is empty. Choose a product and add it to the cart.",
+    "تصفّح المنتجات": "Browse products", "تسوّق حسب القسم": "Shop by category", "المزيد": "More", "متابعة التسوق": "Continue shopping", "أهلاً بك في متجرنا": "Welcome to our store",
+    "مبروك! 🎉": "Congratulations! 🎉", "كل تجارة عظيمة بدأت بخطوة… وخطوتك الآن ✨": "Every great business began with a step… and yours starts now ✨",
+    "ما عندك متجر؟": "Don't have a store?", "ما عندك متجر": "Don't have a store", "أو": "or", "أضف": "Add", "المتجر لا يستقبل": "Store doesn't accept",
+    "تعذّر الحفظ": "Couldn't save", "تعذّر الحفظ:": "Couldn't save:", "تعذّر الحفظ، تحقق من الإنترنت. سنعيد المحاولة تلقائياً": "Couldn't save, check your connection. We'll retry automatically",
+    "تعذّر التحديث، تحقق من الإنترنت": "Couldn't update, check your connection", "تعذّر الاتصال، تحقق من الإنترنت": "Connection failed, check your internet",
+    "تعذّر الاتصال، حاول مرة ثانية": "Connection failed, try again", "تعذّر الاتصال بالسيرفر، تحقق من الإنترنت": "Couldn't reach the server, check your internet",
+    "لا يوجد اتصال بالإنترنت": "No internet connection", "تعذّر تحميل المتجر، تحقق من الإنترنت": "Couldn't load the store, check your internet",
+    "تعذّر تحميل بياناتك، حاول مجدداً": "Couldn't load your data, try again", "تعذّر إنشاء المتجر، تحقق من الإنترنت وحاول مجدداً": "Couldn't create the store, check your internet and try again",
+    "تعذّر حذف المتجر، حاول مجدداً": "Couldn't delete the store, try again", "تعذّر إنشاء كلمة مؤقتة، حاول مجدداً": "Couldn't create temporary password, try again",
+    "تعذّر إنشاء الرموز": "Couldn't create codes", "تعذّر تسجيل الدعوة": "Couldn't register invite", "تعذّر حجز رابط للمتجر": "Couldn't reserve a link for the store",
+    "تعذّر النسخ": "Couldn't copy", "تعذّر النسخ، انسخ يدوياً": "Couldn't copy, copy manually", "تعذّر قراءة الصورة، جرّب صورة أخرى": "Couldn't read the image, try another one",
+    "تعذّر إرسال الطلب، تحقق من الإنترنت وحاول مرة ثانية": "Couldn't send the order, check your internet and try again", "ما قدرت أوصل للخدمة، تأكد من النت وجرّب مرة ثانية": "Couldn't reach the service, check your internet and try again",
+    "محاولات خاطئة كثيرة. حاول بعد ساعة": "Too many wrong attempts. Try again in an hour", "محاولات كثيرة، انتظر دقيقة ثم حاول": "Too many attempts, wait a minute and try again",
+    "الرمز غير صحيح، تأكد منه وحاول مرة ثانية": "Wrong code, check it and try again", "هذا الرمز مستخدم من قبل": "This code was already used", "هذا الرمز موجود": "This code already exists",
+    "الرمز من 3 إلى 16 حرفاً إنجليزياً أو رقماً": "The code is 3 to 16 English letters or numbers", "حروف إنجليزية وأرقام، من 3 إلى 16.": "English letters and numbers, 3 to 16.",
+    "اسم الرابط من حرف واحد إلى 40 حرفاً إنجليزياً صغيراً أو رقماً أو شرطة، ولا يبدأ أو ينتهي بشرطة": "The link name is 1 to 40 lowercase English letters, numbers or dashes, not starting or ending with a dash",
+    "اسم الرابط محجوز، اختر اسماً آخر": "This link name is reserved, choose another", "اسم الرابط مستخدم، اختر اسماً آخر": "This link name is taken, choose another",
+    "اسم الرابط مستخدم من متجر آخر، اختر اسماً غيره": "This link name is used by another store, choose a different one", "هذه الصفحة مسجّلة لمتجر آخر": "This page is registered to another store",
+    "هذا الانتقال غير مسموح": "This transition is not allowed", "حدث خطأ:": "An error occurred:", "المبلغ 250 دينار على الأقل": "Amount is at least 250 IQD",
+    "اكتب مبلغاً أكبر من صفر": "Enter an amount greater than zero", "اكتب بيانات الدخول": "Enter sign-in details", "اكتب رمز الاشتراك": "Enter subscription code",
+    "اكتب رقم الطلب ورقم الهاتف الذي طلبت به": "Enter the order number and the phone you ordered with", "اكتب اسم المتجر، الرابط، اسم المالك أو بريده": "Enter store name, link, owner name or email",
+    "اسم المتجر، الرابط، اسم المالك أو بريده": "Store name, link, owner name or email", "اكتب اسمك (حرفان على الأقل)": "Enter your name (at least 2 letters)",
+    "اكتب اسماً": "Enter a name", "اكتب البريد الإلكتروني للحساب (استعادة كلمة المرور تعمل بالبريد فقط)": "Enter your account email (password reset works by email only)",
+    "ما وصلتك الرسالة؟ انتظر دقيقة، ثم شوف مجلد": "Didn't get the message? Wait a minute, then check the folder",
+    "إذا كان الحساب موجوداً، وصلك رابط تغيير كلمة المرور على البريد. إذا ما وصلك، شوف مجلد الرسائل غير المرغوب فيها (Spam).": "If the account exists, a password reset link was sent to the email. If you didn't receive it, check your spam folder.",
+    "الرسائل غير المرغوب فيها (Spam)": "Spam folder", "افتح بريدك الإلكتروني": "Open your email", "افتح رسالة": "Open message", "بعنوان «تأكيد بريدك الإلكتروني في رواج»": "titled “Confirm your email on Rawaj”",
+    "«تأكيد البريد الإلكتروني»": "“Confirm email”", "«رواج»": "“Rawaj”", "تعذّر إرسال بريد التأكيد. يجب إيقاف «Confirm email» من إعدادات Supabase": "Couldn't send the confirmation email. Turn off “Confirm email” in Supabase settings",
+    "لا يوجد": "None", "لا شيء بعد.": "Nothing yet.", "لا": "No", "نعم": "Yes", "الآن": "Now", "أمس": "Yesterday", "غداً": "Tomorrow", "اليوم": "Today", "لاحقاً": "Later",
+    "نسيت": "Forgot", "العربية": "العربية", "English": "English", "اللغة": "Language", "اللغة / Language": "Language", "حتى تصلك طلبات الزبائن ورسائلهم على رقمك أنت": "So that customers' orders and messages reach your own number",
+    "على هذا الرقم تصلك طلبات زبائنك ورسائلهم من صفحة متجرك.": "Your customers' orders and messages from your store page arrive on this number.",
+    "يُنشأ ملف الزبون تلقائياً من رقم هاتفه عند أول طلب.": "The customer's file is created automatically from their phone number on their first order.",
+    "بحث": "Search", "ابحث": "Search", "بحث في المخزون ": "Search inventory ", "كل": "All", "الكل ": "All ",
+    "يومياً": "Daily", "أسبوعياً": "Weekly", "اليوم ": "Today ", "آخر": "Last", "الشهر": "Month", "الاسم أو الهاتف": "Name or phone", "الاسم أو الهاتف ": "Name or phone ",
+    "الصندوق ": "Cash box ", "الدعوة ": "Invite ", "الطلب ": "Order ", "الزبائن ": "Customers ", "المنتجات ": "Products ", "المخزن ": "Warehouse ",
+    "مبيعات ": "Sales ", "المستخدم": "User", "مستخدم": "User", "الدور": "Role", "موظف": "Staff", "المدير": "Manager", "مدير المنصة": "Platform admin",
+    "تنبيه": "Alert", "تنبيه عند": "Alert at", "تنبيه": "Alert", "الصلاحيات": "Permissions", "صلاحيات": "Permissions", "الكمية الكلية": "Total quantity", "الإجمالي": "Total",
+    "الربح": "Profit", "الخسارة": "Loss", "الأرباح": "Profits", "الخسائر": "Losses", "صافي الربح ": "Net profit ", "د.ع": "IQD", "د.ع.": "IQD.", "د.ع أو برو": "IQD or Pro",
+    "د.ع شهرياً.": "IQD monthly.", "د.ع شهرياً:": "IQD monthly:", "د.ع شهرياً": "IQD monthly", "نسخ رابط المتجر ": "Copy store link ", "أعد تفعيل": "Reactivate",
+    "بغداد": "Baghdad", "البصرة": "Basra", "أربيل": "Erbil", "الأنبار": "Anbar", "النجف": "Najaf", "بابل": "Babylon", "كربلاء": "Karbala", "كركوك": "Kirkuk",
+    "دهوك": "Duhok", "ديالى": "Diyala", "ذي قار": "Dhi Qar", "صلاح الدين": "Saladin", "ميسان": "Maysan", "المثنى": "Muthanna", "نينوى": "Nineveh",
+    "السليمانية": "Sulaymaniyah", "القادسية": "Al-Qadisiyah", "واسط": "Wasit", "حلبجة": "Halabja",
+    "كانون الثاني": "January", "شباط": "February", "آذار": "March", "نيسان": "April", "أيار": "May", "حزيران": "June", "تموز": "July", "آب": "August",
+    "أيلول": "September", "تشرين الأول": "October", "تشرين الثاني": "November", "كانون الأول": "December",
+    "انستغرام ": "Instagram ", "حروف": "letters", "أرقام": "numbers", "رقم": "No.", "عدد": "Count", "عدد الكل": "Total count", "المتوسط": "Average",
+    "الوقت": "Time", "المدة": "Duration", "الكمية الإجمالية": "Total quantity", "المبيعات الكلية": "Total sales", "الرصيد": "Balance", "الكل ": "All ",
+    "صباحاً": "AM", "مساءً": "PM", "بعد": "After", "قبل": "Before", "منذ": "since", "ساعة": "hour", "دقيقة": "minute", "دقائق": "minutes", "ثانية": "second",
+    "لوحة الإدارة": "Admin panel", "خروج تلقائي": "Automatic sign-out", "خرجت من لوحة الإدارة تلقائياً بعد 30 دقيقة بدون نشاط": "Signed out of the admin panel automatically after 30 minutes of inactivity",
+    "بلا طلبات خلال 30 يوماً": "No orders in 30 days", "تصفية المتاجر": "Filter stores", "تصفية المخزون": "Filter inventory", "تصفية حسب الحالة": "Filter by status",
+    "متاجر": "Stores", "تظهر": "Show", "تظهر بصفحة متجرك": "Shown on your store page", "يظهر في أعلى لوحة التحكم وفي صفحة متجرك": "Shows at the top of the dashboard and on your store page",
+    "نسخة عادي:": "Basic plan copy:", "نوع الخصم ": "Discount type ", "مرتجع": "Returned", "مرتجع و": "Returned and ", "مرتجع و ": "Returned and ",
+    "تم الإرسال": "Sent", "تم الحفظ": "Saved", "تم": "Done", "نجح": "Success", "تحديث البيانات": "Update data"
+  };
+  const KEYS = Object.keys(DICT).sort((a, b) => b.length - a.length);
+  const esc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const RX = new RegExp('(^|[^\\u0600-\\u06FF])(' + KEYS.map(esc).join('|') + ')(?![\\u0600-\\u06FF])', 'g');
+  const ATTRS = ['placeholder', 'title', 'aria-label', 'alt'];
+  const textRec = new WeakMap();
+  const attrRec = new WeakMap();
+  let lang = 'ar';
+  let titleAr = '';
+  try { lang = localStorage.getItem('rawaj-lang') === 'en' ? 'en' : 'ar'; } catch (e) { /* private mode */ }
+
+  const trans = (s) => s.replace(RX, (m, pre, k) => pre + DICT[k]);
+  // Shows the English text in English mode and the original Arabic in Arabic mode; keeps the Arabic original so switching back restores it.
+  function pick(cur, rec) {
+    const src = rec && cur === rec.en ? rec.ar : cur;
+    if (lang !== 'en') return { value: src, rec: null };
+    const en = trans(src);
+    return en === src ? { value: src, rec: null } : { value: en, rec: { ar: src, en: en } };
+  }
+  function walk(root) {
+    const tw = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+    const nodes = [];
+    while (tw.nextNode()) nodes.push(tw.currentNode);
+    for (const n of nodes) {
+      const p = n.parentNode && n.parentNode.nodeName;
+      if (p === 'SCRIPT' || p === 'STYLE' || p === 'TEXTAREA') continue;
+      const r = pick(n.nodeValue, textRec.get(n));
+      if (r.value !== n.nodeValue) n.nodeValue = r.value;
+      if (r.rec) textRec.set(n, r.rec); else textRec.delete(n);
+    }
+    for (const el of root.querySelectorAll('[placeholder],[title],[aria-label],[alt]')) {
+      const rec = attrRec.get(el) || {};
+      for (const a of ATTRS) {
+        const cur = el.getAttribute(a);
+        if (cur == null) continue;
+        const r = pick(cur, rec[a]);
+        if (r.value !== cur) el.setAttribute(a, r.value);
+        if (r.rec) rec[a] = r.rec; else delete rec[a];
+      }
+      attrRec.set(el, rec);
+    }
+  }
+  const obs = new MutationObserver(() => schedule());
+  let queued = false;
+  function schedule() {
+    if (queued) return;
+    queued = true;
+    requestAnimationFrame(() => { queued = false; apply(); });
+  }
+  function apply() {
+    obs.disconnect();
+    walk(document.body);
+    obs.observe(document.body, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ATTRS });
+    document.querySelectorAll('[data-lang]').forEach((b) => b.classList.toggle('primary', b.dataset.lang === lang));
+  }
+  function setTitle() { document.title = lang === 'en' ? trans(titleAr) : titleAr; }
+  function setLang(l) {
+    lang = l === 'en' ? 'en' : 'ar';
+    try { localStorage.setItem('rawaj-lang', lang); } catch (e) { /* private mode */ }
+    document.documentElement.lang = lang;
+    document.documentElement.dir = lang === 'en' ? 'ltr' : 'rtl';
+    setTitle();
+    apply();
+  }
+  document.addEventListener('click', (e) => {
+    const b = e.target.closest && e.target.closest('[data-lang]');
+    if (b) setLang(b.dataset.lang);
+  });
+  function init() {
+    titleAr = document.title;
+    document.documentElement.lang = lang;
+    document.documentElement.dir = lang === 'en' ? 'ltr' : 'rtl';
+    setTitle();
+    apply();
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
 })();
 </script>
 </body>
