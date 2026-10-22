@@ -855,7 +855,7 @@ function priceCards(s) {
     </div>`;
   return `<div class="price-cards">
     ${card('basic', [`حتى <b class="num">${BASIC_LIMIT}</b> منتجات منشورة`, 'الطلبات والمخزن والحسابات', 'رابط متجرك ورسائل واتساب'])}
-    ${card('pro', ['<b>منتجات بلا حدود</b>', '<b>كوبونات خصم</b> لزبائنك', 'طلب ميزة خاصة بمتجرك', '<b>رواج الذكي</b>: 5 أسئلة يومياً', 'كل ميزات العادي'], true)}
+    ${card('pro', ['<b>منتجات بلا حدود</b>', '<b>كوبونات خصم</b> لزبائنك', 'طلب ميزة خاصة بمتجرك', '<b>رواج الذكي</b> بأسئلة يومية', 'كل ميزات العادي'], true)}
     ${card('super', ['<b>كل ميزات برو</b>', '<b>رواج الذكي</b> بلا حد يومي'], false)}
   </div>`;
 }
@@ -2785,7 +2785,6 @@ function proLocked(title, text) {
   <h2>رقِّ متجرك لبرو</h2>${priceCards(s)}`;
 }
 let aiMsgs = [];
-let aiLimitTxt = null;
 function aiBubble(m) {
   if (m.role === 'me') return `<div class="ai-row me"><div class="ai-bub">${esc(m.text)}</div></div>`;
   return `<div class="ai-row bot"><div class="ai-bub${m.err ? ' ai-err' : ''}${m.pending ? ' ai-pend' : ''}">${esc(m.text)}</div><span class="ai-ava">${icon('ai')}</span></div>`;
@@ -2801,9 +2800,8 @@ function viewAI() {
   const s = store();
   if (!isPro(s)) return `<h1>رواج الذكي</h1>
     <section class="panel pro-lock"><span class="feat-ico">${icon('lock')}</span>
-    <div><h2 style="margin:0 0 6px">ميزة خاصة ببرو وسوبر برو</h2><p style="margin:0">برو يعطيك 5 أسئلة باليوم، وسوبر برو يعطيك أسئلة بلا حد. الخانة تظهر لك، بس ما تقدر تستخدمها على الخطة العادية.</p></div></section>
+    <div><h2 style="margin:0 0 6px">ميزة خاصة ببرو وسوبر برو</h2><p style="margin:0">برو يعطيك أسئلة يومية، وسوبر برو يعطيك أسئلة بلا حد. الخانة تظهر لك، بس ما تقدر تستخدمها على الخطة العادية.</p></div></section>
     <h2>رقِّ متجرك</h2>${priceCards(s)}`;
-  const limitTxt = aiLimitTxt || (isSuperStore(s) ? 'سوبر برو: أسئلة بلا حد' : 'برو: 5 أسئلة باليوم');
   return `<h1>رواج الذكي</h1>
   <div class="ai-wrap">
     ${aiMsgs.length ? '' : `<section class="panel ai-intro"><span class="ai-ava">${icon('ai')}</span><div><b>أهلاً، أنا رواج الذكي</b><p class="sub" style="margin:4px 0 0">أقرأ بيانات متجرك بس، وأجاوبك عن المبيعات والمنتجات والطلبات، وأسوي فاتورة لأي زبون. جرّب مثلاً: "شنو أكثر منتج انباع اليوم؟" أو "سوّيلي فاتورة لزبون فلان".</p></div></section>`}
@@ -2812,7 +2810,6 @@ function viewAI() {
       <textarea id="aiQ" rows="1" maxlength="800" placeholder="اكتب سؤالك…" aria-label="سؤالك لرواج الذكي"></textarea>
       <button class="btn primary" type="submit" id="aiBtn">إرسال</button>
     </form>
-    <div class="sub ai-limit" id="aiLimit">${limitTxt}</div>
   </div>`;
 }
 function viewFeature() {
@@ -3909,7 +3906,7 @@ document.addEventListener('submit', async (e) => {
     const tok = data && data.session && data.session.access_token;
     if (!tok) throw new Error('سجّل دخول من جديد');
     const ctl = new AbortController();
-    const timer = setTimeout(() => ctl.abort(), 45000);
+    const timer = setTimeout(() => ctl.abort(), 120000);
     let res;
     try {
       res = await fetch(SUPA_URL + '/functions/v1/rawaj-ai', { method: 'POST', signal: ctl.signal, headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + tok, apikey: SUPA_KEY }, body: JSON.stringify({ question: q }) });
@@ -3919,15 +3916,11 @@ document.addEventListener('submit', async (e) => {
       clearTimeout(timer);
     }
     const j = await res.json().catch(() => ({}));
-    if (res.status === 429) throw new Error('خلصت أسئلتك اليوم (5 أسئلة). ارجع بكرة، أو رقِّ لسوبر برو بلا حد.');
+    if (res.status === 429) throw new Error('خلصت أسئلتك اليوم. ارجع بكرة، أو رقِّ لسوبر برو بلا حد.');
+    if (res.status === 503) throw new Error('الخدمة مزدحمة الحين، جرّب بعد لحظات.');
     if (res.status === 403) throw new Error('هذي الميزة لبرو وسوبر برو بس.');
     if (!res.ok) throw new Error(j.error === 'no_key' ? 'رواج الذكي مو مفعّل بعد' : `تعذّر الجواب (${j.error || res.status}${j.stage ? ' / ' + j.stage : ''}${j.detail ? ': ' + String(j.detail).slice(0, 160) : ''})`);
     reply = { role: 'bot', text: j.answer };
-    if (j.remaining != null) {
-      aiLimitTxt = `تبقى لك ${j.remaining} سؤال اليوم`;
-      const lim = $('#aiLimit');
-      if (lim) lim.textContent = aiLimitTxt;
-    }
   } catch (err) {
     reply = { role: 'bot', text: err.message || 'تعذّر الجواب', err: true };
   } finally {
