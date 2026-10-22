@@ -696,7 +696,7 @@ const ACTION_LABEL = {
 const STOCK_OUT = new Set(['confirmed', 'preparing', 'shipped', 'delivered']); // stock already deducted
 
 const ROLES = {
-  owner:     { l: 'المالك',      p: ['home', 'orders', 'orders.write', 'products', 'products.write', 'cost', 'warehouse', 'customers', 'reports', 'settings', 'feature', 'coupons'] },
+  owner:     { l: 'المالك',      p: ['home', 'orders', 'orders.write', 'products', 'products.write', 'cost', 'warehouse', 'customers', 'reports', 'settings', 'feature', 'coupons', 'ai'] },
   orders:    { l: 'موظف طلبات',  p: ['home', 'orders', 'orders.write', 'products', 'customers', 'feature'] },
   inventory: { l: 'موظف مخزون',  p: ['home', 'orders', 'products', 'products.write', 'cost', 'warehouse', 'feature'] },
 };
@@ -732,6 +732,7 @@ const ICONS = {
   coupons: '<path d="M3 8a2 2 0 002-2h14a2 2 0 002 2v2a2 2 0 000 4v2a2 2 0 00-2 2H5a2 2 0 00-2-2v-2a2 2 0 000-4z"/><path d="M9.5 15l5-6"/><circle cx="9.5" cy="9.5" r=".9"/><circle cx="14.5" cy="14.5" r=".9"/>',
   lock: '<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/>',
   feature: '<path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 00-3.6 10.8c.7.5 1.1 1.3 1.1 2.2h5c0-.9.4-1.7 1.1-2.2A6 6 0 0012 3z"/><path d="M18.5 3.5l1-1M21 8h1.4M5.5 3.5l-1-1M3 8H1.6"/>',
+  ai: '<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M19 16l.8 2.2L22 19l-2.2.8L19 22l-.8-2.2L16 19l2.2-.8z"/>',
   store: '<path d="M4 9l1.5-5h13L20 9"/><path d="M4 9a2.7 2.7 0 005.3 0 2.7 2.7 0 005.4 0 2.7 2.7 0 005.3 0"/><path d="M5 11v9h14v-9"/><path d="M10 20v-5h4v5"/>',
 };
 // Rawaj mark: a shopping bag with a rising line, on a deep green tile.
@@ -754,6 +755,7 @@ const NAV = [
   { id: 'settings', l: 'الإعدادات', sideOnly: true },
   { id: 'coupons', l: 'كوبونات الخصم', sideOnly: true, pro: true },
   { id: 'feature', l: 'طلب ميزة', sideOnly: true, pro: true },
+  { id: 'ai', l: 'رواج الذكي', sideOnly: true, pro: true, tag: 'سوبر' },
 ];
 
 /* ---------------- helpers ---------------- */
@@ -813,8 +815,8 @@ const WELCOME_DAYS = 30;
 const ADMIN_PHONE = '07801691548';
 // Two versions: عادي (up to 8 published products) and برو (unlimited).
 const BASIC_LIMIT = 8;
-const PRICES = { basic: { m: 4900, y: 50000 }, pro: { m: 6900, y: 76000 } };
-const TIER_NAME = { basic: 'عادي', pro: 'برو' };
+const PRICES = { basic: { m: 4900, y: 50000 }, pro: { m: 6900, y: 76000 }, super: { m: 8900, y: 100000 } };
+const TIER_NAME = { basic: 'عادي', pro: 'برو', super: 'سوبر برو' };
 const PRICE_MONTH = PRICES.basic.m, PRICE_YEAR = PRICES.basic.y;
 const fmtPrice = (n) => n.toLocaleString('en-US');
 // Subscribing happens on WhatsApp with the platform admin; the message names the store, version and period.
@@ -823,7 +825,7 @@ function subscribeUrl(s, tier = 'basic', period = 'm') {
   return `https://wa.me/964${ADMIN_PHONE.slice(1)}?text=${encodeURIComponent(`مرحباً، أريد ${what} لمتجر "${s.name}" — الرابط: ${s.slug}`)}`;
 }
 function renewLinks(s, compact) {
-  if (compact) return `<a class="btn" href="${subscribeUrl(s, ['pro_monthly', 'pro_yearly'].includes(s.plan) ? 'pro' : 'basic', 'm')}" target="_blank" rel="noopener">${icon('chat')} اشترك الآن</a>`;
+  if (compact) return `<a class="btn" href="${subscribeUrl(s, ['super_monthly', 'super_yearly'].includes(s.plan) ? 'super' : ['pro_monthly', 'pro_yearly'].includes(s.plan) ? 'pro' : 'basic', 'm')}" target="_blank" rel="noopener">${icon('chat')} اشترك الآن</a>`;
   return `<a class="btn" href="tel:${ADMIN_PHONE}">${icon('phone')} اتصال <span class="num">${ADMIN_PHONE}</span></a>`;
 }
 function priceCards(s) {
@@ -837,7 +839,8 @@ function priceCards(s) {
     </div>`;
   return `<div class="price-cards">
     ${card('basic', [`حتى <b class="num">${BASIC_LIMIT}</b> منتجات منشورة`, 'الطلبات والمخزن والحسابات', 'رابط متجرك ورسائل واتساب'])}
-    ${card('pro', ['<b>منتجات بلا حدود</b>', '<b>كوبونات خصم</b> لزبائنك', 'طلب ميزة خاصة بمتجرك', 'كل ميزات العادي'], true)}
+    ${card('pro', ['<b>منتجات بلا حدود</b>', '<b>كوبونات خصم</b> لزبائنك', 'طلب ميزة خاصة بمتجرك', '<b>رواج الذكي</b>: سؤالين يومياً', 'كل ميزات العادي'], true)}
+    ${card('super', ['<b>كل ميزات برو</b>', '<b>رواج الذكي</b> بلا حد يومي'], false)}
   </div>`;
 }
 const daysSince = (ts) => Math.max(1, Math.floor((Date.now() - ts) / DAY));
@@ -848,6 +851,8 @@ const PLANS = {
   yearly:      { l: 'عادي سنوي',   price: PRICES.basic.y, days: 365, perYear: true },
   pro_monthly: { l: 'برو شهري',    price: PRICES.pro.m, days: 30 },
   pro_yearly:  { l: 'برو سنوي',    price: PRICES.pro.y, days: 365, perYear: true },
+  super_monthly: { l: 'سوبر برو شهري', price: PRICES.super.m, days: 30 },
+  super_yearly:  { l: 'سوبر برو سنوي', price: PRICES.super.y, days: 365, perYear: true },
   free:        { l: 'مجانية دائمة', price: 0 },
   // older plans, kept so existing stores still display correctly
   basic:    { l: 'أساسية',    price: 15000, legacy: true },
@@ -860,10 +865,11 @@ function planOf(s) {
   if (pl !== 'free' && s.planEnds && s.planEnds < Date.now()) return 'expired';
   return pl;
 }
-const isPaid = (s) => ['monthly', 'yearly', 'pro_monthly', 'pro_yearly', 'basic', 'pro', 'business'].includes(planOf(s)) && !s.welcome;
+const isPaid = (s) => ['monthly', 'yearly', 'pro_monthly', 'pro_yearly', 'super_monthly', 'super_yearly', 'basic', 'pro', 'business'].includes(planOf(s)) && !s.welcome;
 // The free month, the permanent free plan and older pro/business plans have no product limit (same rule as the server).
-const isProPlan = (plan) => ['trial', 'pro_monthly', 'pro_yearly', 'free', 'pro', 'business'].includes(plan);
+const isProPlan = (plan) => ['trial', 'pro_monthly', 'pro_yearly', 'super_monthly', 'super_yearly', 'free', 'pro', 'business'].includes(plan);
 const isPro = (s) => isProPlan(planOf(s));
+const isSuperStore = (s) => ['super_monthly', 'super_yearly'].includes(planOf(s));
 const publishedLimit = (s) => (isPro(s) ? Infinity : BASIC_LIMIT);
 function planBadge(s) {
   const pl = planOf(s);
@@ -1424,7 +1430,7 @@ function renderChrome() {
   $('#storeSub').textContent = `${currentUser().name} · ${ROLES[state.role].l}`;
   $('#roleSelect').value = state.role;
   const allowed = NAV.filter((n) => can(n.id));
-  const btn = (n) => `<button type="button" data-nav="${esc(n.id)}" ${state.view === n.id ? 'aria-current="page"' : ''}>${icon(n.id)}<span>${n.l}</span>${n.pro ? '<i class="pro-tag">برو</i>' : ''}</button>`;
+  const btn = (n) => `<button type="button" data-nav="${esc(n.id)}" ${state.view === n.id ? 'aria-current="page"' : ''}>${icon(n.id)}<span>${n.l}</span>${n.pro ? `<i class="pro-tag">${n.tag || 'برو'}</i>` : ''}</button>`;
   $('#sideNav').innerHTML = allowed.map(btn).join('');
   const extra = allowed.filter((n) => n.sideOnly);
   $('#bottomNav').innerHTML = allowed.filter((n) => !n.sideOnly).map(btn).join('')
@@ -1456,7 +1462,7 @@ function render() {
   renderChrome();
   const v = $('#view');
   ensureShape(s0);
-  const views = { coupons: viewCoupons, feature: viewFeature, home: viewHome, orders: viewOrders, products: viewProducts, warehouse: viewWarehouse, customers: viewCustomers, reports: viewReports, settings: viewSettings };
+  const views = { ai: viewAI, coupons: viewCoupons, feature: viewFeature, home: viewHome, orders: viewOrders, products: viewProducts, warehouse: viewWarehouse, customers: viewCustomers, reports: viewReports, settings: viewSettings };
   const changed = v.dataset.view !== state.view;
   v.innerHTML = views[state.view]();
   v.dataset.view = state.view;
@@ -1907,7 +1913,7 @@ function adminStoreSheet(id) {
       <dt>مبيعات الشهر</dt><dd>${money(sales)}</dd>
     </dl>
     <div class="field"><label for="aPlan">تغيير الخطة</label>
-      <div class="row"><select class="input grow" id="aPlan">${['monthly', 'yearly', 'pro_monthly', 'pro_yearly', 'trial', 'free'].map((k) => `<option value="${k}" ${(s.plan || 'trial') === k ? 'selected' : ''}>${PLANS[k].l}${PLANS[k].price ? ` — ${PLANS[k].price.toLocaleString('en-US')} د.ع` : ''}${PLANS[k].days ? ` (${PLANS[k].days} يوماً)` : ''}</option>`).join('')}</select>
+      <div class="row"><select class="input grow" id="aPlan">${['monthly', 'yearly', 'pro_monthly', 'pro_yearly', 'super_monthly', 'super_yearly', 'trial', 'free'].map((k) => `<option value="${k}" ${(s.plan || 'trial') === k ? 'selected' : ''}>${PLANS[k].l}${PLANS[k].price ? ` — ${PLANS[k].price.toLocaleString('en-US')} د.ع` : ''}${PLANS[k].days ? ` (${PLANS[k].days} يوماً)` : ''}</option>`).join('')}</select>
       <button class="btn primary" type="button" id="aPlanBtn">تفعيل</button></div>
       <small class="sub">في المرحلة الأولى يُفعَّل الاشتراك يدوياً بعد استلام التحويل.</small></div>
     <div class="actions">
@@ -2127,13 +2133,6 @@ function viewHome() {
   const fmtK = (n) => Math.round(n / 1000).toLocaleString('en-US'); // bar labels in thousands
   return `
   <h1 class="sr-only">لوحة التحكم — ${esc(s.name)}</h1>
-  <section class="panel ai-box" style="margin-bottom:14px">
-    <div><b>رواج الذكي</b><div class="sub">اسأل عن مبيعات متجرك ومنتجاتك وطلباتك، أو اطلب فاتورة لزبون. يقرأ بيانات متجرك بس.</div></div>
-    <form id="aiForm" novalidate style="margin-top:10px">
-      <div class="row"><input class="input grow" id="aiQ" maxlength="800" placeholder="مثال: شنو أكثر منتج انباع اليوم؟" aria-label="سؤالك لرواج الذكي"><button class="btn primary" type="submit" id="aiBtn">اسأل</button></div>
-    </form>
-    <div id="aiOut" class="sub" style="margin-top:10px;white-space:pre-wrap" hidden></div>
-  </section>
   <div class="dash-head">
     <div><div class="dash-hi">${d.getHours() < 12 ? 'صباح الخير' : 'مساء الخير'}${who ? '، ' + esc(who) : ''}</div><div class="sub">${esc(dateStr)} · اليوم <span class="num">${todays.length}</span> طلب بقيمة ${money(todaysSales)}</div></div>
     <div class="dash-link">
@@ -2739,7 +2738,7 @@ function cashOpeningSheet() {
 
 function moreSheet() {
   const items = NAV.filter((n) => n.sideOnly && can(n.id));
-  openSheet(`${sheetHead('المزيد')}<div class="list">${items.map((n) => `<button class="item" type="button" data-nav="${esc(n.id)}">${icon(n.id)}<div class="grow">${n.l}</div>${n.pro ? '<i class="pro-tag">برو</i>' : ''}</button>`).join('')}</div>`);
+  openSheet(`${sheetHead('المزيد')}<div class="list">${items.map((n) => `<button class="item" type="button" data-nav="${esc(n.id)}">${icon(n.id)}<div class="grow">${n.l}</div>${n.pro ? `<i class="pro-tag">${n.tag || 'برو'}</i>` : ''}</button>`).join('')}</div>`);
 }
 
 function exportPL() {
@@ -2768,6 +2767,23 @@ function proLocked(title, text) {
   <section class="panel pro-lock"><span class="feat-ico">${icon('lock')}</span>
     <div><h2 style="margin:0 0 6px">ميزة خاصة بنسخة برو</h2><p style="margin:0">${text}</p></div></section>
   <h2>رقِّ متجرك لبرو</h2>${priceCards(s)}`;
+}
+function viewAI() {
+  const s = store();
+  const head = `<h1>رواج الذكي</h1><p class="sub">اسأل عن مبيعات متجرك ومنتجاتك وطلباتك، أو اطلب فاتورة لزبون. يقرأ بيانات متجرك بس.</p>`;
+  if (!isPro(s)) return `${head}
+    <section class="panel pro-lock"><span class="feat-ico">${icon('lock')}</span>
+    <div><h2 style="margin:0 0 6px">ميزة خاصة ببرو وسوبر برو</h2><p style="margin:0">برو يعطيك سؤالين باليوم، وسوبر برو يعطيك أسئلة بلا حد. الخانة تظهر لك، بس ما تقدر تستخدمها على الخطة العادية.</p></div></section>
+    <h2>رقِّ متجرك</h2>${priceCards(s)}`;
+  const limitTxt = isSuperStore(s) ? 'سوبر برو: أسئلة بلا حد' : 'برو: سؤالين باليوم';
+  return `${head}
+  <section class="panel ai-box">
+    <div class="sub">${limitTxt}</div>
+    <form id="aiForm" novalidate style="margin-top:10px">
+      <div class="row"><input class="input grow" id="aiQ" maxlength="800" placeholder="مثال: شنو أكثر منتج انباع اليوم؟" aria-label="سؤالك لرواج الذكي"><button class="btn primary" type="submit" id="aiBtn">اسأل</button></div>
+    </form>
+    <div id="aiOut" class="sub" style="margin-top:10px;white-space:pre-wrap" hidden></div>
+  </section>`;
 }
 function viewFeature() {
   const s = store();
@@ -3851,8 +3867,11 @@ document.addEventListener('submit', async (e) => {
     if (!tok) throw new Error('سجّل دخول من جديد');
     const res = await fetch(SUPA_URL + '/functions/v1/rawaj-ai', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + tok, apikey: SUPA_KEY }, body: JSON.stringify({ question: q }) });
     const j = await res.json().catch(() => ({}));
+    if (res.status === 429) throw new Error('خلصت أسئلتك اليوم (سؤالين). ارجع بكرة، أو رقِّ لسوبر برو بلا حد.');
+    if (res.status === 403) throw new Error('هذي الميزة لبرو وسوبر برو بس.');
     if (!res.ok) throw new Error(j.error === 'no_key' ? 'رواج الذكي مو مفعّل بعد' : 'تعذّر الجواب، جرّب مرة ثانية');
     out.textContent = j.answer;
+    if (j.remaining != null) out.textContent += `\n\nتبقى لك ${j.remaining} سؤال اليوم.`;
   } catch (err) {
     out.textContent = err.message || 'تعذّر الجواب';
   } finally {
