@@ -3152,7 +3152,7 @@ function productSheet(id) {
       <div class="field" id="pReasonWrap" hidden><label for="pReason">سبب تعديل المخزون</label><input class="input" id="pReason" maxlength="120" placeholder="مثال: جرد، تالف، استلام بضاعة"></div>
       <label class="row" style="margin:6px 0 12px"><input type="checkbox" id="pActive" ${p.active ? 'checked' : ''} ${dis}> يظهر للزبائن في واجهة المتجر</label>
       <div id="pErr" class="err" hidden></div>
-      ${edit ? `<button class="btn primary block" type="submit">${existing ? 'حفظ التغييرات' : 'إضافة المنتج'}</button>` : '<p class="sub">عرض فقط: دورك لا يسمح بتعديل المنتجات.</p>'}
+      ${edit ? `<button class="btn primary block" type="submit">${existing ? 'حفظ التغييرات' : 'إضافة المنتج'}</button>${existing ? '<button class="btn danger block" type="button" id="pDel" style="margin-top:8px">حذف المنتج</button>' : ''}` : '<p class="sub">عرض فقط: دورك لا يسمح بتعديل المنتجات.</p>'}
     </form>
     ${moves.length ? `<h2>آخر حركات المخزون</h2><div class="list">${moves.map((m) => `<div class="item"><div class="grow"><div>${esc(m.reason)}</div><div class="meta">${esc(vLabel(m.variantId))} · ${dateText(m.at)} · ${esc(m.by)}</div></div><b class="num" style="color:${m.qty < 0 ? 'var(--bad)' : 'var(--good)'}">${m.qty > 0 ? '+' : ''}${m.qty}</b></div>`).join('')}</div>` : ''}`,
   (sh) => {
@@ -3182,6 +3182,15 @@ function productSheet(id) {
       if (b.dataset.cover != null) { const [im] = p.images.splice(+b.dataset.cover, 1); p.images.unshift(im); }
       drawImgs();
     });
+    const pd = sh.querySelector('#pDel');
+    if (pd) pd.addEventListener('click', () => confirmSheet('حذف المنتج', `حذف "${esc(p.name)}"؟ ما يرجع بعد الحذف، وتنحذف صوره.`, 'حذف', true).then((ok) => {
+      if (!ok) return;
+      const s2 = store();
+      s2.products = s2.products.filter((x) => x.id !== existing.id);
+      imgDel(existing.images || []);
+      save(); render(); closeSheet();
+      toast('حُذف المنتج');
+    }));
     const pf = sh.querySelector('#pFile');
     if (pf) pf.addEventListener('change', async () => {
       const room = imgMaxFor(store()) - p.images.length;
