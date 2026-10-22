@@ -1793,6 +1793,7 @@ function renderAdmin() {
 
   $('#admin').innerHTML = `
   <div class="admin-top">${LOGO_SVG(34)}<h1>رواج · لوحة الإدارة</h1><span class="sub" style="color:inherit;opacity:.75">${esc(currentUser().email)}</span>
+    <button class="btn" type="button" data-act="admin-own">متجري</button>
     <button class="btn" type="button" data-act="admin-refresh">تحديث</button>
     <button class="btn" type="button" data-act="logout">خروج</button></div>
   <div class="admin-wrap">
@@ -3754,6 +3755,7 @@ document.addEventListener('click', (e) => {
     case 'new-expense': expenseSheet(); break;
     case 'open-storefront': openStorefront(); break;
     case 'logout': signOut(); break;
+    case 'admin-own': { state.adminAs = null; saveUI(); render(); window.scrollTo(0, 0); break; }
     case 'admin-exit': { const s = store(); syncNow().then(() => { state.adminAs = null; if (s) logAdmin('خروج من إدارة متجر', s); saveUI(); render(); window.scrollTo(0, 0); }); break; }
     case 'admin-refresh': loadAdminData().then(() => { renderAdmin(); toast('حُدّثت البيانات'); }, () => toast('تعذّر التحديث، تحقق من الإنترنت', true)); break;
     case 'make-codes': {
