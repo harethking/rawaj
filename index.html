@@ -3,6 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob: https://awollmwahlczurrtjweg.supabase.co https://images.unsplash.com; connect-src 'self' https://awollmwahlczurrtjweg.supabase.co wss://awollmwahlczurrtjweg.supabase.co; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; manifest-src 'self'; worker-src 'none'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
 <title>رواج — متجرك وحساباته في جيبك</title>
 <meta name="description" content="رواج: منصة لإدارة متجرك أونلاين — الطلبات والمخزن والأرباح ورابط متجرك للزبائن.">
 <meta name="theme-color" content="#1f6b4f">
@@ -639,8 +641,9 @@ body.signed-out #planBanner, body.admin-mode #planBanner{display:none}
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <div id="print"></div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="vendor/supabase-2.117.2.js"></script>
 <script>
+if (window.top !== window.self) { document.documentElement.style.display = 'none'; try { window.top.location = window.self.location.href; } catch (e) { /* framed by another site: stay hidden */ } } // no clickjacking
 'use strict';
 /* =========================================================================
    رواج — platform for small online stores.
@@ -746,6 +749,28 @@ const NAV = [
 /* ---------------- helpers ---------------- */
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+// ---- safety: everything below comes from store data that its owner (or anyone, for orders) can write.
+const COLOR_RE = /^#[0-9a-fA-F]{3,8}$/;
+const safeColor = (c) => (typeof c === 'string' && COLOR_RE.test(c) ? c : '#1f6b4f');
+const IMG_RE = /^([0-9a-f-]{36}\/[A-Za-z0-9_-]{1,64}\.(webp|jpe?g|png)|https:\/\/images\.unsplash\.com\/[A-Za-z0-9._~\/?=&%:+-]{1,400})$/; // same rule as the server and the page policy
+const safeImg = (x) => (typeof x === 'string' && IMG_RE.test(x) ? x : null);
+const safeId = (x) => String(x == null ? '' : x).replace(/[^A-Za-z0-9_-]/g, '').slice(0, 64);
+// Cleans one store's data in place before anything is drawn from it.
+function sanitizeStore(s) {
+  s.color = safeColor(s.color);
+  s.logo = safeImg(s.logo);
+  if (Array.isArray(s.products)) s.products = s.products.filter((p) => p && typeof p === 'object').map((p) => {
+    p.id = safeId(p.id) || ('p' + Math.random().toString(36).slice(2, 9));
+    p.color = safeColor(p.color);
+    p.images = (Array.isArray(p.images) ? p.images : []).map(safeImg).filter(Boolean);
+    p.name = String(p.name == null ? '' : p.name); p.category = String(p.category == null ? '' : p.category);
+    p.variants = (Array.isArray(p.variants) ? p.variants : []).filter((v) => v && typeof v === 'object').map((v) => ({ ...v, id: safeId(v.id) || ('v' + Math.random().toString(36).slice(2, 9)), label: String(v.label == null ? '' : v.label), price: Number(v.price) || 0, cost: Number(v.cost) || 0, stock: Number(v.stock) || 0 }));
+    return p;
+  });
+  if (Array.isArray(s.orders)) s.orders.forEach((o) => { if (o && typeof o === 'object') { o.id = safeId(o.id) || ('o' + Math.random().toString(36).slice(2, 9)); o.no = Number(o.no) || 0; } });
+  if (s.socials && typeof s.socials === 'object') for (const k of Object.keys(s.socials)) if (!/^https:\/\/[^\s<>"']+$/.test(String(s.socials[k]))) delete s.socials[k];
+  return s;
+}
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const money = (n) => `<span class="num">${Math.round(n).toLocaleString('en-US')}</span> د.ع`;
 const moneyText = (n) => `${Math.round(n).toLocaleString('en-US')} د.ع`;
@@ -892,7 +917,7 @@ function hydrateImages(root) {
   for (const el of (root || document).querySelectorAll('img[data-img]:not([src])')) {
     const id = el.dataset.img;
     const box = el.closest('.pimg,.thumb,.pic,.gal-main,.store-mark,.sf-logo,.sf-mark');
-    if (id && id.includes('/')) { el.onerror = () => { if (box) box.classList.add('noimg'); }; el.src = imgUrl(id); }
+    if (id && safeImg(id)) { el.onerror = () => { if (box) box.classList.add('noimg'); }; el.src = imgUrl(id); }
     else if (box) box.classList.add('noimg');
   }
 }
@@ -965,8 +990,8 @@ async function addImages(files, room, max) {
 }
 function tile(p, cls) {
   const cover = p.images && p.images[0];
-  if (cover) return `<div class="${cls}" style="background:var(--sunk)"><img data-img="${cover}" alt="${esc(p.name)}" loading="lazy"></div>`;
-  return `<div class="${cls}" style="background:${p.color}">${esc(p.name.charAt(0))}</div>`;
+  if (cover) return `<div class="${cls}" style="background:var(--sunk)"><img data-img="${esc(cover)}" alt="${esc(p.name)}" loading="lazy"></div>`;
+  return `<div class="${cls}" style="background:${safeColor(p.color)}">${esc(p.name.charAt(0))}</div>`;
 }
 
 /* ---------------- state (cloud) ----------------
@@ -998,6 +1023,7 @@ function fromRow(r) {
   if (!s.name) s.name = 'متجري';
   if (!s.color) s.color = TILE_COLORS[0];
   ensureShape(s);
+  sanitizeStore(s);
   s._synced = fingerprint(s);
   return s;
 }
@@ -1309,7 +1335,7 @@ function cashLedger(s) {
 }
 
 function downloadCSV(name, rows) {
-  const cell = (c) => { const v = String(c == null ? '' : c); return /[",\n\r]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v; };
+  const cell = (c) => { let v = String(c == null ? '' : c); if (typeof c === 'string' && /^[=+\-@\t\r]/.test(v)) v = "'" + v; return /[",\n\r]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v; };
   const csv = '﻿' + rows.map((r) => r.map(cell).join(',')).join('\r\n');
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
@@ -1382,13 +1408,13 @@ async function copyText(text) {
 /* ---------------- chrome ---------------- */
 function renderChrome() {
   const s = store();
-  document.documentElement.style.setProperty('--brand', s.color);
-  $('#storeMark').innerHTML = s.logo ? `<img data-img="${s.logo}" alt="شعار ${esc(s.name)}">` : esc(s.name.trim().charAt(0));
+  document.documentElement.style.setProperty('--brand', safeColor(s.color));
+  $('#storeMark').innerHTML = s.logo ? `<img data-img="${esc(s.logo)}" alt="شعار ${esc(s.name)}">` : esc(s.name.trim().charAt(0));
   $('#storeName').textContent = s.name;
   $('#storeSub').textContent = `${currentUser().name} · ${ROLES[state.role].l}`;
   $('#roleSelect').value = state.role;
   const allowed = NAV.filter((n) => can(n.id));
-  const btn = (n) => `<button type="button" data-nav="${n.id}" ${state.view === n.id ? 'aria-current="page"' : ''}>${icon(n.id)}<span>${n.l}</span>${n.pro ? '<i class="pro-tag">برو</i>' : ''}</button>`;
+  const btn = (n) => `<button type="button" data-nav="${esc(n.id)}" ${state.view === n.id ? 'aria-current="page"' : ''}>${icon(n.id)}<span>${n.l}</span>${n.pro ? '<i class="pro-tag">برو</i>' : ''}</button>`;
   $('#sideNav').innerHTML = allowed.map(btn).join('');
   const extra = allowed.filter((n) => n.sideOnly);
   $('#bottomNav').innerHTML = allowed.filter((n) => !n.sideOnly).map(btn).join('')
@@ -1491,7 +1517,7 @@ function renderAuth() {
         <div class="field"><label for="aSocial">رابط صفحتك (انستغرام / فيسبوك / تيك توك)</label><input class="input" id="aSocial" maxlength="200" dir="ltr" style="text-align:left" placeholder="instagram.com/your.shop" autocapitalize="off" spellcheck="false"></div>` : ''}
         <div class="hint" style="margin:0 0 12px">متجرك الجديد يحصل على <b>شهر كامل مجاناً</b>، وبعدها نسخة عادي <b class="num">${fmtPrice(PRICES.basic.m)}</b> د.ع أو برو <b class="num">${fmtPrice(PRICES.pro.m)}</b> د.ع شهرياً.</div>` : ''}
       <div class="field"><label for="aId">البريد الإلكتروني أو رقم الهاتف</label><input class="input" id="aId" maxlength="120" autocomplete="username" dir="ltr" style="text-align:right"></div>
-      <div class="field"><label for="aPw">كلمة المرور</label><input class="input" id="aPw" type="password" maxlength="200" autocomplete="${reg ? 'new-password' : 'current-password'}">${reg ? '<small class="sub">8 أحرف على الأقل</small>' : ''}</div>
+      <div class="field"><label for="aPw">كلمة المرور</label><input class="input" id="aPw" type="password" maxlength="200" autocomplete="${reg ? 'new-password' : 'current-password'}">${reg ? '<small class="sub">8 أحرف على الأقل، حروف وأرقام</small>' : ''}</div>
       <div id="aErr" class="err" hidden></div>
       <button class="btn primary block" type="submit" id="aSubmit">${reg ? 'إنشاء الحساب والمتجر' : 'دخول'}</button>
     </form>
@@ -1533,7 +1559,7 @@ async function onAuthSubmit(e) {
     if (!name) return showErr('اكتب اسمك');
     if (!storeName) return showErr('اكتب اسم متجرك');
     if (!id) return showErr('اكتب بريداً صحيحاً أو رقم هاتف من 11 رقماً يبدأ بـ 07');
-    if (pw.length < 8) return showErr('كلمة المرور 8 أحرف على الأقل');
+    if (pw.length < 8 || !/[A-Za-z\u0600-\u06FF]/.test(pw) || !/[0-9]/.test(pw)) return showErr('كلمة المرور 8 أحرف على الأقل، وبيها حروف وأرقام');
     const socialEl = $('#aSocial');
     if (socialEl) {
       const soc = socialEl.value.trim();
@@ -1699,16 +1725,16 @@ function renderAdmin() {
       return ex.length ? `<h2>اشتراكات منتهية <span class="sub">(<span class="num">${ex.length}</span>)</span></h2><div class="list">${ex.map((x) => `<div class="item"><div class="exp-counter"><b class="num">${daysSince(x.planEnds)}</b><span>يوم</span></div>
         <div class="grow"><div class="trunc"><b>${esc(x.name)}</b></div><div class="meta">انتهى ${dateText(x.planEnds)} · ${(PLANS[x.plan] || PLANS.trial).l}</div></div>
         ${validPhone(x.phone || '') ? `<a class="btn" href="https://wa.me/964${normPhone(x.phone).slice(1)}?text=${encodeURIComponent(`مرحباً، اشتراك متجر «${x.name}» على رواج انتهى قبل ${daysSince(x.planEnds)} يوم. جدّده حتى يرجع متجرك يشتغل بكل الميزات.`)}" target="_blank" rel="noopener">${icon('chat')} تذكير</a>` : ''}
-        <button class="btn" type="button" data-astore="${x.id}">إدارة</button></div>`).join('')}</div>` : ''; })()}
+        <button class="btn" type="button" data-astore="${esc(x.id)}">إدارة</button></div>`).join('')}</div>` : ''; })()}
     <h2>المتاجر</h2>
     <div class="search">${icon('search')}<input class="input" id="aq" type="search" placeholder="اسم المتجر، الرابط، اسم المالك أو بريده" value="${esc(state.aq || '')}" aria-label="بحث في المتاجر"></div>
     <div class="chips" role="group" aria-label="تصفية المتاجر">
-      ${Object.keys(filters).map((k) => `<button class="chip" type="button" data-af="${k}" aria-pressed="${f === k}">${labels[k]}<b class="num">${counts[k]}</b></button>`).join('')}
+      ${Object.keys(filters).map((k) => `<button class="chip" type="button" data-af="${esc(k)}" aria-pressed="${f === k}">${labels[k]}<b class="num">${counts[k]}</b></button>`).join('')}
     </div>
     ${list.length ? `<div class="list">${list.slice(0, limit).map((s) => {
       const o = owners.get(s.id);
-      return `<button class="item" type="button" data-astore="${s.id}">
-        <div class="thumb" style="background:${s.color}">${s.logo ? `<img data-img="${s.logo}" alt="">` : esc(s.name.trim().charAt(0))}</div>
+      return `<button class="item" type="button" data-astore="${esc(s.id)}">
+        <div class="thumb" style="background:${safeColor(s.color)}">${s.logo ? `<img data-img="${esc(s.logo)}" alt="">` : esc(s.name.trim().charAt(0))}</div>
         <div class="grow"><div class="row" style="gap:6px"><span class="trunc">${esc(s.name)}</span>${planBadge(s)}${statusOf(s) === 'suspended' ? '<span class="st-susp">معلّق</span>' : ''}${planOf(s) === 'expired' ? `<span class="exp-days">منتهي منذ <b class="num">${daysSince(s.planEnds)}</b> يوم</span>` : ''}</div>
           <div class="meta trunc">${o ? esc(o.name) + ' · <span dir="ltr">' + esc(o.email) + '</span>' : 'بلا مالك'}</div></div>
         <div style="text-align:left" class="meta"><div><span class="num">${s.products.length}</span> منتج</div><div><span class="num">${s.orders.length}</span> طلب</div></div>
@@ -1746,7 +1772,7 @@ function adminReferrals() {
       <div><b>${esc(x.name)}</b> <span class="sub">· ${o ? esc(o.name) + ' · <span dir="ltr">' + esc(o.email) + '</span>' : ''}</span></div>
       <div class="meta">دعاه: ${inv ? esc(inv.name) : '—'} · أُنشئ ${ago(x.createdAt)} · منتجات: <span class="num">${x.products.length}</span></div>
       <a href="${esc(x.socialUrl)}" target="_blank" rel="noopener noreferrer" dir="ltr">${esc(x.socialUrl)}</a></div>
-      <div class="row" style="flex-direction:column;gap:6px"><button class="btn primary" type="button" data-refok="${x.id}">قبول</button><button class="btn danger" type="button" data-refno="${x.id}">رفض</button></div></div>`; }).join('')}</div>
+      <div class="row" style="flex-direction:column;gap:6px"><button class="btn primary" type="button" data-refok="${esc(x.id)}">قبول</button><button class="btn danger" type="button" data-refno="${esc(x.id)}">رفض</button></div></div>`; }).join('')}</div>
     <p class="note">افتح الصفحة وتأكد أنها حقيقية وتخص صاحب المتجر (منشورات، متابعين، ليست جديدة أو فارغة). كل 5 دعوات مقبولة تعطي صاحب الرابط شهراً مجانياً تلقائياً.</p>`
     : '<div class="list"><div class="empty">لا توجد دعوات تنتظر التحقق.</div></div>'}`;
 }
@@ -2035,7 +2061,7 @@ function viewHome() {
     <button type="button" class="alert ${counts.new ? 'hot' : ''}" data-filter="new" style="--c:var(--new)"><b class="num">${counts.new}</b><span>تنتظر التأكيد</span></button>
     <button type="button" class="alert" data-filter="shipped" style="--c:var(--shipped)"><b>${money(cod)}</b><span>عند شركة التوصيل</span></button>
     <button type="button" class="alert" data-nav="reports" style="--c:var(--good)"><b>${money(owed)}</b><span>تم التسليم ولم يُستلم</span></button>
-    <button type="button" class="alert ${low.length ? 'hot' : ''}" data-nav="${can('warehouse') ? 'warehouse' : 'products'}" style="--c:var(--warn)"><b class="num">${low.length}</b><span>منتجات قاربت على النفاد</span></button>
+    <button type="button" class="alert ${low.length ? 'hot' : ''}" data-nav="${esc(can('warehouse') ? 'warehouse' : 'products')}" style="--c:var(--warn)"><b class="num">${low.length}</b><span>منتجات قاربت على النفاد</span></button>
   </div>
 
   ${quick.length ? `<div class="quick">${quick.join('')}</div>` : ''}
@@ -2050,7 +2076,7 @@ function viewHome() {
 
     <section class="panel" aria-label="مسار الطلبات">
       <h2 style="margin:0 0 12px">مسار الطلبات</h2>
-      <div class="flow">${flow.map((k) => `<button type="button" class="flow-row" data-filter="${k}" style="--c:${STATUS[k].c}">
+      <div class="flow">${flow.map((k) => `<button type="button" class="flow-row" data-filter="${esc(k)}" style="--c:${STATUS[k].c}">
         <span class="flow-l">${STATUS[k].l}</span><span class="flow-bar"><i style="width:${s.orders.length ? Math.max(counts[k] ? 4 : 0, (counts[k] / s.orders.length) * 100) : 0}%"></i></span><b class="num">${counts[k]}</b></button>`).join('')}</div>
       <div class="pipe-foot"><span>ملغى <b class="num">${counts.canceled}</b></span><span>مرتجع <b class="num">${counts.returned}</b></span><span>الكل <b class="num">${s.orders.length}</b></span></div>
     </section>
@@ -2062,13 +2088,13 @@ function viewHome() {
 
     <section>
       <h2>الأكثر طلباً هذا الشهر</h2>
-      ${top.length ? `<div class="list">${top.map((t, i) => `<button class="item" type="button" ${s.products.some((x) => x.id === t.id) ? `data-product="${t.id}"` : ''}>
+      ${top.length ? `<div class="list">${top.map((t, i) => `<button class="item" type="button" ${s.products.some((x) => x.id === t.id) ? `data-product="${esc(t.id)}"` : ''}>
         <span class="rank num">${i + 1}</span>${tile(pName(t.id, t.name), 'thumb')}
         <div class="grow"><div class="trunc">${esc(t.name)}</div><div class="meta"><span class="num">${t.qty}</span> قطعة</div></div><div>${money(t.v)}</div></button>`).join('')}</div>`
         : '<div class="list"><div class="empty">لا توجد طلبات هذا الشهر بعد.</div></div>'}
       ${gov.length ? `<h2>الطلبات حسب المحافظة</h2><div class="panel">${gov.map(([c, n]) => `<div class="gov"><span>${esc(c)}</span><span class="flow-bar"><i style="width:${(n / gov[0][1]) * 100}%"></i></span><b class="num">${n}</b></div>`).join('')}</div>` : ''}
       ${low.length ? `<h2>يحتاج إعادة تعبئة</h2><div class="list">${low.slice(0, 6).map((p) => `
-        <button class="item" type="button" data-product="${p.id}">${tile(p, 'thumb')}
+        <button class="item" type="button" data-product="${esc(p.id)}">${tile(p, 'thumb')}
           <div class="grow"><div class="trunc">${esc(p.name)}</div>
           <div class="meta">${p.variants.filter((v) => v.stock <= p.low).map((v) => `${esc(v.label || 'المخزون')}: <span class="num">${v.stock}</span>`).join(' ، ')}</div></div>
           <span class="tag warn">قليل</span></button>`).join('')}</div>` : ''}
@@ -2080,7 +2106,7 @@ function viewHome() {
 function orderList(orders) {
   if (!orders.length) return `<div class="list"><div class="empty">لا توجد طلبات هنا.${can('orders.write') ? '<br><button class="btn primary" type="button" data-act="new-order">سجّل طلباً</button>' : ''}</div></div>`;
   return `<div class="list">${orders.map((o) => `
-    <button class="item" type="button" data-order="${o.id}">
+    <button class="item" type="button" data-order="${esc(o.id)}">
       <span class="ono num">#${o.no}</span>
       <div class="grow"><div class="trunc">${esc(o.customer.name)}</div>
         <div class="meta">${esc(o.customer.city)} · ${ago(o.createdAt)}${o.source === 'storefront' ? ' · من واجهة المتجر' : ''}</div></div>
@@ -2102,7 +2128,7 @@ function viewOrders() {
   <div class="spread"><h1>الطلبات</h1>${can('orders.write') ? `<button class="btn primary" type="button" data-act="new-order">${icon('plus')} طلب جديد</button>` : ''}</div>
   <div class="search">${icon('search')}<input class="input" id="q" type="search" placeholder="رقم الطلب، اسم الزبون أو الهاتف" value="${esc(state.q || '')}" aria-label="بحث في الطلبات"></div>
   <div class="chips" role="group" aria-label="تصفية حسب الحالة">
-    ${chips.map((k) => `<button class="chip" type="button" data-filter="${k}" aria-pressed="${state.orderFilter === k}">${k === 'all' ? 'الكل' : STATUS[k].l}<b class="num">${counts[k]}</b></button>`).join('')}
+    ${chips.map((k) => `<button class="chip" type="button" data-filter="${esc(k)}" aria-pressed="${state.orderFilter === k}">${k === 'all' ? 'الكل' : STATUS[k].l}<b class="num">${counts[k]}</b></button>`).join('')}
   </div>
   ${orderList(list.slice(0, 80))}
   ${list.length > 80 ? `<p class="sub">تُعرض أحدث 80 نتيجة. استخدم البحث للوصول لطلب أقدم.</p>` : ''}`;
@@ -2120,7 +2146,7 @@ function viewProducts() {
     const prices = p.variants.map((v) => v.price);
     const lo = prices.length ? Math.min(...prices) : 0, hi = prices.length ? Math.max(...prices) : 0;
     const stock = totalStock(p);
-    return `<button class="pcard ${p.active ? '' : 'off'}" type="button" data-product="${p.id}">
+    return `<button class="pcard ${p.active ? '' : 'off'}" type="button" data-product="${esc(p.id)}">
       ${!p.active ? '<span class="pc-flag"><span class="tag">مخفي عن الزبائن</span></span>' : isLow(p) ? '<span class="pc-flag"><span class="tag warn">قارب على النفاد</span></span>' : ''}
       ${tile(p, 'pic')}
       <div class="pc-body">
@@ -2247,7 +2273,7 @@ function accExpenses(s, key) {
   <div class="spread"><h2 style="margin-top:0">مصروفات ${periodLabel(key)}: ${money(r.exp)}</h2><button class="btn primary" type="button" data-act="new-expense">${icon('plus')} مصروف</button></div>
   ${r.byCat.length ? `<div class="panel" style="margin-bottom:12px"><table class="ledger">${r.byCat.map(([c, v]) => `<tr><td>${esc(c)}</td><td>${money(v)}</td></tr>`).join('')}</table></div>` : ''}
   ${r.expenses.length ? `<div class="list">${r.expenses.slice().sort((x, y) => y.at - x.at).map((e) => `<div class="item"><div class="grow"><div>${esc(e.category)}</div><div class="meta">${esc(e.note)} · ${dateText(e.at)}</div></div><div>${money(e.amount)}</div>
-    <button class="icon-btn" type="button" data-delexp="${e.id}" aria-label="حذف المصروف" style="width:32px;height:32px">${icon('close')}</button></div>`).join('')}</div>` : '<div class="list"><div class="empty">لا مصروفات مسجّلة في هذه الفترة.</div></div>'}`;
+    <button class="icon-btn" type="button" data-delexp="${esc(e.id)}" aria-label="حذف المصروف" style="width:32px;height:32px">${icon('close')}</button></div>`).join('')}</div>` : '<div class="list"><div class="empty">لا مصروفات مسجّلة في هذه الفترة.</div></div>'}`;
 }
 
 function accInsights(s, key) {
@@ -2257,7 +2283,7 @@ function accInsights(s, key) {
   <h2 style="margin-top:0">الأكثر مبيعاً في ${periodLabel(key)}</h2>
   ${r.top.length ? `<div class="list">${r.top.map((x, i) => `<div class="item"><span class="ono num">${i + 1}</span><div class="grow"><div class="trunc">${esc(x.name)}</div><div class="meta"><span class="num">${x.qty}</span> قطعة · ربح ${money(x.profit)}</div></div><div>${money(x.revenue)}</div></div>`).join('')}</div>` : '<div class="list"><div class="empty">لا توجد مبيعات مُسلَّمة في هذه الفترة.</div></div>'}
   <h2>منتجات راكدة <span class="sub">بلا طلبات خلال 30 يوماً</span></h2>
-  ${stg.length ? `<div class="list">${stg.map((p) => `<button class="item" type="button" data-product="${p.id}">${tile(p, 'thumb')}<div class="grow trunc">${esc(p.name)}</div><div class="meta">في المخزن <span class="num">${totalStock(p)}</span> · قيمتها ${money(p.variants.reduce((t, v) => t + v.cost * v.stock, 0))}</div></button>`).join('')}</div>` : '<div class="list"><div class="empty">كل المنتجات تتحرك.</div></div>'}`;
+  ${stg.length ? `<div class="list">${stg.map((p) => `<button class="item" type="button" data-product="${esc(p.id)}">${tile(p, 'thumb')}<div class="grow trunc">${esc(p.name)}</div><div class="meta">في المخزن <span class="num">${totalStock(p)}</span> · قيمتها ${money(p.variants.reduce((t, v) => t + v.cost * v.stock, 0))}</div></button>`).join('')}</div>` : '<div class="list"><div class="empty">كل المنتجات تتحرك.</div></div>'}`;
 }
 
 /* ---------------- warehouse ---------------- */
@@ -2295,8 +2321,8 @@ function whStock(s) {
     <div class="${out.length ? 'neg' : ''}"><dt>نفدت</dt><dd><span class="num">${out.length}</span> خيار</dd></div>
   </dl>
   <div class="search" style="margin-top:12px">${icon('search')}<input class="input" id="wq" type="search" placeholder="ابحث عن منتج أو خيار" value="${esc(q)}" aria-label="بحث في المخزون"></div>
-  <div class="chips" role="group" aria-label="تصفية المخزون">${chips.map(([k, l, n]) => `<button class="chip" type="button" data-whf="${k}" aria-pressed="${f === k}">${l}<b class="num">${n}</b></button>`).join('')}</div>
-  ${list.length ? `<div class="list">${list.map(({ p, v }) => `<button class="item" type="button" data-variant="${v.id}">
+  <div class="chips" role="group" aria-label="تصفية المخزون">${chips.map(([k, l, n]) => `<button class="chip" type="button" data-whf="${esc(k)}" aria-pressed="${f === k}">${l}<b class="num">${n}</b></button>`).join('')}</div>
+  ${list.length ? `<div class="list">${list.map(({ p, v }) => `<button class="item" type="button" data-variant="${esc(v.id)}">
     ${tile(p, 'thumb')}
     <div class="grow"><div class="trunc">${esc(p.name)}</div><div class="meta">${esc(v.label)}${can('cost') ? ` · تكلفة ${money(v.cost)}` : ''}</div></div>
     <span class="qty-pill num ${v.stock <= 0 ? 'out' : v.stock <= p.low ? 'low' : ''}">${v.stock}</span></button>`).join('')}</div>`
@@ -2306,7 +2332,7 @@ function whStock(s) {
 function whPurchases(s) {
   const supName = (id) => (s.suppliers.find((x) => x.id === id) || { name: '—' }).name;
   const list = s.purchases.slice().sort((a, b) => b.at - a.at);
-  return list.length ? `<div class="list">${list.map((pu) => `<button class="item" type="button" data-purchase="${pu.id}">
+  return list.length ? `<div class="list">${list.map((pu) => `<button class="item" type="button" data-purchase="${esc(pu.id)}">
     <div class="grow"><div class="trunc">${esc(supName(pu.supplierId))}</div><div class="meta">${dateText(pu.at)} · ${pu.lines.reduce((t, l) => t + l.qty, 0)} قطعة${pu.note ? ' · ' + esc(pu.note) : ''}</div></div>
     <div style="text-align:left"><div>${money(pu.total)}</div>${pu.total > pu.paid ? `<div class="meta" style="color:var(--bad)">باقي ${money(pu.total - pu.paid)}</div>` : '<div class="meta">مدفوع</div>'}</div></button>`).join('')}</div>`
     : `<div class="list"><div class="empty">لم تسجّل مشتريات بعد.<br><button class="btn primary" type="button" data-act="new-purchase">استلام بضاعة</button></div></div>`;
@@ -2314,7 +2340,7 @@ function whPurchases(s) {
 
 function whSuppliers(s) {
   return `<div class="spread" style="margin-bottom:10px"><span class="sub">الديون تُحسب من المشتريات ناقص ما دفعته.</span><button class="btn" type="button" data-act="new-supplier">${icon('plus')} مورد</button></div>
-  ${s.suppliers.length ? `<div class="list">${s.suppliers.map((x) => { const b = supplierBalance(s, x.id); return `<button class="item" type="button" data-supplier="${x.id}">
+  ${s.suppliers.length ? `<div class="list">${s.suppliers.map((x) => { const b = supplierBalance(s, x.id); return `<button class="item" type="button" data-supplier="${esc(x.id)}">
     <div class="grow"><div class="trunc">${esc(x.name)}</div><div class="meta">مشتريات ${money(b.bought)}${x.phone ? ` · <span class="num">${esc(x.phone)}</span>` : ''}</div></div>
     <div style="text-align:left">${b.owed > 0 ? `<div style="color:var(--bad)">عليك ${money(b.owed)}</div>` : '<div class="meta">لا ديون</div>'}</div></button>`; }).join('')}</div>`
     : '<div class="list"><div class="empty">لا يوجد موردون بعد. يُضاف المورد تلقائياً عند أول استلام بضاعة.</div></div>'}`;
@@ -2391,7 +2417,7 @@ function purchaseSheet(prefVid) {
     const setCost = () => { const f = findVariant(s, sh.querySelector('#puVar').value); if (f) sh.querySelector('#puCost').value = f.v.cost || ''; };
     setCost();
     const draw = () => {
-      sh.querySelector('#puLines').innerHTML = lines.map((l, i) => { const f = findVariant(s, l.variantId); return `<div class="oline"><div class="grow">${esc(f.p.name)}<div class="sub">${esc(f.v.label)} · <span class="num">${l.qty}</span> × ${money(l.cost)}</div></div><b>${money(l.qty * l.cost)}</b><button class="icon-btn" type="button" data-rmline="${i}" aria-label="حذف" style="width:32px;height:32px">${icon('close')}</button></div>`; }).join('');
+      sh.querySelector('#puLines').innerHTML = lines.map((l, i) => { const f = findVariant(s, l.variantId); return `<div class="oline"><div class="grow">${esc(f.p.name)}<div class="sub">${esc(f.v.label)} · <span class="num">${l.qty}</span> × ${money(l.cost)}</div></div><b>${money(l.qty * l.cost)}</b><button class="icon-btn" type="button" data-rmline="${esc(i)}" aria-label="حذف" style="width:32px;height:32px">${icon('close')}</button></div>`; }).join('');
       if (!paidTouched) sh.querySelector('#puPaid').value = total();
       sh.querySelector('#puTotal').innerHTML = money(total());
       sh.querySelector('#puDebt').innerHTML = money(Math.max(0, total() - n('#puPaid')));
@@ -2504,7 +2530,7 @@ function purchaseDetail(id) {
     <table class="lines">${pu.lines.map((l) => `<tr><td>${esc(l.name)}<div class="sub">${esc(l.label)} · <span class="num">${l.qty}</span> × ${money(l.cost)}</div></td><td>${money(l.qty * l.cost)}</td></tr>`).join('')}</table>
     <div class="tot grand"><span>الإجمالي</span><span>${money(pu.total)}</span></div>
     <div class="tot"><span>المدفوع عند الاستلام</span><span>${money(pu.paid)}</span></div>
-    ${sup ? `<button class="btn block" type="button" data-supplier="${sup.id}" style="margin-top:12px">حساب المورد</button>` : ''}`);
+    ${sup ? `<button class="btn block" type="button" data-supplier="${esc(sup.id)}" style="margin-top:12px">حساب المورد</button>` : ''}`);
 }
 
 function supplierSheet(id) {
@@ -2529,7 +2555,7 @@ function supplierSheet(id) {
       <button class="btn primary block" type="submit">${b.owed > 0 ? 'حفظ وتسجيل الدفعة' : 'حفظ'}</button>
     </form>
     <h2>الفواتير والدفعات</h2>
-    <div class="list">${[...purs.map((p) => ({ at: p.at, html: `<button class="item" type="button" data-purchase="${p.id}"><div class="grow"><div>فاتورة شراء</div><div class="meta">${dateText(p.at)}</div></div><div>${money(p.total)}</div></button>` })),
+    <div class="list">${[...purs.map((p) => ({ at: p.at, html: `<button class="item" type="button" data-purchase="${esc(p.id)}"><div class="grow"><div>فاتورة شراء</div><div class="meta">${dateText(p.at)}</div></div><div>${money(p.total)}</div></button>` })),
       ...pays.map((p) => ({ at: p.at, html: `<div class="item"><div class="grow"><div>دفعة${p.note ? ': ' + esc(p.note) : ''}</div><div class="meta">${dateText(p.at)}</div></div><div style="color:var(--good)">${money(p.amount)}</div></div>` }))]
       .sort((x, y) => y.at - x.at).map((x) => x.html).join('') || '<div class="empty">لا شيء بعد.</div>'}</div>`,
   (sh) => {
@@ -2578,7 +2604,7 @@ function settleSheet() {
   openSheet(`${sheetHead('استلام مبلغ من شركة التوصيل')}
     <p class="sub" style="margin-top:-6px">أشّر الطلبات التي استلمت مبلغها. المبلغ = قيمة المنتجات بعد الخصم (أجرة التوصيل تبقى عند الشركة).</p>
     <label class="check-row"><input type="checkbox" id="stAll" checked> <b>تحديد الكل</b></label>
-    <div id="stList">${list.map((o) => `<label class="check-row"><input type="checkbox" data-st="${o.id}" checked>
+    <div id="stList">${list.map((o) => `<label class="check-row"><input type="checkbox" data-st="${esc(o.id)}" checked>
       <span class="grow"><span class="num">#${o.no}</span> ${esc(o.customer.name)} <span class="sub">· ${dateText(statusAt(o, 'delivered'))}</span></span><span>${money(settleValue(o))}</span></label>`).join('')}</div>
     <div class="tot grand"><span>المبلغ المستلم</span><span id="stTotal"></span></div>
     <button class="btn primary block" type="button" id="stSave" style="margin-top:12px">تسجيل الاستلام في الصندوق</button>`,
@@ -2618,7 +2644,7 @@ function cashOpeningSheet() {
 
 function moreSheet() {
   const items = NAV.filter((n) => n.sideOnly && can(n.id));
-  openSheet(`${sheetHead('المزيد')}<div class="list">${items.map((n) => `<button class="item" type="button" data-nav="${n.id}">${icon(n.id)}<div class="grow">${n.l}</div>${n.pro ? '<i class="pro-tag">برو</i>' : ''}</button>`).join('')}</div>`);
+  openSheet(`${sheetHead('المزيد')}<div class="list">${items.map((n) => `<button class="item" type="button" data-nav="${esc(n.id)}">${icon(n.id)}<div class="grow">${n.l}</div>${n.pro ? '<i class="pro-tag">برو</i>' : ''}</button>`).join('')}</div>`);
 }
 
 function exportPL() {
@@ -2684,7 +2710,7 @@ function viewCoupons() {
   return `
   <div class="spread"><h1>كوبونات الخصم</h1><button class="btn primary" type="button" data-act="new-coupon">${icon('plus')} كوبون جديد</button></div>
   <p class="sub" style="margin-top:-6px">انشر الكوبون بصفحاتك. الزبون يكتبه عند إتمام الطلب، والخصم ينحسب ويتسجل بالطلب تلقائياً.</p>
-  ${list.length ? `<div class="list">${list.map((c, i) => { const st = state_(c); return `<button class="item" type="button" data-coupon="${i}">
+  ${list.length ? `<div class="list">${list.map((c, i) => { const st = state_(c); return `<button class="item" type="button" data-coupon="${esc(i)}">
       <span class="cp-code num">${esc(c.code)}</span>
       <div class="grow"><div>${couponText(c)}${c.min ? ` <span class="sub">· لطلب من ${moneyText(c.min)}</span>` : ''}</div>
         <div class="meta">استُخدم <span class="num">${c.used || 0}</span>${c.max ? ` من <span class="num">${c.max}</span>` : ' مرة'}${c.expires ? ` · ينتهي ${dateText(c.expires)}` : ''}</div></div>
@@ -2741,7 +2767,7 @@ function viewSettings() {
   <h1>إعدادات المتجر</h1>
   ${linkCard(s)}
   <div class="panel row" style="margin-bottom:14px">
-    <div class="store-mark" style="width:64px;height:64px;border-radius:16px;font-size:26px">${s.logo ? `<img data-img="${s.logo}" alt="الشعار">` : esc(s.name.trim().charAt(0))}</div>
+    <div class="store-mark" style="width:64px;height:64px;border-radius:16px;font-size:26px">${s.logo ? `<img data-img="${esc(s.logo)}" alt="الشعار">` : esc(s.name.trim().charAt(0))}</div>
     <div class="grow"><div>شعار المتجر</div><div class="sub">يظهر في أعلى لوحة التحكم وفي صفحة متجرك</div></div>
     <div class="row" style="flex-direction:column;align-items:stretch;gap:6px">
       <label class="btn upload">${icon('camera')} ${s.logo ? 'تغيير' : 'رفع شعار'}<input type="file" id="logoFile" accept="image/*" aria-label="رفع شعار المتجر"></label>
@@ -2817,7 +2843,7 @@ function orderSheet(id) {
       <div class="tot grand"><span>المبلغ المطلوب من الزبون</span><span>${money(orderTotal(o))}</span></div>
       ${can('cost') ? `<div class="tot"><span>ربح الطلب (قبل المصروفات)</span><span>${money(Math.max(0, sub - o.discount) - orderCost(o))}</span></div>` : ''}
     </div>
-    ${nexts.length ? `<div class="actions">${nexts.map((t) => `<button class="btn ${t === 'canceled' || t === 'returned' ? 'danger' : 'primary'}" type="button" data-to="${t}">${ACTION_LABEL[t]}</button>`).join('')}</div>` : ''}
+    ${nexts.length ? `<div class="actions">${nexts.map((t) => `<button class="btn ${t === 'canceled' || t === 'returned' ? 'danger' : 'primary'}" type="button" data-to="${esc(t)}">${ACTION_LABEL[t]}</button>`).join('')}</div>` : ''}
     <div class="actions">
       <button class="btn" type="button" data-act="copy-order">${icon('copy')} نسخ للواتساب</button>
       <button class="btn" type="button" data-act="print-order">${icon('print')} طباعة الفاتورة</button>
@@ -2892,8 +2918,8 @@ function newOrderSheet(prefill) {
       sh.querySelector('#oLines').innerHTML = draft.lines.map((l, i) => {
         const f = findVariant(s, l.variantId);
         return `<div class="oline"><div class="grow">${esc(f.p.name)}<div class="sub">${esc(f.v.label)} · ${money(f.v.price)}</div></div>
-          <div class="qty"><button type="button" data-dec="${i}" aria-label="إنقاص">−</button><span class="num">${l.qty}</span><button type="button" data-inc="${i}" aria-label="زيادة">+</button></div>
-          <button class="icon-btn" type="button" data-rm="${i}" aria-label="حذف" style="width:32px;height:32px">${icon('close')}</button></div>`;
+          <div class="qty"><button type="button" data-dec="${esc(i)}" aria-label="إنقاص">−</button><span class="num">${l.qty}</span><button type="button" data-inc="${esc(i)}" aria-label="زيادة">+</button></div>
+          <button class="icon-btn" type="button" data-rm="${esc(i)}" aria-label="حذف" style="width:32px;height:32px">${icon('close')}</button></div>`;
       }).join('') || '<p class="sub">لم تُضف منتجات بعد.</p>';
       const sub = draft.lines.reduce((t, l) => t + findVariant(s, l.variantId).v.price * l.qty, 0);
       sh.querySelector('#oTotal').innerHTML = money(Math.max(0, sub - num('#oDiscount')) + num('#oDelivery'));
@@ -2984,17 +3010,17 @@ function productSheet(id) {
     const orig = new Map((existing ? existing.variants : []).map((v) => [v.id, v.stock]));
     const draw = () => {
       sh.querySelector('#pVars').innerHTML = p.variants.map((v, i) => `<div class="vrow">
-        <input class="input" data-k="label" data-i="${i}" value="${esc(v.label)}" placeholder="مثال: أسود / L" aria-label="اسم الخيار" ${dis}>
-        <input class="input num" data-k="price" data-i="${i}" inputmode="numeric" value="${v.price}" aria-label="سعر البيع" style="text-align:right" ${dis}>
-        ${showCost ? `<input class="input num" data-k="cost" data-i="${i}" inputmode="numeric" value="${v.cost}" aria-label="التكلفة" style="text-align:right" ${dis}>` : '<span></span>'}
-        <input class="input num" data-k="stock" data-i="${i}" inputmode="numeric" value="${v.stock}" aria-label="المخزون" style="text-align:right" ${dis}>
-        ${edit && v.fresh ? `<button class="x" type="button" data-rmv="${i}" aria-label="حذف الخيار">×</button>` : '<span></span>'}
+        <input class="input" data-k="label" data-i="${esc(i)}" value="${esc(v.label)}" placeholder="مثال: أسود / L" aria-label="اسم الخيار" ${dis}>
+        <input class="input num" data-k="price" data-i="${esc(i)}" inputmode="numeric" value="${v.price}" aria-label="سعر البيع" style="text-align:right" ${dis}>
+        ${showCost ? `<input class="input num" data-k="cost" data-i="${esc(i)}" inputmode="numeric" value="${v.cost}" aria-label="التكلفة" style="text-align:right" ${dis}>` : '<span></span>'}
+        <input class="input num" data-k="stock" data-i="${esc(i)}" inputmode="numeric" value="${v.stock}" aria-label="المخزون" style="text-align:right" ${dis}>
+        ${edit && v.fresh ? `<button class="x" type="button" data-rmv="${esc(i)}" aria-label="حذف الخيار">×</button>` : '<span></span>'}
       </div>`).join('');
     };
     if (!Array.isArray(p.images)) p.images = [];
     const drawImgs = () => {
-      sh.querySelector('#pImgs').innerHTML = p.images.length ? p.images.map((id, i) => `<div class="pimg ${i === 0 ? 'first' : ''}"><img data-img="${id}" alt="صورة ${i + 1}">
-        ${edit ? `<button class="x" type="button" data-rmimg="${i}" aria-label="حذف الصورة">×</button>${i > 0 ? `<button class="cover" type="button" data-cover="${i}">اجعلها الغلاف</button>` : ''}` : ''}</div>`).join('')
+      sh.querySelector('#pImgs').innerHTML = p.images.length ? p.images.map((id, i) => `<div class="pimg ${i === 0 ? 'first' : ''}"><img data-img="${esc(id)}" alt="صورة ${i + 1}">
+        ${edit ? `<button class="x" type="button" data-rmimg="${esc(i)}" aria-label="حذف الصورة">×</button>${i > 0 ? `<button class="cover" type="button" data-cover="${esc(i)}">اجعلها الغلاف</button>` : ''}` : ''}</div>`).join('')
         : '<p class="sub" style="grid-column:1/-1;margin:0">لا توجد صور بعد.</p>';
       const up = sh.querySelector('#pUpBtn');
       if (up) up.hidden = p.images.length >= IMG_MAX;
@@ -3178,7 +3204,7 @@ function openStorefront(target, isPublic) {
   const changed = !sfStore || sfStore.slug !== s.slug;
   sfStore = s; sfPublic = !!isPublic;
   if (changed) cart = lsGet(cartKey(), []).filter((c) => c && c.pid && c.vid && c.qty > 0);
-  if (s.color) document.documentElement.style.setProperty('--brand', s.color);
+  if (s.color) document.documentElement.style.setProperty('--brand', safeColor(s.color));
   renderStorefront();
   $('#storefront').classList.add('open');
   document.body.style.overflow = 'hidden';
@@ -3197,21 +3223,21 @@ function renderStorefront() {
   const cats = Array.from(groups.keys());
   const phone = s.phone && validPhone(s.phone) ? normPhone(s.phone) : '';
   const card = (p) => `<article class="sf-card" data-q="${esc(`${p.name} ${p.category || ''} ${p.desc || ''}`.toLowerCase())}">
-      <button type="button" class="sf-card-hit" data-sfp="${p.id}" aria-label="${esc(p.name)}">${tile(p, 'pic')}</button>
-      <div class="sf-card-body"><button type="button" class="sf-card-name" data-sfp="${p.id}">${esc(p.name)}</button>
+      <button type="button" class="sf-card-hit" data-sfp="${esc(p.id)}" aria-label="${esc(p.name)}">${tile(p, 'pic')}</button>
+      <div class="sf-card-body"><button type="button" class="sf-card-name" data-sfp="${esc(p.id)}">${esc(p.name)}</button>
         <div class="sf-card-row"><span class="sf-card-price">${priceText(p)}</span>
-          <button type="button" class="sf-add" data-sfadd="${p.id}" aria-label="أضف ${esc(p.name)} إلى السلة">${icon('plus')}</button></div></div></article>`;
+          <button type="button" class="sf-add" data-sfadd="${esc(p.id)}" aria-label="أضف ${esc(p.name)} إلى السلة">${icon('plus')}</button></div></div></article>`;
   sf.innerHTML = `
     ${sfPublic ? '' : `<div class="sf-owner"><span>معاينة صفحة متجرك كما يراها الزبون</span><span class="row" style="gap:6px"><button type="button" data-act="copy-link">نسخ الرابط</button><button type="button" data-act="close-storefront">رجوع</button></span></div>`}
     <header class="sf-top">
-      <div class="sf-mark">${s.logo ? `<img data-img="${s.logo}" alt="">` : esc((s.name || '').trim().charAt(0))}</div>
+      <div class="sf-mark">${s.logo ? `<img data-img="${esc(s.logo)}" alt="">` : esc((s.name || '').trim().charAt(0))}</div>
       <div class="grow sf-top-name trunc">${esc(s.name)}</div>
       ${suspended ? '' : `<button type="button" class="sf-cart-btn" data-act="sf-cart" aria-label="السلة">${icon('bag')}<span class="sf-count num" id="sfCount" hidden>0</span></button>`}
     </header>
     <div class="sf-wrap">
       <section class="sf-hero">
         <div class="sf-hero-in">
-          <div class="sf-logo">${s.logo ? `<img data-img="${s.logo}" alt="شعار ${esc(s.name)}">` : esc((s.name || '').trim().charAt(0))}</div>
+          <div class="sf-logo">${s.logo ? `<img data-img="${esc(s.logo)}" alt="شعار ${esc(s.name)}">` : esc((s.name || '').trim().charAt(0))}</div>
           <div class="grow"><h1>${esc(s.name)}</h1><p>${suspended ? 'هذا المتجر متوقف مؤقتاً' : esc(s.tagline || 'أهلاً بك في متجرنا')}</p></div>
         </div>
         ${suspended ? '' : `<div class="sf-perks"><span>${icon('truck')} توصيل لكل المحافظات</span><span>${icon('cash')} الدفع عند الاستلام</span>
@@ -3221,11 +3247,11 @@ function renderStorefront() {
       ${all.length > 6 ? `<div class="sf-search">${icon('search')}<input id="sfSearch" type="search" placeholder="ابحث عن منتج" aria-label="ابحث عن منتج" autocomplete="off"></div>` : ''}
       ${cats.length > 1 ? `<section class="sf-cats" aria-label="تسوّق حسب القسم"><div class="sf-cats-head">تسوّق حسب القسم</div>
         <div class="sf-cats-row">${cats.map((c, i) => { const g = groups.get(c); const p = g.find((x) => x.images && x.images[0]) || g[0];
-          return `<button type="button" class="sf-cat" data-sfjump="${i}">${tile(p, 'pic sf-cat-pic')}<span class="sf-cat-n">${esc(c)}</span><small><span class="num">${g.length}</span> منتج</small></button>`; }).join('')}</div></section>` : ''}
-      ${cats.length > 1 ? `<nav class="sf-tabs" aria-label="الأقسام">${cats.map((c, i) => `<button type="button" data-sfjump="${i}" aria-current="${i === 0}">${esc(c)}<span class="num">${groups.get(c).length}</span></button>`).join('')}</nav>` : ''}
+          return `<button type="button" class="sf-cat" data-sfjump="${esc(i)}">${tile(p, 'pic sf-cat-pic')}<span class="sf-cat-n">${esc(c)}</span><small><span class="num">${g.length}</span> منتج</small></button>`; }).join('')}</div></section>` : ''}
+      ${cats.length > 1 ? `<nav class="sf-tabs" aria-label="الأقسام">${cats.map((c, i) => `<button type="button" data-sfjump="${esc(i)}" aria-current="${i === 0}">${esc(c)}<span class="num">${groups.get(c).length}</span></button>`).join('')}</nav>` : ''}
       ${suspended ? '<div class="sf-empty">المتجر لا يستقبل طلبات حالياً. حاول لاحقاً.</div>'
         : !all.length ? '<div class="sf-empty">لا توجد منتجات معروضة بعد.</div>'
-        : cats.map((c, i) => `<section class="sf-sec" id="sfsec-${i}" data-sec="${i}">
+        : cats.map((c, i) => `<section class="sf-sec" id="sfsec-${i}" data-sec="${esc(i)}">
             <div class="sf-sec-head"><h2>${esc(c)}</h2><span><span class="num">${groups.get(c).length}</span> منتج</span></div>
             <div class="sf-grid">${groups.get(c).map(card).join('')}</div></section>`).join('')}
       <div class="sf-empty" id="sfNone" hidden>لا توجد نتائج مطابقة.</div>
@@ -3310,6 +3336,7 @@ async function routePublic() {
   }
   const s = Object.assign({ status: 'active', color: TILE_COLORS[0] }, data);
   s.products = (data.products || []).map((p) => ({ ...p, active: true, images: p.images || [], variants: (p.variants || []).map((v) => ({ ...v, price: Number(v.price) || 0 })) }));
+  sanitizeStore(s);
   if (s.name) document.title = `${s.name} — متجر على رواج`;
   openStorefront(s, true);
   return true;
@@ -3325,13 +3352,13 @@ function sfProductSheet(id) {
   let qty = 1;
   const closed = statusOf(s) === 'suspended';
   openSheet(`${sheetHead(esc(p.name))}
-    ${p.images && p.images.length ? `<div class="gal-main"><img id="galMain" data-img="${p.images[0]}" alt="${esc(p.name)}"></div>
-      ${p.images.length > 1 ? `<div class="gal-thumbs">${p.images.map((im, i) => `<button type="button" data-gal="${im}" aria-pressed="${i === 0}" aria-label="صورة ${i + 1}"><img data-img="${im}" alt=""></button>`).join('')}</div>` : ''}`
+    ${p.images && p.images.length ? `<div class="gal-main"><img id="galMain" data-img="${esc(p.images[0])}" alt="${esc(p.name)}"></div>
+      ${p.images.length > 1 ? `<div class="gal-thumbs">${p.images.map((im, i) => `<button type="button" data-gal="${esc(im)}" aria-pressed="${i === 0}" aria-label="صورة ${i + 1}"><img data-img="${esc(im)}" alt=""></button>`).join('')}</div>` : ''}`
       : `<div class="pic" style="background:${p.color};aspect-ratio:16/9;border-radius:14px;display:grid;place-items:center;color:#fff;font-size:48px;font-weight:600">${esc(p.name.charAt(0))}</div>`}
     ${p.category ? `<span class="sf-cat-tag">${esc(p.category)}</span>` : ''}
     <div class="sf-price" id="spPrice">${multi ? priceText(p) : money(p.variants[0].price)}</div>
     ${p.desc ? `<p style="white-space:pre-line;margin:6px 0 0">${esc(p.desc)}</p>` : ''}
-    ${multi ? `<div class="sf-label" id="spOptL">اختر النوع أو المقاس</div><div class="opts" role="group" aria-labelledby="spOptL">${p.variants.map((v) => `<button type="button" class="opt" data-v="${v.id}" aria-pressed="false">${esc(v.label)}${samePrice ? '' : ` · ${money(v.price)}`}</button>`).join('')}</div>` : ''}
+    ${multi ? `<div class="sf-label" id="spOptL">اختر النوع أو المقاس</div><div class="opts" role="group" aria-labelledby="spOptL">${p.variants.map((v) => `<button type="button" class="opt" data-v="${esc(v.id)}" aria-pressed="false">${esc(v.label)}${samePrice ? '' : ` · ${money(v.price)}`}</button>`).join('')}</div>` : ''}
     ${closed ? '' : `<div class="sf-label">الكمية</div>
     <div class="spread"><div class="qty sf-qty"><button type="button" data-q="1" aria-label="زيادة">+</button><span id="spQty" class="num">1</span><button type="button" data-q="-1" aria-label="إنقاص">−</button></div>
       <div id="spLine" style="font-weight:600"></div></div>
@@ -3382,8 +3409,8 @@ function sfCartSheet() {
       <div id="cartLines">${lines.map((l, i) => `<div class="cline">${tile(l.p, 'thumb')}
         <div class="grow"><div class="trunc" style="font-weight:500">${esc(l.p.name)}</div>
           <div class="sub">${showLabel(l.p, l.v) ? `${esc(l.v.label)} · ` : ''}${money(l.v.price)}</div>
-          <button type="button" class="x" data-crm="${i}">حذف</button></div>
-        <div class="qty"><button type="button" data-cinc="${i}" aria-label="زيادة">+</button><span class="num">${l.qty}</span><button type="button" data-cdec="${i}" aria-label="إنقاص">−</button></div></div>`).join('')}</div>
+          <button type="button" class="x" data-crm="${esc(i)}">حذف</button></div>
+        <div class="qty"><button type="button" data-cinc="${esc(i)}" aria-label="زيادة">+</button><span class="num">${l.qty}</span><button type="button" data-cdec="${esc(i)}" aria-label="إنقاص">−</button></div></div>`).join('')}</div>
       <div class="sum-box"><div class="tot grand" style="border:0;margin:0;padding:0"><span>مجموع المنتجات</span><span>${money(cartSub())}</span></div>
         <div class="sub" style="margin-top:4px">أجرة التوصيل تُحسب حسب المحافظة في الخطوة التالية.</div></div>
       <div class="actions"><button class="btn" type="button" data-act="close-sheet">متابعة التسوق</button><button class="btn primary" type="button" id="toCheckout">إكمال الطلب</button></div>`,
@@ -3554,7 +3581,7 @@ function sfTrackSheet() {
   const mine = lsGet(`rawaj-orders-${s.slug}`, []);
   const last = mine[0] || {};
   openSheet(`${sheetHead('تتبّع طلبك')}
-    ${mine.length > 1 ? `<div class="chips">${mine.map((m) => `<button type="button" class="chip" data-tno="${m.no}" data-tph="${esc(m.phone)}">#${m.no}</button>`).join('')}</div>` : ''}
+    ${mine.length > 1 ? `<div class="chips">${mine.map((m) => `<button type="button" class="chip" data-tno="${esc(m.no)}" data-tph="${esc(m.phone)}">#${m.no}</button>`).join('')}</div>` : ''}
     <form id="trForm" novalidate>
       <div class="grid2">
         <div class="field"><label for="trNo">رقم الطلب</label><input class="input num" id="trNo" inputmode="numeric" style="text-align:right" value="${esc(last.no || '')}"></div>
@@ -3774,6 +3801,13 @@ document.addEventListener('submit', (e) => {
 window.addEventListener('hashchange', () => {
   routePublic().then((ok) => { if (!ok && $('#storefront').classList.contains('open') && sfPublic) closeStorefront(); });
 });
+// Platform admin is signed out after 30 minutes without any activity on the page.
+let lastActive = Date.now();
+['pointerdown', 'keydown', 'scroll', 'touchstart'].forEach((ev) => window.addEventListener(ev, () => { lastActive = Date.now(); }, { passive: true }));
+setInterval(() => {
+  const u = currentUser();
+  if (u && u.isAdmin && Date.now() - lastActive > 30 * 60e3) { lastActive = Date.now(); signOut().then(() => toast('خرجت من لوحة الإدارة تلقائياً بعد 30 دقيقة بدون نشاط')); }
+}, 60e3);
 sb.auth.onAuthStateChange((event) => {
   if (event === 'SIGNED_OUT' && state.session) { state = freshState(); loadUI(); renderAuth(); }
 });
