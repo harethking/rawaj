@@ -3865,7 +3865,16 @@ document.addEventListener('submit', async (e) => {
     const { data } = await sb.auth.getSession();
     const tok = data && data.session && data.session.access_token;
     if (!tok) throw new Error('سجّل دخول من جديد');
-    const res = await fetch(SUPA_URL + '/functions/v1/rawaj-ai', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + tok, apikey: SUPA_KEY }, body: JSON.stringify({ question: q }) });
+    const ctl = new AbortController();
+    const timer = setTimeout(() => ctl.abort(), 45000);
+    let res;
+    try {
+      res = await fetch(SUPA_URL + '/functions/v1/rawaj-ai', { method: 'POST', signal: ctl.signal, headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + tok, apikey: SUPA_KEY }, body: JSON.stringify({ question: q }) });
+    } catch (e) {
+      throw new Error(e && e.name === 'AbortError' ? 'الجواب تأخر كثير، جرّب مرة ثانية' : 'ما قدرت أوصل للخدمة، تأكد من النت وجرّب مرة ثانية');
+    } finally {
+      clearTimeout(timer);
+    }
     const j = await res.json().catch(() => ({}));
     if (res.status === 429) throw new Error('خلصت أسئلتك اليوم (5 أسئلة). ارجع بكرة، أو رقِّ لسوبر برو بلا حد.');
     if (res.status === 403) throw new Error('هذي الميزة لبرو وسوبر برو بس.');
