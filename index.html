@@ -730,7 +730,8 @@ function monthLabel(key) { const [y, m] = key.split('-').map(Number); return `${
 
 const WELCOME_DAYS = 30;
 const ADMIN_PHONE = '07801691548';
-const PRICE_MONTH = 3900, PRICE_YEAR = 36000;
+const PRICE_MONTH = 4900, PRICE_YEAR = 50000;
+const fmtPrice = (n) => n.toLocaleString('en-US');
 // Subscribing happens on WhatsApp with the platform admin; the message names the store and the plan.
 function subscribeUrl(s, plan) {
   const what = plan === 'yearly' ? `الاشتراك السنوي (${moneyText(PRICE_YEAR)})` : plan === 'monthly' ? `الاشتراك الشهري (${moneyText(PRICE_MONTH)})` : 'الاشتراك';
@@ -744,12 +745,12 @@ function priceCards(s) {
   return `<div class="price-cards">
     <a class="price-card" href="${subscribeUrl(s, 'monthly')}" target="_blank" rel="noopener">
       <span class="pc-name">الاشتراك الشهري</span>
-      <span class="pc-price"><b class="num">3,900</b> د.ع</span><span class="pc-per">كل شهر</span>
+      <span class="pc-price"><b class="num">${fmtPrice(PRICE_MONTH)}</b> د.ع</span><span class="pc-per">كل شهر</span>
       <span class="btn primary block">${icon('chat')} اشترك الآن</span></a>
     <a class="price-card best" href="${subscribeUrl(s, 'yearly')}" target="_blank" rel="noopener">
       <span class="pc-tag">الأوفر</span>
       <span class="pc-name">الاشتراك السنوي</span>
-      <span class="pc-price"><b class="num">36,000</b> د.ع</span><span class="pc-per">سنة كاملة · توفّر <span class="num">${(PRICE_MONTH * 12 - PRICE_YEAR).toLocaleString('en-US')}</span> د.ع</span>
+      <span class="pc-price"><b class="num">${fmtPrice(PRICE_YEAR)}</b> د.ع</span><span class="pc-per">سنة كاملة · توفّر <span class="num">${(PRICE_MONTH * 12 - PRICE_YEAR).toLocaleString('en-US')}</span> د.ع</span>
       <span class="btn primary block">${icon('chat')} اشترك الآن</span></a>
   </div>`;
 }
@@ -1349,7 +1350,7 @@ function render() {
   const expired = planOf(s0) === 'expired';
   if (!u.isAdmin && (expired || (left <= 7 && (s0.plan || 'trial') !== 'free'))) {
     pb.className = `on ${expired ? 'bad' : 'warn'}`;
-    pb.innerHTML = `<span>${expired ? 'انتهى اشتراك متجرك.' : `${s0.welcome ? 'شهرك المجاني' : 'اشتراكك'} ينتهي ${left <= 0 ? 'اليوم' : left === 1 ? 'غداً' : `بعد ${left} أيام`}.`} اشترك بـ <b class="num">3,900</b> د.ع شهرياً أو <b class="num">36,000</b> د.ع سنوياً:</span><span class="row">${renewLinks(s0, true)}</span>`;
+    pb.innerHTML = `<span>${expired ? 'انتهى اشتراك متجرك.' : `${s0.welcome ? 'شهرك المجاني' : 'اشتراكك'} ينتهي ${left <= 0 ? 'اليوم' : left === 1 ? 'غداً' : `بعد ${left} أيام`}.`} اشترك بـ <b class="num">${fmtPrice(PRICE_MONTH)}</b> د.ع شهرياً أو <b class="num">${fmtPrice(PRICE_YEAR)}</b> د.ع سنوياً:</span><span class="row">${renewLinks(s0, true)}</span>`;
   } else { pb.className = ''; pb.innerHTML = ''; }
   if (!can(state.view)) state.view = 'home';
   renderChrome();
@@ -1401,7 +1402,7 @@ function renderAuth() {
       ${reg ? `
         <div class="field"><label for="aName">اسمك</label><input class="input" id="aName" maxlength="80" autocomplete="name"></div>
         <div class="field"><label for="aStore">اسم متجرك</label><input class="input" id="aStore" maxlength="80" placeholder="مثال: عطور الأنبار"></div>
-        <div class="hint" style="margin:0 0 12px">متجرك الجديد يحصل على <b>شهر كامل مجاناً</b>، وبعدها <b class="num">3,900</b> د.ع شهرياً أو <b class="num">36,000</b> د.ع سنوياً.</div>` : ''}
+        <div class="hint" style="margin:0 0 12px">متجرك الجديد يحصل على <b>شهر كامل مجاناً</b>، وبعدها <b class="num">${fmtPrice(PRICE_MONTH)}</b> د.ع شهرياً أو <b class="num">${fmtPrice(PRICE_YEAR)}</b> د.ع سنوياً.</div>` : ''}
       <div class="field"><label for="aId">البريد الإلكتروني أو رقم الهاتف</label><input class="input" id="aId" maxlength="120" autocomplete="username" dir="ltr" style="text-align:right"></div>
       <div class="field"><label for="aPw">كلمة المرور</label><input class="input" id="aPw" type="password" maxlength="200" autocomplete="${reg ? 'new-password' : 'current-password'}">${reg ? '<small class="sub">8 أحرف على الأقل</small>' : ''}</div>
       <div id="aErr" class="err" hidden></div>
