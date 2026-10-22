@@ -3869,7 +3869,7 @@ document.addEventListener('submit', async (e) => {
     const j = await res.json().catch(() => ({}));
     if (res.status === 429) throw new Error('خلصت أسئلتك اليوم (5 أسئلة). ارجع بكرة، أو رقِّ لسوبر برو بلا حد.');
     if (res.status === 403) throw new Error('هذي الميزة لبرو وسوبر برو بس.');
-    if (!res.ok) throw new Error(j.error === 'no_key' ? 'رواج الذكي مو مفعّل بعد' : 'تعذّر الجواب، جرّب مرة ثانية');
+    if (!res.ok) throw new Error(j.error === 'no_key' ? 'رواج الذكي مو مفعّل بعد' : `تعذّر الجواب (${j.error || res.status}${j.stage ? ' / ' + j.stage : ''}${j.detail ? ': ' + String(j.detail).slice(0, 160) : ''})`);
     out.textContent = j.answer;
     if (j.remaining != null) out.textContent += `\n\nتبقى لك ${j.remaining} سؤال اليوم.`;
   } catch (err) {
