@@ -131,6 +131,22 @@ h2{font-size:16px;font-weight:600;margin:24px 0 10px}
 button.item:hover{background:var(--sunk)}
 .item .meta{font-size:12.5px;color:var(--muted)}
 .item svg{width:22px;height:22px;flex:none}
+.ai-wrap{display:flex;flex-direction:column;gap:12px}
+.ai-msgs{display:flex;flex-direction:column;gap:10px}
+.ai-row{display:flex;gap:8px;align-items:flex-end}
+.ai-row.me{justify-content:flex-start}
+.ai-row.bot{justify-content:flex-end}
+.ai-bub{max-width:82%;padding:10px 14px;border-radius:16px;white-space:pre-wrap;line-height:1.75;font-size:15px;word-break:break-word}
+.ai-row.me .ai-bub{background:var(--brand);color:var(--brand-ink);border-bottom-right-radius:4px}
+.ai-row.bot .ai-bub{background:var(--surface);border:1px solid var(--line);border-bottom-left-radius:4px}
+.ai-bub.ai-err{color:var(--warn)}
+.ai-bub.ai-pend{color:var(--muted)}
+.ai-ava{width:34px;height:34px;border-radius:50%;background:var(--brand-soft);color:var(--brand);display:grid;place-items:center;flex:none}
+.ai-ava svg{width:18px;height:18px}
+.ai-intro{display:flex;gap:12px;align-items:flex-start}
+.ai-composer{position:sticky;bottom:8px;z-index:2;display:flex;gap:8px;align-items:flex-end;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:8px;box-shadow:0 6px 20px rgba(0,0,0,.08)}
+.ai-composer textarea{flex:1;border:0;background:transparent;resize:none;font:inherit;color:inherit;outline:none;max-height:120px;padding:8px 6px}
+.ai-limit{text-align:center}
 .ono{font-weight:600;color:var(--muted);font-size:13px;min-width:44px}
 .empty{padding:28px 16px;text-align:center;color:var(--muted)}
 .empty button{margin-top:10px}
@@ -2768,22 +2784,36 @@ function proLocked(title, text) {
     <div><h2 style="margin:0 0 6px">ميزة خاصة بنسخة برو</h2><p style="margin:0">${text}</p></div></section>
   <h2>رقِّ متجرك لبرو</h2>${priceCards(s)}`;
 }
+let aiMsgs = [];
+let aiLimitTxt = null;
+function aiBubble(m) {
+  if (m.role === 'me') return `<div class="ai-row me"><div class="ai-bub">${esc(m.text)}</div></div>`;
+  return `<div class="ai-row bot"><div class="ai-bub${m.err ? ' ai-err' : ''}${m.pending ? ' ai-pend' : ''}">${esc(m.text)}</div><span class="ai-ava">${icon('ai')}</span></div>`;
+}
+function aiRenderMsgs() {
+  const el = $('#aiMsgs');
+  if (!el) return;
+  el.innerHTML = aiMsgs.map(aiBubble).join('');
+  const last = el.lastElementChild;
+  if (last) last.scrollIntoView({ block: 'end', behavior: 'smooth' });
+}
 function viewAI() {
   const s = store();
-  const head = `<h1>رواج الذكي</h1><p class="sub">اسأل عن مبيعات متجرك ومنتجاتك وطلباتك، أو اطلب فاتورة لزبون. يقرأ بيانات متجرك بس.</p>`;
-  if (!isPro(s)) return `${head}
+  if (!isPro(s)) return `<h1>رواج الذكي</h1>
     <section class="panel pro-lock"><span class="feat-ico">${icon('lock')}</span>
     <div><h2 style="margin:0 0 6px">ميزة خاصة ببرو وسوبر برو</h2><p style="margin:0">برو يعطيك 5 أسئلة باليوم، وسوبر برو يعطيك أسئلة بلا حد. الخانة تظهر لك، بس ما تقدر تستخدمها على الخطة العادية.</p></div></section>
     <h2>رقِّ متجرك</h2>${priceCards(s)}`;
-  const limitTxt = isSuperStore(s) ? 'سوبر برو: أسئلة بلا حد' : 'برو: 5 أسئلة باليوم';
-  return `${head}
-  <section class="panel ai-box">
-    <div class="sub">${limitTxt}</div>
-    <form id="aiForm" novalidate style="margin-top:10px">
-      <div class="row"><input class="input grow" id="aiQ" maxlength="800" placeholder="مثال: شنو أكثر منتج انباع اليوم؟" aria-label="سؤالك لرواج الذكي"><button class="btn primary" type="submit" id="aiBtn">اسأل</button></div>
+  const limitTxt = aiLimitTxt || (isSuperStore(s) ? 'سوبر برو: أسئلة بلا حد' : 'برو: 5 أسئلة باليوم');
+  return `<h1>رواج الذكي</h1>
+  <div class="ai-wrap">
+    ${aiMsgs.length ? '' : `<section class="panel ai-intro"><span class="ai-ava">${icon('ai')}</span><div><b>أهلاً، أنا رواج الذكي</b><p class="sub" style="margin:4px 0 0">أقرأ بيانات متجرك بس، وأجاوبك عن المبيعات والمنتجات والطلبات، وأسوي فاتورة لأي زبون. جرّب مثلاً: "شنو أكثر منتج انباع اليوم؟" أو "سوّيلي فاتورة لزبون فلان".</p></div></section>`}
+    <div class="ai-msgs" id="aiMsgs">${aiMsgs.map(aiBubble).join('')}</div>
+    <form id="aiForm" class="ai-composer" novalidate>
+      <textarea id="aiQ" rows="1" maxlength="800" placeholder="اكتب سؤالك…" aria-label="سؤالك لرواج الذكي"></textarea>
+      <button class="btn primary" type="submit" id="aiBtn">إرسال</button>
     </form>
-    <div id="aiOut" class="sub" style="margin-top:10px;white-space:pre-wrap" hidden></div>
-  </section>`;
+    <div class="sub ai-limit" id="aiLimit">${limitTxt}</div>
+  </div>`;
 }
 function viewFeature() {
   const s = store();
@@ -3853,14 +3883,27 @@ document.addEventListener('change', async (e) => {
     save(); render(); toast('حُفظ الشعار');
   }
 });
+document.addEventListener('keydown', (e) => {
+  if (e.target.id === 'aiQ' && e.key === 'Enter' && !e.shiftKey && !e.isComposing) {
+    e.preventDefault();
+    const f = $('#aiForm');
+    if (f) f.requestSubmit();
+  }
+});
 document.addEventListener('submit', async (e) => {
   if (e.target.id !== 'aiForm') return;
   e.preventDefault();
-  const q = $('#aiQ').value.trim();
-  const out = $('#aiOut'), btn = $('#aiBtn');
+  const qEl = $('#aiQ');
+  const q = qEl.value.trim();
   if (!q) return;
-  out.hidden = false; out.textContent = 'جارِ التفكير…';
-  btn.disabled = true;
+  const btn = $('#aiBtn');
+  qEl.value = '';
+  aiMsgs.push({ role: 'me', text: q }, { role: 'bot', text: 'يفكّر…', pending: true });
+  const intro = $('.ai-intro');
+  if (intro) intro.remove();
+  aiRenderMsgs();
+  if (btn) btn.disabled = true;
+  let reply;
   try {
     const { data } = await sb.auth.getSession();
     const tok = data && data.session && data.session.access_token;
@@ -3870,8 +3913,8 @@ document.addEventListener('submit', async (e) => {
     let res;
     try {
       res = await fetch(SUPA_URL + '/functions/v1/rawaj-ai', { method: 'POST', signal: ctl.signal, headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + tok, apikey: SUPA_KEY }, body: JSON.stringify({ question: q }) });
-    } catch (e) {
-      throw new Error(e && e.name === 'AbortError' ? 'الجواب تأخر كثير، جرّب مرة ثانية' : 'ما قدرت أوصل للخدمة، تأكد من النت وجرّب مرة ثانية');
+    } catch (err) {
+      throw new Error(err && err.name === 'AbortError' ? 'الجواب تأخر كثير، جرّب مرة ثانية' : 'ما قدرت أوصل للخدمة، تأكد من النت وجرّب مرة ثانية');
     } finally {
       clearTimeout(timer);
     }
@@ -3879,13 +3922,20 @@ document.addEventListener('submit', async (e) => {
     if (res.status === 429) throw new Error('خلصت أسئلتك اليوم (5 أسئلة). ارجع بكرة، أو رقِّ لسوبر برو بلا حد.');
     if (res.status === 403) throw new Error('هذي الميزة لبرو وسوبر برو بس.');
     if (!res.ok) throw new Error(j.error === 'no_key' ? 'رواج الذكي مو مفعّل بعد' : `تعذّر الجواب (${j.error || res.status}${j.stage ? ' / ' + j.stage : ''}${j.detail ? ': ' + String(j.detail).slice(0, 160) : ''})`);
-    out.textContent = j.answer;
-    if (j.remaining != null) out.textContent += `\n\nتبقى لك ${j.remaining} سؤال اليوم.`;
+    reply = { role: 'bot', text: j.answer };
+    if (j.remaining != null) {
+      aiLimitTxt = `تبقى لك ${j.remaining} سؤال اليوم`;
+      const lim = $('#aiLimit');
+      if (lim) lim.textContent = aiLimitTxt;
+    }
   } catch (err) {
-    out.textContent = err.message || 'تعذّر الجواب';
+    reply = { role: 'bot', text: err.message || 'تعذّر الجواب', err: true };
   } finally {
-    btn.disabled = false;
+    if (btn) btn.disabled = false;
   }
+  aiMsgs = aiMsgs.filter((m) => !m.pending);
+  aiMsgs.push(reply);
+  aiRenderMsgs();
 });
 document.addEventListener('submit', async (e) => {
   if (e.target.id !== 'chgPwForm') return;
