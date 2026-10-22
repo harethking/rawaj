@@ -559,6 +559,11 @@ nav.bottom .pro-tag{display:none}
 .auth-brand h1{color:#1f6b4f}
 .auth .btn.primary{background:linear-gradient(135deg,#f59e0b 0%,#1f6b4f 100%);border-color:transparent;color:#ffffff}
 .auth .tabs [aria-selected="true"]{color:#1f6b4f;border-bottom-color:#f59e0b}
+.confirm-box{border:1px solid #bfe3cf;background:#f1fbf6;text-align:right}
+.confirm-box .confirm-title{font-size:18px;font-weight:700;color:#1f6b4f;margin-bottom:8px}
+.confirm-box p{margin:0 0 10px;font-size:14px;line-height:1.8;color:var(--ink)}
+.confirm-box ol{margin:0 0 12px;padding-inline-start:20px;font-size:14px;line-height:1.9;color:var(--ink)}
+.confirm-note{background:#fff8e7;border:1px solid #f5d79a;border-radius:10px;padding:10px 12px;font-size:13px;line-height:1.8;color:#7a5200;margin-bottom:12px}
 .tabs{display:grid;grid-template-columns:1fr 1fr;background:var(--sunk);border:1px solid var(--line);border-radius:12px;padding:4px;margin-bottom:16px}
 .tabs button{border:0;background:none;border-radius:9px;padding:9px;color:var(--muted)}
 .tabs button[aria-selected="true"]{background:var(--surface);color:var(--ink);font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.08)}
@@ -1576,7 +1581,21 @@ async function onAuthSubmit(e) {
     if (data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) return showErr('هذا الحساب مسجّل مسبقاً، سجّل الدخول بدلاً من ذلك');
     if (!data.session) {
       try { localStorage.setItem('rawaj-pending-store', storeName); } catch (err) { /* ignore */ }
-      return showErr('أُنشئ الحساب. أكّد بريدك من الرسالة التي وصلتك ثم سجّل الدخول');
+      const isMail = id.includes('@');
+      $('#authForm').outerHTML = `<div class="panel confirm-box" role="status">
+        <div class="confirm-title">تم إنشاء حسابك 🎉</div>
+        ${isMail ? `<p>بقيت خطوة واحدة: أرسلنا رسالة تأكيد إلى<br><b dir="ltr">${esc(id)}</b></p>
+        <ol>
+          <li>افتح بريدك الإلكتروني</li>
+          <li>افتح رسالة <b>«رواج»</b> بعنوان «تأكيد بريدك الإلكتروني في رواج»</li>
+          <li>اضغط زر <b>«تأكيد البريد الإلكتروني»</b></li>
+          <li>ارجع هنا وسجّل الدخول، ومتجرك يكون جاهز</li>
+        </ol>
+        <div class="confirm-note">ما وصلتك الرسالة؟ انتظر دقيقة، ثم شوف مجلد <b>الرسائل غير المرغوب فيها (Spam)</b>. إذا لگيتها هناك، اضغط «ليست رسالة غير مرغوب فيها» حتى توصلك رسائلنا القادمة للبريد الوارد.</div>`
+        : `<p>سجّل الدخول الآن برقمك وكلمة المرور حتى نكمل تجهيز متجرك.</p>`}
+        <button class="btn primary block" type="button" data-tab="login">سجّل الدخول</button>
+      </div>`;
+      return;
     }
     try { await loadAccount(data.user); if (!store()) await createStore(storeName); } catch (err) { return showErr('أُنشئ الحساب لكن تعذّر إنشاء المتجر. سجّل الدخول لإكماله'); }
     await applyPendingReferral().catch(() => {});
