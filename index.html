@@ -839,7 +839,7 @@ function priceCards(s) {
     </div>`;
   return `<div class="price-cards">
     ${card('basic', [`حتى <b class="num">${BASIC_LIMIT}</b> منتجات منشورة`, 'الطلبات والمخزن والحسابات', 'رابط متجرك ورسائل واتساب'])}
-    ${card('pro', ['<b>منتجات بلا حدود</b>', '<b>كوبونات خصم</b> لزبائنك', 'طلب ميزة خاصة بمتجرك', '<b>رواج الذكي</b>: سؤالين يومياً', 'كل ميزات العادي'], true)}
+    ${card('pro', ['<b>منتجات بلا حدود</b>', '<b>كوبونات خصم</b> لزبائنك', 'طلب ميزة خاصة بمتجرك', '<b>رواج الذكي</b>: 5 أسئلة يومياً', 'كل ميزات العادي'], true)}
     ${card('super', ['<b>كل ميزات برو</b>', '<b>رواج الذكي</b> بلا حد يومي'], false)}
   </div>`;
 }
@@ -2773,9 +2773,9 @@ function viewAI() {
   const head = `<h1>رواج الذكي</h1><p class="sub">اسأل عن مبيعات متجرك ومنتجاتك وطلباتك، أو اطلب فاتورة لزبون. يقرأ بيانات متجرك بس.</p>`;
   if (!isPro(s)) return `${head}
     <section class="panel pro-lock"><span class="feat-ico">${icon('lock')}</span>
-    <div><h2 style="margin:0 0 6px">ميزة خاصة ببرو وسوبر برو</h2><p style="margin:0">برو يعطيك سؤالين باليوم، وسوبر برو يعطيك أسئلة بلا حد. الخانة تظهر لك، بس ما تقدر تستخدمها على الخطة العادية.</p></div></section>
+    <div><h2 style="margin:0 0 6px">ميزة خاصة ببرو وسوبر برو</h2><p style="margin:0">برو يعطيك 5 أسئلة باليوم، وسوبر برو يعطيك أسئلة بلا حد. الخانة تظهر لك، بس ما تقدر تستخدمها على الخطة العادية.</p></div></section>
     <h2>رقِّ متجرك</h2>${priceCards(s)}`;
-  const limitTxt = isSuperStore(s) ? 'سوبر برو: أسئلة بلا حد' : 'برو: سؤالين باليوم';
+  const limitTxt = isSuperStore(s) ? 'سوبر برو: أسئلة بلا حد' : 'برو: 5 أسئلة باليوم';
   return `${head}
   <section class="panel ai-box">
     <div class="sub">${limitTxt}</div>
@@ -3867,7 +3867,7 @@ document.addEventListener('submit', async (e) => {
     if (!tok) throw new Error('سجّل دخول من جديد');
     const res = await fetch(SUPA_URL + '/functions/v1/rawaj-ai', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + tok, apikey: SUPA_KEY }, body: JSON.stringify({ question: q }) });
     const j = await res.json().catch(() => ({}));
-    if (res.status === 429) throw new Error('خلصت أسئلتك اليوم (سؤالين). ارجع بكرة، أو رقِّ لسوبر برو بلا حد.');
+    if (res.status === 429) throw new Error('خلصت أسئلتك اليوم (5 أسئلة). ارجع بكرة، أو رقِّ لسوبر برو بلا حد.');
     if (res.status === 403) throw new Error('هذي الميزة لبرو وسوبر برو بس.');
     if (!res.ok) throw new Error(j.error === 'no_key' ? 'رواج الذكي مو مفعّل بعد' : 'تعذّر الجواب، جرّب مرة ثانية');
     out.textContent = j.answer;
