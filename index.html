@@ -498,6 +498,12 @@ nav.side{height:calc(100vh - 59px)}
 .welcome .price-cards{text-align:start}
 .admin-top .rawaj-logo{filter:none}
 
+
+.feat-intro{display:flex;gap:14px;align-items:flex-start}
+.feat-ico{flex:none;width:48px;height:48px;border-radius:15px;display:grid;place-items:center;background:var(--brand-soft);color:var(--brand)}
+.feat-ico svg{width:26px;height:26px}
+.feat-steps{margin:12px 0 0;padding-inline-start:20px;color:var(--muted);font-size:14px;display:grid;gap:4px}
+
 /* Auth */
 .auth{min-height:100vh;display:grid;place-items:center;padding:24px 16px}
 .auth-box{width:100%;max-width:400px}
@@ -635,9 +641,9 @@ const ACTION_LABEL = {
 const STOCK_OUT = new Set(['confirmed', 'preparing', 'shipped', 'delivered']); // stock already deducted
 
 const ROLES = {
-  owner:     { l: 'المالك',      p: ['home', 'orders', 'orders.write', 'products', 'products.write', 'cost', 'warehouse', 'customers', 'reports', 'settings'] },
-  orders:    { l: 'موظف طلبات',  p: ['home', 'orders', 'orders.write', 'products', 'customers'] },
-  inventory: { l: 'موظف مخزون',  p: ['home', 'orders', 'products', 'products.write', 'cost', 'warehouse'] },
+  owner:     { l: 'المالك',      p: ['home', 'orders', 'orders.write', 'products', 'products.write', 'cost', 'warehouse', 'customers', 'reports', 'settings', 'feature'] },
+  orders:    { l: 'موظف طلبات',  p: ['home', 'orders', 'orders.write', 'products', 'customers', 'feature'] },
+  inventory: { l: 'موظف مخزون',  p: ['home', 'orders', 'products', 'products.write', 'cost', 'warehouse', 'feature'] },
 };
 
 const CITIES = ['بغداد', 'البصرة', 'نينوى', 'أربيل', 'النجف', 'كربلاء', 'بابل', 'الأنبار', 'ديالى', 'صلاح الدين', 'كركوك', 'واسط', 'ذي قار', 'ميسان', 'المثنى', 'القادسية', 'دهوك', 'السليمانية', 'حلبجة'];
@@ -667,6 +673,7 @@ const ICONS = {
   chat: '<path d="M4 20l1.3-3.9A8 8 0 1112 20a8 8 0 01-3.6-.9z"/>',
   check: '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
   minus: '<path d="M5 12h14"/>',
+  feature: '<path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 00-3.6 10.8c.7.5 1.1 1.3 1.1 2.2h5c0-.9.4-1.7 1.1-2.2A6 6 0 0012 3z"/><path d="M18.5 3.5l1-1M21 8h1.4M5.5 3.5l-1-1M3 8H1.6"/>',
   store: '<path d="M4 9l1.5-5h13L20 9"/><path d="M4 9a2.7 2.7 0 005.3 0 2.7 2.7 0 005.4 0 2.7 2.7 0 005.3 0"/><path d="M5 11v9h14v-9"/><path d="M10 20v-5h4v5"/>',
 };
 // Rawaj mark: a shopping bag with a rising line, on a deep green tile.
@@ -687,6 +694,7 @@ const NAV = [
   { id: 'reports', l: 'الحسابات' },
   { id: 'customers', l: 'الزبائن', sideOnly: true },
   { id: 'settings', l: 'الإعدادات', sideOnly: true },
+  { id: 'feature', l: 'طلب ميزة', sideOnly: true },
 ];
 
 /* ---------------- helpers ---------------- */
@@ -1347,7 +1355,7 @@ function render() {
   renderChrome();
   const v = $('#view');
   ensureShape(s0);
-  const views = { home: viewHome, orders: viewOrders, products: viewProducts, warehouse: viewWarehouse, customers: viewCustomers, reports: viewReports, settings: viewSettings };
+  const views = { feature: viewFeature, home: viewHome, orders: viewOrders, products: viewProducts, warehouse: viewWarehouse, customers: viewCustomers, reports: viewReports, settings: viewSettings };
   const changed = v.dataset.view !== state.view;
   v.innerHTML = views[state.view]();
   v.dataset.view = state.view;
@@ -2437,6 +2445,31 @@ function exportOrders() {
   downloadCSV(`طلبات-${s.slug}-${key}.csv`, rows);
 }
 
+// "طلب ميزة": the owner describes a feature for their own store; it goes to the platform admin on WhatsApp.
+function viewFeature() {
+  const s = store();
+  return `
+  <h1>طلب ميزة</h1>
+  <section class="panel feat-intro">
+    <span class="feat-ico">${icon('feature')}</span>
+    <div>
+      <h2 style="margin:0 0 6px">تحتاج ميزة خاصة بمتجرك؟</h2>
+      <p style="margin:0">نقدر نضيف لمتجرك ميزة تناسب شغلك: قسم جديد، تقرير خاص، طريقة دفع أو توصيل، أو أي شي يسهّل عملك.</p>
+      <ul class="feat-steps">
+        <li>اكتب الميزة اللي تريدها بالمربع اللي تحت.</li>
+        <li>اضغط «إرسال الطلب»، ينفتح واتساب برسالة جاهزة.</li>
+        <li>نراجع طلبك ونرد عليك بالتفاصيل والوقت.</li>
+      </ul>
+    </div>
+  </section>
+  <form class="panel" id="featForm" novalidate style="margin-top:14px">
+    <div class="field"><label for="featText">اشرح الميزة اللي تريدها</label>
+      <textarea class="input" id="featText" maxlength="1500" style="min-height:150px" placeholder="مثال: أريد أن يختار الزبون موعد التوصيل، وتظهر لي الطلبات حسب اليوم."></textarea>
+      <small class="sub"><span id="featCount" class="num">0</span> / 1500</small></div>
+    <div id="featErr" class="err" hidden></div>
+    <button class="btn primary block" type="submit">${icon('chat')} إرسال الطلب عبر واتساب</button>
+  </form>`;
+}
 function viewSettings() {
   const s = store();
   return `
@@ -3355,6 +3388,20 @@ document.addEventListener('submit', async (e) => {
   save(); render(); toast('حُفظت التغييرات');
 });
 
+document.addEventListener('input', (e) => { if (e.target.id === 'featText') { const c = $('#featCount'); if (c) c.textContent = e.target.value.length; } });
+document.addEventListener('submit', (e) => {
+  if (e.target.id !== 'featForm') return;
+  e.preventDefault();
+  const s = store();
+  const text = $('#featText').value.trim();
+  const errEl = $('#featErr');
+  if (text.length < 5) { errEl.textContent = 'اكتب شرح الميزة أولاً'; errEl.hidden = false; return; }
+  errEl.hidden = true;
+  const u = currentUser();
+  const msg = `طلب ميزة جديدة لمتجر "${s.name}" (${shortLink(s)})\nمن: ${u ? u.name : ''}\n\n${text}`;
+  window.open(`https://wa.me/964${ADMIN_PHONE.slice(1)}?text=${encodeURIComponent(msg)}`, '_blank', 'noopener');
+  toast('انفتح واتساب، اضغط إرسال هناك');
+});
 window.addEventListener('hashchange', () => {
   routePublic().then((ok) => { if (!ok && $('#storefront').classList.contains('open') && sfPublic) closeStorefront(); });
 });
