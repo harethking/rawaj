@@ -2883,6 +2883,15 @@ function viewSettings() {
     <button class="btn primary block" type="submit">حفظ التغييرات</button>
   </form>
 
+  <h2>كلمة المرور</h2>
+  <form class="panel" id="chgPwForm" novalidate>
+    <div class="field"><label for="cNew">كلمة المرور الجديدة</label><input class="input" id="cNew" type="password" autocomplete="new-password" dir="ltr" style="text-align:left"></div>
+    <div class="field"><label for="cNew2">أعد كتابة كلمة المرور</label><input class="input" id="cNew2" type="password" autocomplete="new-password" dir="ltr" style="text-align:left"></div>
+    <small class="sub">8 أحرف على الأقل، وبيها حروف وأرقام.</small>
+    <div id="cErr" class="err" hidden></div>
+    <button class="btn block" type="submit" id="cSubmit" style="margin-top:10px">حفظ كلمة المرور الجديدة</button>
+  </form>
+
   <h2>الاشتراك</h2>
   <div class="panel">
     <div class="spread"><div>اشتراكك: ${planBadge(s)} <span class="tier-chip ${isPro(s) ? 'pro' : ''}">${isPro(s) ? 'برو' : 'عادي'}</span></div>${s.planEnds && planOf(s) !== 'free' ? `<span class="sub">${planOf(s) === 'expired' ? `انتهى في ${dateText(s.planEnds)}` : `باقي <b class="num">${daysLeft(s)}</b> يوماً · حتى ${dateText(s.planEnds)}`}</span>` : ''}</div>
@@ -3819,6 +3828,22 @@ document.addEventListener('change', async (e) => {
     s.logo = ids[0];
     save(); render(); toast('حُفظ الشعار');
   }
+});
+document.addEventListener('submit', async (e) => {
+  if (e.target.id !== 'chgPwForm') return;
+  e.preventDefault();
+  const pw = $('#cNew').value, pw2 = $('#cNew2').value;
+  const errEl = $('#cErr'), btn = $('#cSubmit');
+  errEl.hidden = true;
+  const showErr = (m) => { errEl.textContent = m; errEl.hidden = false; btn.disabled = false; btn.textContent = 'حفظ كلمة المرور الجديدة'; };
+  if (pw.length < 8 || !/[A-Za-z؀-ۿ]/.test(pw) || !/[0-9]/.test(pw)) return showErr('كلمة المرور 8 أحرف على الأقل، وبيها حروف وأرقام');
+  if (pw !== pw2) return showErr('كلمتا المرور غير متطابقتين');
+  btn.disabled = true; btn.textContent = 'جارِ الحفظ…';
+  const { error } = await sb.auth.updateUser({ password: pw });
+  if (error) return showErr(authError(error));
+  $('#cNew').value = ''; $('#cNew2').value = '';
+  btn.disabled = false; btn.textContent = 'حفظ كلمة المرور الجديدة';
+  toast('تم تغيير كلمة المرور');
 });
 document.addEventListener('submit', async (e) => {
   if (e.target.id !== 'settingsForm') return;
