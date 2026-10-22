@@ -1087,6 +1087,7 @@ async function syncNow() {
     s._synced = json;
     setSync('ok');
   } catch (e) {
+    if (/IMG_LIMIT|PRODUCT_LIMIT/.test(String((e && e.message) || ''))) toast('خطتك ما تسمح بهذا العدد من الصور أو المنتجات، احذف الزيادة', true);
     setSync('error');
     const msg = String((e && (e.message || e.code)) || '');
     if (msg.includes('STORE_SUSPENDED')) { s.status = 'suspended'; render(); return; }
