@@ -528,6 +528,24 @@ nav.side{height:calc(100vh - 59px)}
 .limit-bar .flow-bar{margin-top:8px}
 .limit-bar.full{border-color:color-mix(in srgb,var(--warn) 45%,transparent)}
 
+
+.pro-tag{font-style:normal;font-size:10.5px;font-weight:700;background:var(--brand);color:var(--brand-ink);border-radius:999px;padding:0 7px;margin-inline-start:auto;line-height:18px}
+nav.side button .pro-tag{margin-inline-start:auto}
+nav.bottom .pro-tag{display:none}
+.pro-lock{display:flex;gap:14px;align-items:flex-start;border-color:color-mix(in srgb,var(--brand) 35%,transparent);background:var(--brand-soft)}
+.cp-code{font-weight:700;letter-spacing:1px;background:var(--sunk);border:1px dashed var(--line-strong);border-radius:8px;padding:4px 10px;flex:none}
+.coupon-box{margin:-4px 0 12px}
+.coupon-box .input{min-height:40px}
+.socials-set{border:1px solid var(--line);border-radius:12px;padding:10px 12px 0;margin:0 0 12px}
+.socials-set legend{font-size:13.5px;padding:0 6px}
+.sf-socials{position:relative;z-index:1;display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.sf-soc{display:inline-flex;align-items:center;gap:5px;font-size:12.5px;padding:5px 11px;border-radius:999px;background:rgba(255,255,255,.15);color:#fff;text-decoration:none;border:1px solid rgba(255,255,255,.25)}
+.sf-soc svg{width:14px;height:14px}
+.exp-days{font-size:11.5px;font-weight:600;color:var(--bad);background:color-mix(in srgb,var(--bad) 10%,transparent);border-radius:999px;padding:1px 8px;white-space:nowrap}
+.exp-counter{flex:none;width:54px;height:54px;border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:color-mix(in srgb,var(--bad) 12%,transparent);color:var(--bad);line-height:1.1}
+.exp-counter b{font-size:20px}
+.exp-counter span{font-size:11px}
+
 /* Auth */
 .auth{min-height:100vh;display:grid;place-items:center;padding:24px 16px}
 .auth-box{width:100%;max-width:400px}
@@ -665,7 +683,7 @@ const ACTION_LABEL = {
 const STOCK_OUT = new Set(['confirmed', 'preparing', 'shipped', 'delivered']); // stock already deducted
 
 const ROLES = {
-  owner:     { l: 'المالك',      p: ['home', 'orders', 'orders.write', 'products', 'products.write', 'cost', 'warehouse', 'customers', 'reports', 'settings', 'feature'] },
+  owner:     { l: 'المالك',      p: ['home', 'orders', 'orders.write', 'products', 'products.write', 'cost', 'warehouse', 'customers', 'reports', 'settings', 'feature', 'coupons'] },
   orders:    { l: 'موظف طلبات',  p: ['home', 'orders', 'orders.write', 'products', 'customers', 'feature'] },
   inventory: { l: 'موظف مخزون',  p: ['home', 'orders', 'products', 'products.write', 'cost', 'warehouse', 'feature'] },
 };
@@ -697,6 +715,9 @@ const ICONS = {
   chat: '<path d="M4 20l1.3-3.9A8 8 0 1112 20a8 8 0 01-3.6-.9z"/>',
   check: '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
   minus: '<path d="M5 12h14"/>',
+  link: '<path d="M10 14a4 4 0 005.7 0l3-3a4 4 0 00-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 00-5.7 0l-3 3a4 4 0 005.7 5.7l1-1"/>',
+  coupons: '<path d="M3 8a2 2 0 002-2h14a2 2 0 002 2v2a2 2 0 000 4v2a2 2 0 00-2 2H5a2 2 0 00-2-2v-2a2 2 0 000-4z"/><path d="M9.5 15l5-6"/><circle cx="9.5" cy="9.5" r=".9"/><circle cx="14.5" cy="14.5" r=".9"/>',
+  lock: '<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/>',
   feature: '<path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 00-3.6 10.8c.7.5 1.1 1.3 1.1 2.2h5c0-.9.4-1.7 1.1-2.2A6 6 0 0012 3z"/><path d="M18.5 3.5l1-1M21 8h1.4M5.5 3.5l-1-1M3 8H1.6"/>',
   store: '<path d="M4 9l1.5-5h13L20 9"/><path d="M4 9a2.7 2.7 0 005.3 0 2.7 2.7 0 005.4 0 2.7 2.7 0 005.3 0"/><path d="M5 11v9h14v-9"/><path d="M10 20v-5h4v5"/>',
 };
@@ -718,7 +739,8 @@ const NAV = [
   { id: 'reports', l: 'الحسابات' },
   { id: 'customers', l: 'الزبائن', sideOnly: true },
   { id: 'settings', l: 'الإعدادات', sideOnly: true },
-  { id: 'feature', l: 'طلب ميزة', sideOnly: true },
+  { id: 'coupons', l: 'كوبونات الخصم', sideOnly: true, pro: true },
+  { id: 'feature', l: 'طلب ميزة', sideOnly: true, pro: true },
 ];
 
 /* ---------------- helpers ---------------- */
@@ -780,9 +802,10 @@ function priceCards(s) {
     </div>`;
   return `<div class="price-cards">
     ${card('basic', [`حتى <b class="num">${BASIC_LIMIT}</b> منتجات منشورة`, 'الطلبات والمخزن والحسابات', 'رابط متجرك ورسائل واتساب'])}
-    ${card('pro', ['<b>منتجات بلا حدود</b>', 'كل ميزات العادي', 'مناسبة للمتاجر الكبيرة والمتنوعة'], true)}
+    ${card('pro', ['<b>منتجات بلا حدود</b>', '<b>كوبونات خصم</b> لزبائنك', 'طلب ميزة خاصة بمتجرك', 'كل ميزات العادي'], true)}
   </div>`;
 }
+const daysSince = (ts) => Math.max(1, Math.floor((Date.now() - ts) / DAY));
 const daysLeft = (s) => (s.planEnds ? Math.ceil((s.planEnds - Date.now()) / DAY) : Infinity);
 const PLANS = {
   trial:       { l: 'شهر مجاني',   price: 0 },
@@ -1031,6 +1054,7 @@ async function mergeConflict(s) {
     if (same(remote[k], base[k])) fresh[k] = local[k];  // changed only here: keep it
     else if (k === 'orders') fresh.orders = mergeOrders(base.orders || [], local.orders || [], remote.orders || []);
     else if (k === 'nextNo') continue;
+    else if (k === 'coupons') fresh.coupons = (local.coupons || []).map((c) => { const r = (remote.coupons || []).find((x) => x.code === c.code); return r ? { ...c, used: Math.max(c.used || 0, r.used || 0) } : c; });
     else if (!same(remote[k], local[k])) lost = true;   // changed in both places: newer save wins
   }
   fresh.nextNo = Math.max(Number(local.nextNo) || 0, Number(remote.nextNo) || 0, ...fresh.orders.map((o) => (Number(o.no) || 0) + 1), 1001);
@@ -1364,7 +1388,7 @@ function renderChrome() {
   $('#storeSub').textContent = `${currentUser().name} · ${ROLES[state.role].l}`;
   $('#roleSelect').value = state.role;
   const allowed = NAV.filter((n) => can(n.id));
-  const btn = (n) => `<button type="button" data-nav="${n.id}" ${state.view === n.id ? 'aria-current="page"' : ''}>${icon(n.id)}<span>${n.l}</span></button>`;
+  const btn = (n) => `<button type="button" data-nav="${n.id}" ${state.view === n.id ? 'aria-current="page"' : ''}>${icon(n.id)}<span>${n.l}</span>${n.pro ? '<i class="pro-tag">برو</i>' : ''}</button>`;
   $('#sideNav').innerHTML = allowed.map(btn).join('');
   const extra = allowed.filter((n) => n.sideOnly);
   $('#bottomNav').innerHTML = allowed.filter((n) => !n.sideOnly).map(btn).join('')
@@ -1396,7 +1420,7 @@ function render() {
   renderChrome();
   const v = $('#view');
   ensureShape(s0);
-  const views = { feature: viewFeature, home: viewHome, orders: viewOrders, products: viewProducts, warehouse: viewWarehouse, customers: viewCustomers, reports: viewReports, settings: viewSettings };
+  const views = { coupons: viewCoupons, feature: viewFeature, home: viewHome, orders: viewOrders, products: viewProducts, warehouse: viewWarehouse, customers: viewCustomers, reports: viewReports, settings: viewSettings };
   const changed = v.dataset.view !== state.view;
   v.innerHTML = views[state.view]();
   v.dataset.view = state.view;
@@ -1671,6 +1695,11 @@ function renderAdmin() {
       <div><dt>متاجر بلا منتجات</dt><dd><span class="num">${all.filter((s) => !s.products.length).length}</span></dd></div>
     </dl>
 
+    ${(() => { const ex = all.filter((x) => planOf(x) === 'expired').sort((a, b) => a.planEnds - b.planEnds);
+      return ex.length ? `<h2>اشتراكات منتهية <span class="sub">(<span class="num">${ex.length}</span>)</span></h2><div class="list">${ex.map((x) => `<div class="item"><div class="exp-counter"><b class="num">${daysSince(x.planEnds)}</b><span>يوم</span></div>
+        <div class="grow"><div class="trunc"><b>${esc(x.name)}</b></div><div class="meta">انتهى ${dateText(x.planEnds)} · ${(PLANS[x.plan] || PLANS.trial).l}</div></div>
+        ${validPhone(x.phone || '') ? `<a class="btn" href="https://wa.me/964${normPhone(x.phone).slice(1)}?text=${encodeURIComponent(`مرحباً، اشتراك متجر «${x.name}» على رواج انتهى قبل ${daysSince(x.planEnds)} يوم. جدّده حتى يرجع متجرك يشتغل بكل الميزات.`)}" target="_blank" rel="noopener">${icon('chat')} تذكير</a>` : ''}
+        <button class="btn" type="button" data-astore="${x.id}">إدارة</button></div>`).join('')}</div>` : ''; })()}
     <h2>المتاجر</h2>
     <div class="search">${icon('search')}<input class="input" id="aq" type="search" placeholder="اسم المتجر، الرابط، اسم المالك أو بريده" value="${esc(state.aq || '')}" aria-label="بحث في المتاجر"></div>
     <div class="chips" role="group" aria-label="تصفية المتاجر">
@@ -1680,7 +1709,7 @@ function renderAdmin() {
       const o = owners.get(s.id);
       return `<button class="item" type="button" data-astore="${s.id}">
         <div class="thumb" style="background:${s.color}">${s.logo ? `<img data-img="${s.logo}" alt="">` : esc(s.name.trim().charAt(0))}</div>
-        <div class="grow"><div class="row" style="gap:6px"><span class="trunc">${esc(s.name)}</span>${planBadge(s)}${statusOf(s) === 'suspended' ? '<span class="st-susp">معلّق</span>' : ''}</div>
+        <div class="grow"><div class="row" style="gap:6px"><span class="trunc">${esc(s.name)}</span>${planBadge(s)}${statusOf(s) === 'suspended' ? '<span class="st-susp">معلّق</span>' : ''}${planOf(s) === 'expired' ? `<span class="exp-days">منتهي منذ <b class="num">${daysSince(s.planEnds)}</b> يوم</span>` : ''}</div>
           <div class="meta trunc">${o ? esc(o.name) + ' · <span dir="ltr">' + esc(o.email) + '</span>' : 'بلا مالك'}</div></div>
         <div style="text-align:left" class="meta"><div><span class="num">${s.products.length}</span> منتج</div><div><span class="num">${s.orders.length}</span> طلب</div></div>
       </button>`;
@@ -1850,6 +1879,28 @@ function adminStoreSheet(id) {
 }
 
 /* ---------------- views ---------------- */
+const SOCIALS = [
+  { k: 'instagram', l: 'انستغرام', base: 'https://instagram.com/', re: /^(www\.|m\.)?instagram\.com\// },
+  { k: 'facebook', l: 'فيسبوك', base: 'https://facebook.com/', re: /^(www\.|m\.|web\.)?(facebook\.com|fb\.com)\// },
+  { k: 'tiktok', l: 'تيك توك', base: 'https://tiktok.com/@', re: /^(www\.|m\.)?tiktok\.com\// },
+  { k: 'telegram', l: 'تيليغرام', base: 'https://t.me/', re: /^t\.me\// },
+  { k: 'snapchat', l: 'سناب شات', base: 'https://snapchat.com/add/', re: /^(www\.)?snapchat\.com\// },
+  { k: 'youtube', l: 'يوتيوب', base: 'https://youtube.com/@', re: /^(www\.|m\.)?(youtube\.com|youtu\.be)\// },
+];
+// A username or a full link becomes a clean https link to that platform; anything else is rejected.
+function socialLink(k, input) {
+  const sp = SOCIALS.find((x) => x.k === k);
+  let v = String(input || '').trim();
+  if (!v) return '';
+  if (/^https?:\/\//i.test(v) || sp.re.test(v.replace(/^https?:\/\//i, ''))) {
+    v = v.replace(/^https?:\/\//i, '');
+    if (!sp.re.test(v) || /[\s<>"']/.test(v) || v.length > 180) return null;
+    return 'https://' + v.replace(/\/+$/, '');
+  }
+  v = v.replace(/^@/, '');
+  if (!/^[A-Za-z0-9._-]{2,60}$/.test(v)) return null;
+  return sp.base + v;
+}
 const inviteLink = (s) => `${siteBase()}?ref=${s.refCode}`;
 function inviteCard(s) {
   if (!s.refCode) return '';
@@ -2567,7 +2618,7 @@ function cashOpeningSheet() {
 
 function moreSheet() {
   const items = NAV.filter((n) => n.sideOnly && can(n.id));
-  openSheet(`${sheetHead('المزيد')}<div class="list">${items.map((n) => `<button class="item" type="button" data-nav="${n.id}">${icon(n.id)}<div class="grow">${n.l}</div></button>`).join('')}</div>`);
+  openSheet(`${sheetHead('المزيد')}<div class="list">${items.map((n) => `<button class="item" type="button" data-nav="${n.id}">${icon(n.id)}<div class="grow">${n.l}</div>${n.pro ? '<i class="pro-tag">برو</i>' : ''}</button>`).join('')}</div>`);
 }
 
 function exportPL() {
@@ -2590,8 +2641,16 @@ function exportOrders() {
 }
 
 // "طلب ميزة": the owner describes a feature for their own store; it goes to the platform admin on WhatsApp.
+function proLocked(title, text) {
+  const s = store();
+  return `<h1>${title}</h1>
+  <section class="panel pro-lock"><span class="feat-ico">${icon('lock')}</span>
+    <div><h2 style="margin:0 0 6px">ميزة خاصة بنسخة برو</h2><p style="margin:0">${text}</p></div></section>
+  <h2>رقِّ متجرك لبرو</h2>${priceCards(s)}`;
+}
 function viewFeature() {
   const s = store();
+  if (!isPro(s)) return proLocked('طلب ميزة', 'مشتركي برو يگدرون يطلبون ميزات خاصة بمتجرهم ونضيفها لهم.');
   return `
   <h1>طلب ميزة</h1>
   <section class="panel feat-intro">
@@ -2613,6 +2672,68 @@ function viewFeature() {
     <div id="featErr" class="err" hidden></div>
     <button class="btn primary block" type="submit">${icon('chat')} إرسال الطلب عبر واتساب</button>
   </form>`;
+}
+// كوبونات الخصم (برو): the store owner makes codes; the server checks and counts them when a customer orders.
+function couponText(c) { return c.type === 'percent' ? `خصم ${c.value}%` : `خصم ${moneyText(c.value)}`; }
+function viewCoupons() {
+  const s = store();
+  if (!isPro(s)) return proLocked('كوبونات الخصم', 'سوّي كوبونات خصم (نسبة أو مبلغ) وانشرها بصفحاتك. الزبون يكتب الكوبون عند الطلب وينخصم من سعره تلقائياً، وتشوف كم مرة انستخدم كل كوبون.');
+  const list = s.coupons || [];
+  const now = Date.now();
+  const state_ = (c) => (!c.active ? ['موقوف', 'var(--canceled)'] : c.expires && c.expires < now ? ['منتهي', 'var(--bad)'] : c.max && (c.used || 0) >= c.max ? ['اكتمل', 'var(--warn)'] : ['فعّال', 'var(--good)']);
+  return `
+  <div class="spread"><h1>كوبونات الخصم</h1><button class="btn primary" type="button" data-act="new-coupon">${icon('plus')} كوبون جديد</button></div>
+  <p class="sub" style="margin-top:-6px">انشر الكوبون بصفحاتك. الزبون يكتبه عند إتمام الطلب، والخصم ينحسب ويتسجل بالطلب تلقائياً.</p>
+  ${list.length ? `<div class="list">${list.map((c, i) => { const st = state_(c); return `<button class="item" type="button" data-coupon="${i}">
+      <span class="cp-code num">${esc(c.code)}</span>
+      <div class="grow"><div>${couponText(c)}${c.min ? ` <span class="sub">· لطلب من ${moneyText(c.min)}</span>` : ''}</div>
+        <div class="meta">استُخدم <span class="num">${c.used || 0}</span>${c.max ? ` من <span class="num">${c.max}</span>` : ' مرة'}${c.expires ? ` · ينتهي ${dateText(c.expires)}` : ''}</div></div>
+      <span class="badge" style="--c:${st[1]}">${st[0]}</span></button>`; }).join('')}</div>`
+    : `<div class="list"><div class="empty">ما عندك كوبونات بعد.<br><button class="btn primary" type="button" data-act="new-coupon">سوّي أول كوبون</button></div></div>`}`;
+}
+function couponSheet(i) {
+  const s = store();
+  if (!Array.isArray(s.coupons)) s.coupons = [];
+  const c = i != null ? s.coupons[i] : { code: '', type: 'percent', value: 10, active: true, used: 0 };
+  const day = (ts) => (ts ? new Date(ts - new Date(ts).getTimezoneOffset() * 6e4).toISOString().slice(0, 10) : '');
+  openSheet(`${sheetHead(i != null ? 'تعديل الكوبون' : 'كوبون جديد')}
+    <form id="cpForm" novalidate>
+      <div class="field"><label for="cpCode">رمز الكوبون</label><input class="input num" id="cpCode" maxlength="16" dir="ltr" style="text-align:left;text-transform:uppercase" placeholder="WELCOME10" value="${esc(c.code)}" ${i != null && c.used ? 'readonly' : ''}><small class="sub">حروف إنجليزية وأرقام، من 3 إلى 16.</small></div>
+      <div class="grid2">
+        <div class="field"><label for="cpType">نوع الخصم</label><select class="input" id="cpType"><option value="percent" ${c.type === 'percent' ? 'selected' : ''}>نسبة %</option><option value="fixed" ${c.type === 'fixed' ? 'selected' : ''}>مبلغ ثابت (د.ع)</option></select></div>
+        <div class="field"><label for="cpValue">قيمة الخصم</label><input class="input num" id="cpValue" inputmode="numeric" value="${c.value}" style="text-align:right"></div>
+      </div>
+      <div class="grid2">
+        <div class="field"><label for="cpMin">أقل قيمة طلب (اختياري)</label><input class="input num" id="cpMin" inputmode="numeric" value="${c.min || ''}" style="text-align:right"></div>
+        <div class="field"><label for="cpMax">عدد مرات الاستخدام (اختياري)</label><input class="input num" id="cpMax" inputmode="numeric" value="${c.max || ''}" style="text-align:right"></div>
+      </div>
+      <div class="field"><label for="cpExp">ينتهي بتاريخ (اختياري)</label><input class="input" id="cpExp" type="date" value="${day(c.expires)}"></div>
+      <label class="row" style="margin:6px 0 12px"><input type="checkbox" id="cpActive" ${c.active ? 'checked' : ''}> فعّال</label>
+      <div id="cpErr" class="err" hidden></div>
+      <div class="actions">${i != null ? '<button class="btn danger" type="button" id="cpDel">حذف</button><button class="btn" type="button" id="cpShare">نسخ نص للنشر</button>' : ''}<button class="btn primary" type="submit">حفظ</button></div>
+    </form>`, (sh) => {
+    const num = (id) => Math.round(Number(sh.querySelector(id).value.replace(/[,\s]/g, '')) || 0);
+    sh.querySelector('#cpForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const code = sh.querySelector('#cpCode').value.trim().toUpperCase();
+      const type = sh.querySelector('#cpType').value, value = num('#cpValue');
+      const exp = sh.querySelector('#cpExp').value;
+      const errEl = sh.querySelector('#cpErr');
+      let err = '';
+      if (!/^[A-Z0-9]{3,16}$/.test(code)) err = 'الرمز من 3 إلى 16 حرفاً إنجليزياً أو رقماً';
+      else if (s.coupons.some((x, j) => j !== i && x.code.toUpperCase() === code)) err = 'هذا الرمز موجود';
+      else if (type === 'percent' && (value < 1 || value > 90)) err = 'النسبة من 1 إلى 90';
+      else if (type === 'fixed' && value < 250) err = 'المبلغ 250 دينار على الأقل';
+      if (err) { errEl.textContent = err; errEl.hidden = false; return; }
+      const next = { code, type, value, min: num('#cpMin') || 0, max: num('#cpMax') || 0, expires: exp ? new Date(exp + 'T23:59:59').getTime() : 0, active: sh.querySelector('#cpActive').checked, used: c.used || 0 };
+      if (i != null) s.coupons[i] = next; else s.coupons.unshift(next);
+      save(); closeSheet(); render(); toast('حُفظ الكوبون');
+    });
+    const del = sh.querySelector('#cpDel');
+    if (del) del.addEventListener('click', () => confirmSheet('حذف الكوبون', `حذف ${c.code}؟ ما يگدر أحد يستخدمه بعد الحذف.`, 'حذف', true).then((ok) => { if (ok) { s.coupons.splice(i, 1); save(); render(); toast('حُذف الكوبون'); } else couponSheet(i); }));
+    const share = sh.querySelector('#cpShare');
+    if (share) share.addEventListener('click', () => copyText(`🎁 ${couponText(c)} على متجر ${s.name}\nاكتب الكوبون ${c.code} عند الطلب\n${publicLink(s)}`).then((ok) => toast(ok ? 'نُسخ النص، انشره بصفحاتك' : 'تعذّر النسخ', !ok)));
+  });
 }
 function viewSettings() {
   const s = store();
@@ -2639,6 +2760,9 @@ function viewSettings() {
       <div class="field"><label for="setDelB">التوصيل داخل بغداد</label><input class="input num" id="setDelB" inputmode="numeric" value="${deliveryOf(s, 'بغداد')}" style="text-align:right"></div>
       <div class="field"><label for="setDelO">التوصيل لباقي المحافظات</label><input class="input num" id="setDelO" inputmode="numeric" value="${deliveryOf(s, '')}" style="text-align:right"></div>
     </div>
+    <fieldset class="socials-set"><legend>صفحات التواصل <span class="sub">(تظهر بصفحة متجرك، اكتب اسم المستخدم أو الرابط)</span></legend>
+      <div class="grid2">${SOCIALS.map((x) => `<div class="field"><label for="soc-${x.k}">${x.l}</label><input class="input" id="soc-${x.k}" dir="ltr" style="text-align:left" maxlength="180" autocapitalize="off" spellcheck="false" placeholder="${x.k === 'telegram' ? 'username' : '@username'}" value="${esc((s.socials || {})[x.k] || '')}"></div>`).join('')}</div>
+    </fieldset>
     <div class="field"><label for="setSlug">اسم الرابط (حروف إنجليزية صغيرة وأرقام وشرطة)</label>
       <div class="row" dir="ltr"><span class="sub" style="white-space:nowrap">${esc(siteBase().replace(/^https?:\/\//, ''))}${/^https?:/.test(siteBase()) ? '' : '#'}</span><input class="input" id="setSlug" maxlength="40" value="${esc(s.slug)}" dir="ltr" autocapitalize="off" spellcheck="false"></div>
       <small class="sub">إذا غيّرته، الرابط القديم يتوقف عن العمل.</small></div>
@@ -2688,7 +2812,7 @@ function orderSheet(id) {
     <table class="lines">${o.items.map((it) => `<tr><td>${esc(it.name)}<div class="sub">${esc(it.label)} × <span class="num">${it.qty}</span></div></td><td>${money(it.price * it.qty)}</td></tr>`).join('')}</table>
     <div style="margin-top:8px">
       <div class="tot"><span>المجموع</span><span>${money(sub)}</span></div>
-      ${o.discount ? `<div class="tot"><span>خصم</span><span>− ${money(o.discount)}</span></div>` : ''}
+      ${o.discount ? `<div class="tot"><span>خصم${o.coupon ? ` (كوبون <span class="num">${esc(o.coupon)}</span>)` : ''}</span><span>− ${money(o.discount)}</span></div>` : ''}
       <div class="tot"><span>أجرة التوصيل</span><span>${money(o.delivery)}</span></div>
       <div class="tot grand"><span>المبلغ المطلوب من الزبون</span><span>${money(orderTotal(o))}</span></div>
       ${can('cost') ? `<div class="tot"><span>ربح الطلب (قبل المصروفات)</span><span>${money(Math.max(0, sub - o.discount) - orderCost(o))}</span></div>` : ''}
@@ -3092,6 +3216,7 @@ function renderStorefront() {
         </div>
         ${suspended ? '' : `<div class="sf-perks"><span>${icon('truck')} توصيل لكل المحافظات</span><span>${icon('cash')} الدفع عند الاستلام</span>
           ${phone ? `<a class="sf-pill" href="https://wa.me/964${phone.slice(1)}" target="_blank" rel="noopener">${icon('chat')} واتساب</a><a class="sf-pill" href="tel:${phone}">${icon('phone')} اتصال</a>` : ''}</div>`}
+        ${(() => { const so = s.socials || {}; const list = SOCIALS.filter((x) => typeof so[x.k] === 'string' && /^https:\/\//.test(so[x.k])); return list.length ? `<div class="sf-socials">${list.map((x) => `<a class="sf-soc" href="${esc(so[x.k])}" target="_blank" rel="noopener noreferrer">${icon('link')} ${x.l}</a>`).join('')}</div>` : ''; })()}
       </section>
       ${all.length > 6 ? `<div class="sf-search">${icon('search')}<input id="sfSearch" type="search" placeholder="ابحث عن منتج" aria-label="ابحث عن منتج" autocomplete="off"></div>` : ''}
       ${cats.length > 1 ? `<section class="sf-cats" aria-label="تسوّق حسب القسم"><div class="sf-cats-head">تسوّق حسب القسم</div>
@@ -3296,6 +3421,10 @@ const ORDER_ERRORS = {
   NO_STORE: 'المتجر غير موجود',
   TOO_MANY: 'أرسلت طلبات كثيرة خلال وقت قصير. انتظر قليلاً أو تواصل مع المتجر',
   BUSY: 'المتجر يستقبل طلبات كثيرة الآن، حاول بعد دقائق',
+  BAD_COUPON: 'الكوبون غير صحيح',
+  COUPON_EXPIRED: 'انتهت صلاحية الكوبون',
+  COUPON_USED_UP: 'انتهى عدد استخدامات هذا الكوبون',
+  COUPON_MIN: 'قيمة طلبك أقل من الحد المطلوب للكوبون',
 };
 function sfCheckoutSheet() {
   const s = sfStore;
@@ -3303,6 +3432,8 @@ function sfCheckoutSheet() {
   if (!lines.length) { sfCartSheet(); return; }
   const me = lsGet('rawaj-customer', {});
   const sub = cartSub();
+  const couponsOn = sfPublic ? !!s.hasCoupons : isPro(s) && (s.coupons || []).some((c) => c.active);
+  let coupon = null; // { code, discount } after the server accepted it
   openSheet(`${sheetHead('إتمام الطلب')}
     <form id="coForm" novalidate>
       <div class="field"><label for="coName">الاسم</label><input class="input" id="coName" maxlength="60" autocomplete="name" value="${esc(me.name || '')}"></div>
@@ -3313,9 +3444,11 @@ function sfCheckoutSheet() {
       <div class="field"><label for="coNote">ملاحظات للطلب (اختياري)</label><textarea class="input" id="coNote" maxlength="300" style="min-height:60px"></textarea></div>
       <div class="sum-box">
         ${lines.map((l) => `<div class="tot"><span class="trunc">${esc(l.p.name)}${showLabel(l.p, l.v) ? ` (${esc(l.v.label)})` : ''} × <span class="num">${l.qty}</span></span><span>${money(l.v.price * l.qty)}</span></div>`).join('')}
+        <div class="tot" id="coDiscRow" hidden><span>خصم الكوبون <b id="coCode" class="num"></b></span><span id="coDisc"></span></div>
         <div class="tot"><span>أجرة التوصيل</span><span id="coFee">اختر المحافظة</span></div>
         <div class="tot grand"><span>المجموع الكلي</span><span id="coTotal">${money(sub)}</span></div>
       </div>
+      ${couponsOn ? `<div class="coupon-box"><div class="row"><input class="input num grow" id="coCoupon" maxlength="16" dir="ltr" style="text-align:left;text-transform:uppercase" placeholder="عندك كوبون خصم؟" aria-label="كوبون الخصم" autocomplete="off"><button class="btn" type="button" id="coApply">تطبيق</button></div><div id="coCpMsg" class="sub" hidden></div></div>` : ''}
       <div class="cod-note">${icon('cash')} الدفع نقداً عند استلام الطلب. سيتصل بك المتجر للتأكيد قبل الإرسال.</div>
       <div id="coErr" class="err" hidden></div>
       <button class="btn primary block" type="submit" id="coSend">تأكيد الطلب</button>
@@ -3323,11 +3456,30 @@ function sfCheckoutSheet() {
   (sh) => {
     const city = sh.querySelector('#coCity');
     const drawFee = () => {
-      if (!city.value) { sh.querySelector('#coFee').textContent = 'اختر المحافظة'; sh.querySelector('#coTotal').innerHTML = money(sub); return; }
+      const disc = coupon ? coupon.discount : 0;
+      sh.querySelector('#coDiscRow').hidden = !coupon;
+      if (coupon) { sh.querySelector('#coCode').textContent = coupon.code; sh.querySelector('#coDisc').innerHTML = `− ${money(disc)}`; }
+      if (!city.value) { sh.querySelector('#coFee').textContent = 'اختر المحافظة'; sh.querySelector('#coTotal').innerHTML = money(sub - disc); return; }
       const fee = deliveryOf(s, city.value);
       sh.querySelector('#coFee').innerHTML = fee ? money(fee) : 'مجاناً';
-      sh.querySelector('#coTotal').innerHTML = money(sub + fee);
+      sh.querySelector('#coTotal').innerHTML = money(sub - disc + fee);
     };
+    const applyBtn = sh.querySelector('#coApply');
+    if (applyBtn) applyBtn.addEventListener('click', async () => {
+      const msg = sh.querySelector('#coCpMsg');
+      const code = sh.querySelector('#coCoupon').value.trim().toUpperCase();
+      coupon = null; drawFee();
+      if (!code) { msg.hidden = true; return; }
+      applyBtn.disabled = true;
+      const { data, error } = await sb.rpc('check_coupon', { p_slug: s.slug, p_code: code, p_subtotal: sub });
+      applyBtn.disabled = false;
+      msg.hidden = false;
+      if (error || !data) { msg.textContent = 'تعذّر التحقق من الكوبون'; msg.style.color = 'var(--bad)'; return; }
+      if (!data.ok) { msg.textContent = data.error === 'COUPON_MIN' ? `الكوبون يحتاج طلب بقيمة ${moneyText(data.min)} على الأقل` : ORDER_ERRORS[data.error] || ORDER_ERRORS.BAD_COUPON; msg.style.color = 'var(--bad)'; return; }
+      coupon = { code: data.code, discount: Number(data.discount) || 0 };
+      msg.textContent = `تم تطبيق ${data.type === 'percent' ? `خصم ${data.value}%` : 'الخصم'} ✓`; msg.style.color = 'var(--good)';
+      drawFee();
+    });
     city.addEventListener('change', drawFee);
     drawFee();
     sh.querySelector('#coForm').addEventListener('submit', async (e) => {
@@ -3354,10 +3506,12 @@ function sfCheckoutSheet() {
           p_items: cartLines().map((l) => ({ productId: l.p.id, variantId: l.v.id, qty: l.qty })),
           p_customer: { name: cust.name, phone: cust.phone, city: cust.city, address },
           p_note: v('#coNote'),
+          ...(coupon ? { p_coupon: coupon.code } : {}),
         });
       } catch (x) { res = { error: x }; }
       if (res.error || !res.data) {
-        const code = Object.keys(ORDER_ERRORS).find((k) => String((res.error && res.error.message) || '').includes(k));
+        const code = Object.keys(ORDER_ERRORS).sort((a, b) => b.length - a.length).find((k) => String((res.error && res.error.message) || '').includes(k));
+        if (code && code.startsWith('COUPON') || code === 'BAD_COUPON') { coupon = null; drawFee(); }
         errEl.textContent = code ? ORDER_ERRORS[code] : 'تعذّر إرسال الطلب، تحقق من الإنترنت وحاول مرة ثانية';
         errEl.hidden = false;
         btn.disabled = false; btn.textContent = 'تأكيد الطلب';
@@ -3385,6 +3539,7 @@ function sfDoneSheet(o, cust, address) {
       <div class="sub">رقم طلبك <b class="num" style="color:var(--ink);font-size:16px">#${o.no}</b> — احتفظ به لتتبّع الطلب</div></div>
     <div class="sum-box">
       ${o.items.map((i) => `<div class="tot"><span class="trunc">${esc(i.name)} × <span class="num">${i.qty}</span></span><span>${money(i.price * i.qty)}</span></div>`).join('')}
+      ${Number(o.discount) ? `<div class="tot"><span>خصم الكوبون</span><span>− ${money(o.discount)}</span></div>` : ''}
       <div class="tot"><span>أجرة التوصيل</span><span>${money(o.delivery)}</span></div>
       <div class="tot grand"><span>المطلوب عند الاستلام</span><span>${money(o.total)}</span></div>
     </div>
@@ -3471,6 +3626,7 @@ document.addEventListener('click', (e) => {
   if (t.dataset.variant) { variantSheet(t.dataset.variant); return; }
   if (t.dataset.purchase) { purchaseDetail(t.dataset.purchase); return; }
   if (t.dataset.supplier) { supplierSheet(t.dataset.supplier); return; }
+  if (t.dataset.coupon != null && t.closest('main')) { couponSheet(Number(t.dataset.coupon)); return; }
   if (t.dataset.delexp) {
     const s = store();
     const ex = s.expenses.find((x) => x.id === t.dataset.delexp);
@@ -3481,6 +3637,7 @@ document.addEventListener('click', (e) => {
     case 'close-sheet': closeSheet(); break;
     case 'new-order': newOrderSheet(); break;
     case 'new-product': productSheet(null); break;
+    case 'new-coupon': couponSheet(null); break;
     case 'new-expense': expenseSheet(); break;
     case 'open-storefront': openStorefront(); break;
     case 'logout': signOut(); break;
@@ -3559,6 +3716,13 @@ document.addEventListener('submit', async (e) => {
   if (phone && !validPhone(phone)) { errEl.textContent = 'رقم الهاتف يجب أن يكون 11 رقماً ويبدأ بـ 07'; errEl.hidden = false; return; }
   const delB = Number($('#setDelB').value.replace(/[,\s]/g, '')), delO = Number($('#setDelO').value.replace(/[,\s]/g, ''));
   if (![delB, delO].every((n) => Number.isInteger(n) && n >= 0 && n <= 100000)) { errEl.textContent = 'أجرة التوصيل رقم بين 0 و 100,000'; errEl.hidden = false; return; }
+  const socials = {};
+  for (const x of SOCIALS) {
+    const raw = $('#soc-' + x.k).value;
+    const link = socialLink(x.k, raw);
+    if (link === null) { errEl.textContent = `رابط ${x.l} غير صحيح. اكتب اسم المستخدم فقط أو رابط الصفحة`; errEl.hidden = false; return; }
+    if (link) socials[x.k] = link;
+  }
   const slug = $('#setSlug').value.trim().toLowerCase();
   if (!/^[a-z0-9](?:[a-z0-9-]{0,38}[a-z0-9])?$/.test(slug)) { errEl.textContent = 'اسم الرابط من حرف واحد إلى 40 حرفاً إنجليزياً صغيراً أو رقماً أو شرطة، ولا يبدأ أو ينتهي بشرطة'; errEl.hidden = false; return; }
   if (RESERVED.has(slug)) { errEl.textContent = 'اسم الرابط محجوز، اختر اسماً آخر'; errEl.hidden = false; return; }
@@ -3569,7 +3733,7 @@ document.addEventListener('submit', async (e) => {
   }
   s.slug = slug;
   s.name = name; s.tagline = $('#setTag').value.trim(); s.phone = phone ? normPhone(phone) : ''; s.color = $('#setColor').value;
-  s.deliveryBaghdad = delB; s.deliveryOther = delO;
+  s.deliveryBaghdad = delB; s.deliveryOther = delO; s.socials = socials;
   save(); render(); toast('حُفظت التغييرات');
 });
 
@@ -3597,6 +3761,7 @@ document.addEventListener('submit', (e) => {
   if (e.target.id !== 'featForm') return;
   e.preventDefault();
   const s = store();
+  if (!isPro(s)) return;
   const text = $('#featText').value.trim();
   const errEl = $('#featErr');
   if (text.length < 5) { errEl.textContent = 'اكتب شرح الميزة أولاً'; errEl.hidden = false; return; }
