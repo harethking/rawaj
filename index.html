@@ -555,10 +555,6 @@ nav.bottom .pro-tag{display:none}
 .auth-brand .store-mark{width:48px;height:48px;border-radius:14px;font-size:22px}
 .auth-brand h1{margin:0;font-size:24px}
 .auth-brand p{margin:0;color:var(--muted);font-size:13.5px}
-.auth{background:linear-gradient(160deg,#fff8e7 0%,#f1fbf6 50%,#e8f7ff 100%)}
-.auth-brand h1{color:#1f6b4f}
-.auth .btn.primary{background:linear-gradient(135deg,#f59e0b 0%,#1f6b4f 100%);border-color:transparent;color:#ffffff}
-.auth .tabs [aria-selected="true"]{color:#1f6b4f;border-bottom-color:#f59e0b}
 .tabs{display:grid;grid-template-columns:1fr 1fr;background:var(--sunk);border:1px solid var(--line);border-radius:12px;padding:4px;margin-bottom:16px}
 .tabs button{border:0;background:none;border-radius:9px;padding:9px;color:var(--muted)}
 .tabs button[aria-selected="true"]{background:var(--surface);color:var(--ink);font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.08)}
@@ -1525,7 +1521,7 @@ function renderAuth() {
       <div id="aErr" class="err" hidden></div>
       <button class="btn primary block" type="submit" id="aSubmit">${reg ? 'إنشاء الحساب والمتجر' : 'دخول'}</button>
     </form>
-    ${reg ? `<p class="sub" style="text-align:center;margin-top:14px">كل تجارة عظيمة بدأت بخطوة… وخطوتك الآن ✨</p>
+    ${reg ? `<p class="sub" style="text-align:center;margin-top:14px">يُنشأ لك متجر خاص بك. لا يرى أحد غيرك منتجاته وطلباته.</p>
     <button class="btn block" type="button" data-tab="login" style="margin-top:6px">عندي حساب، أريد تسجيل الدخول</button>` : `
     <div class="panel" style="margin-top:14px;text-align:center">
       <div style="font-weight:600">ما عندك متجر؟</div>
