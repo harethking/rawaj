@@ -720,19 +720,18 @@ function ensureShape(s) {
   if (!s.notes) s.notes = {};
   return s;
 }
-// New stores get a short link: the Latin name if it is short, otherwise 4 random letters/digits.
+// New stores get the shortest free link: 1 character, then 2 (the server picks it).
 const SLUG_CHARS = 'abcdefghjkmnpqrstuvwxyz23456789';
 const randSlug = (n) => Array.from({ length: n }, () => SLUG_CHARS[Math.floor(Math.random() * SLUG_CHARS.length)]).join('');
-async function uniqueSlug(name) {
-  const latin = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 12).replace(/-+$/, '');
-  const tries = [];
-  if (latin.length >= 3 && !RESERVED.has(latin) && SLUG_RE.test(latin)) tries.push(latin);
-  for (let i = 0; i < 5; i++) tries.push(randSlug(i < 3 ? 4 : 5));
-  for (const slug of tries) {
-    const { data, error } = await sb.rpc('slug_available', { p_slug: slug });
-    if (!error && data === true) return slug;
+async function uniqueSlug() {
+  const { data, error } = await sb.rpc('free_short_slug');
+  if (!error && typeof data === 'string' && SLUG_RE.test(data)) return data;
+  for (let i = 0; i < 6; i++) {
+    const slug = randSlug(i < 3 ? 2 : 3);
+    const r = await sb.rpc('slug_available', { p_slug: slug });
+    if (!r.error && r.data === true) return slug;
   }
-  return randSlug(6);
+  return randSlug(5);
 }
 const currentUser = () => (state.session ? state.users.find((u) => u.id === state.session) : null);
 
@@ -2884,7 +2883,7 @@ function siteBase() {
 }
 function publicLink(s) { const b = siteBase(); return /^https?:/.test(b) ? b + s.slug : `${b}#${s.slug}`; }
 const shortLink = (s) => publicLink(s).replace(/^https?:\/\//, '');
-const SLUG_RE = /^[a-z0-9][a-z0-9-]{1,38}[a-z0-9]$/;
+const SLUG_RE = /^[a-z0-9](?:[a-z0-9-]{0,38}[a-z0-9])?$/;
 function slugFromLocation() {
   const h = location.hash.replace(/^#\/?(s\/)?/, '');
   if (h && SLUG_RE.test(h)) return h;
@@ -3263,7 +3262,7 @@ document.addEventListener('submit', async (e) => {
   const delB = Number($('#setDelB').value.replace(/[,\s]/g, '')), delO = Number($('#setDelO').value.replace(/[,\s]/g, ''));
   if (![delB, delO].every((n) => Number.isInteger(n) && n >= 0 && n <= 100000)) { errEl.textContent = 'أجرة التوصيل رقم بين 0 و 100,000'; errEl.hidden = false; return; }
   const slug = $('#setSlug').value.trim().toLowerCase();
-  if (!/^[a-z0-9][a-z0-9-]{1,38}[a-z0-9]$/.test(slug)) { errEl.textContent = 'اسم الرابط من 3 إلى 40 حرفاً إنجليزياً صغيراً أو رقماً أو شرطة، ولا يبدأ أو ينتهي بشرطة'; errEl.hidden = false; return; }
+  if (!/^[a-z0-9](?:[a-z0-9-]{0,38}[a-z0-9])?$/.test(slug)) { errEl.textContent = 'اسم الرابط من حرف واحد إلى 40 حرفاً إنجليزياً صغيراً أو رقماً أو شرطة، ولا يبدأ أو ينتهي بشرطة'; errEl.hidden = false; return; }
   if (RESERVED.has(slug)) { errEl.textContent = 'اسم الرابط محجوز، اختر اسماً آخر'; errEl.hidden = false; return; }
   if (slug !== s.slug) {
     const { data: free, error } = await sb.rpc('slug_available', { p_slug: slug });

@@ -12,7 +12,7 @@
     var base = project ? '/' + parts[0] + '/' : '/';
     var slug = (project ? parts[1] : parts[0]) || '';
     slug = slug.toLowerCase();
-    location.replace(base + (/^[a-z0-9][a-z0-9-]{1,38}[a-z0-9]$/.test(slug) ? '#' + slug : ''));
+    location.replace(base + (/^[a-z0-9](?:[a-z0-9-]{0,38}[a-z0-9])?$/.test(slug) ? '#' + slug : ''));
   })();
 </script>
 </head>
