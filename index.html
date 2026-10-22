@@ -927,6 +927,8 @@ const currentUser = () => (state.session ? state.users.find((u) => u.id === stat
 /* ---------------- images (Supabase Storage, bucket store-images) ----------------
    Each store writes only inside its own folder <store id>/ (enforced by storage policies). */
 const IMG_MAX = 5;
+// عدد صور المنتج حسب الخطة: العادي 1، برو 2، سوبر برو 3
+const imgMaxFor = (s) => (isSuperStore(s) ? 3 : isPro(s) ? 2 : 1);
 const RESERVED = new Set(['admin', 'api', 'app', 'www', 'login', 'register', 'store', 'stores', 's', 'static', 'help', 'support']);
 const IMG_BUCKET = 'store-images';
 const imgUrl = (id) => (/^https:\/\//.test(id) ? id : `${SUPA_URL}/storage/v1/object/public/${IMG_BUCKET}/${id.split('/').map(encodeURIComponent).join('/')}`);
@@ -3131,7 +3133,7 @@ function productSheet(id) {
   const dis = edit ? '' : 'disabled';
   openSheet(`${sheetHead(existing ? esc(existing.name) : 'منتج جديد')}
     <form id="pForm" novalidate>
-      <div class="field"><label>صور المنتج <span class="sub">حتى ${IMG_MAX} صور، الأولى هي الغلاف. تُضغط تلقائياً إلى أقل من 200 KB</span></label>
+      <div class="field"><label>صور المنتج <span class="sub">حتى ${imgMaxFor(store())} صور، الأولى هي الغلاف. تُضغط تلقائياً إلى أقل من 200 KB</span></label>
         <div class="pimgs" id="pImgs"></div>
         ${edit ? `<label class="btn upload" id="pUpBtn" style="align-self:flex-start">${icon('camera')} إضافة صور<input type="file" id="pFile" accept="image/*" multiple aria-label="إضافة صور المنتج"></label>` : ''}
       </div>
@@ -3170,7 +3172,7 @@ function productSheet(id) {
         ${edit ? `<button class="x" type="button" data-rmimg="${esc(i)}" aria-label="حذف الصورة">×</button>${i > 0 ? `<button class="cover" type="button" data-cover="${esc(i)}">اجعلها الغلاف</button>` : ''}` : ''}</div>`).join('')
         : '<p class="sub" style="grid-column:1/-1;margin:0">لا توجد صور بعد.</p>';
       const up = sh.querySelector('#pUpBtn');
-      if (up) up.hidden = p.images.length >= IMG_MAX;
+      if (up) up.hidden = p.images.length >= imgMaxFor(store());
     };
     drawImgs();
     sh.querySelector('#pImgs').addEventListener('click', (e) => {
@@ -3182,7 +3184,7 @@ function productSheet(id) {
     });
     const pf = sh.querySelector('#pFile');
     if (pf) pf.addEventListener('change', async () => {
-      const room = IMG_MAX - p.images.length;
+      const room = imgMaxFor(store()) - p.images.length;
       if (room <= 0) return;
       toast('جارِ ضغط الصور ورفعها…');
       const { ids, skipped, sizes } = await addImages(pf.files, room, 1200);
