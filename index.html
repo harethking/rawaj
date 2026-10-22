@@ -1500,6 +1500,7 @@ function normId(v) {
   return validPhone(s) ? normPhone(s) : null;
 }
 function renderAuth() {
+  if (authTab === 'forgot') { renderForgot(); return; }
   document.body.classList.add('signed-out');
   document.body.classList.remove('admin-mode');
   $('#adminBanner').classList.remove('on');
@@ -1529,6 +1530,7 @@ function renderAuth() {
       <div class="field"><label for="aPw">كلمة المرور</label><input class="input" id="aPw" type="password" maxlength="200" autocomplete="${reg ? 'new-password' : 'current-password'}">${reg ? '<small class="sub">8 أحرف على الأقل، حروف وأرقام</small>' : ''}</div>
       <div id="aErr" class="err" hidden></div>
       <button class="btn primary block" type="submit" id="aSubmit">${reg ? 'إنشاء الحساب والمتجر' : 'دخول'}</button>
+      ${reg ? '' : '<button class="btn block" type="button" data-tab="forgot" style="margin-top:8px">نسيت كلمة المرور؟</button>'}
     </form>
     ${reg ? `<p class="sub" style="text-align:center;margin-top:14px">كل تجارة عظيمة بدأت بخطوة… وخطوتك الآن ✨</p>
     <button class="btn block" type="button" data-tab="login" style="margin-top:6px">عندي حساب، أريد تسجيل الدخول</button>` : `
@@ -1541,6 +1543,67 @@ function renderAuth() {
   </div></div>`;
   $('#authForm').addEventListener('submit', onAuthSubmit);
   setTimeout(() => { const f = $(reg ? '#aName' : '#aId'); if (f) f.focus(); }, 30);
+}
+function renderForgot() {
+  document.body.classList.add('signed-out');
+  $('#auth').innerHTML = `
+  <div class="auth"><div class="auth-box">
+    <div class="auth-brand">${LOGO_SVG(52)}<div><h1 class="rawaj-name">رواج</h1><p>استعادة كلمة المرور</p></div></div>
+    <form class="panel" id="forgotForm" novalidate>
+      <p class="sub" style="margin:0 0 12px">اكتب البريد الإلكتروني للحساب، وأرسل لك رابط لتغيير كلمة المرور.</p>
+      <div class="field"><label for="fId">البريد الإلكتروني</label><input class="input" id="fId" maxlength="120" autocomplete="username" dir="ltr" style="text-align:right"></div>
+      <div id="fErr" class="err" hidden></div>
+      <div id="fOk" class="hint" hidden></div>
+      <button class="btn primary block" type="submit" id="fSubmit">أرسل رابط التغيير</button>
+    </form>
+    <button class="btn block" type="button" data-tab="login" style="margin-top:10px">رجوع لتسجيل الدخول</button>
+  </div></div>`;
+  $('#forgotForm').addEventListener('submit', onForgotSubmit);
+}
+async function onForgotSubmit(e) {
+  e.preventDefault();
+  const id = normId($('#fId').value);
+  const errEl = $('#fErr'), okEl = $('#fOk'), btn = $('#fSubmit');
+  errEl.hidden = true; okEl.hidden = true;
+  if (!id || !id.includes('@')) { errEl.textContent = 'اكتب البريد الإلكتروني للحساب (استعادة كلمة المرور تعمل بالبريد فقط)'; errEl.hidden = false; return; }
+  btn.disabled = true; btn.textContent = 'جارِ الإرسال…';
+  const { error } = await sb.auth.resetPasswordForEmail(idToEmail(id), { redirectTo: location.origin + location.pathname });
+  btn.disabled = false; btn.textContent = 'أرسل رابط التغيير';
+  if (error) { errEl.textContent = authError(error); errEl.hidden = false; return; }
+  okEl.textContent = 'إذا كان الحساب موجوداً، وصلك رابط تغيير كلمة المرور على البريد. إذا ما وصلك، شوف مجلد الرسائل غير المرغوب فيها (Spam).';
+  okEl.hidden = false;
+}
+function renderRecovery() {
+  document.body.classList.add('signed-out');
+  document.body.classList.remove('admin-mode');
+  $('#auth').innerHTML = `
+  <div class="auth"><div class="auth-box">
+    <div class="auth-brand">${LOGO_SVG(52)}<div><h1 class="rawaj-name">رواج</h1><p>اختر كلمة مرور جديدة</p></div></div>
+    <form class="panel" id="newPwForm" novalidate>
+      <div class="field"><label for="nPw">كلمة المرور الجديدة</label><input class="input" id="nPw" type="password" maxlength="200" autocomplete="new-password"><small class="sub">8 أحرف على الأقل، حروف وأرقام</small></div>
+      <div class="field"><label for="nPw2">أعد كتابة كلمة المرور</label><input class="input" id="nPw2" type="password" maxlength="200" autocomplete="new-password"></div>
+      <div id="nErr" class="err" hidden></div>
+      <button class="btn primary block" type="submit" id="nSubmit">حفظ كلمة المرور</button>
+    </form>
+  </div></div>`;
+  $('#newPwForm').addEventListener('submit', onNewPwSubmit);
+}
+async function onNewPwSubmit(e) {
+  e.preventDefault();
+  const pw = $('#nPw').value, pw2 = $('#nPw2').value;
+  const errEl = $('#nErr'), btn = $('#nSubmit');
+  errEl.hidden = true;
+  const showErr = (m) => { errEl.textContent = m; errEl.hidden = false; btn.disabled = false; btn.textContent = 'حفظ كلمة المرور'; };
+  if (pw.length < 8 || !/[A-Za-z؀-ۿ]/.test(pw) || !/[0-9]/.test(pw)) return showErr('كلمة المرور 8 أحرف على الأقل، وبيها حروف وأرقام');
+  if (pw !== pw2) return showErr('كلمتا المرور غير متطابقتين');
+  btn.disabled = true; btn.textContent = 'جارِ الحفظ…';
+  const { error } = await sb.auth.updateUser({ password: pw });
+  if (error) return showErr(authError(error));
+  await sb.auth.signOut().catch(() => {});
+  try { history.replaceState(null, '', location.pathname); } catch (err) { /* ignore */ }
+  authTab = 'login';
+  renderAuth();
+  toast('تم تغيير كلمة المرور. سجّل الدخول بالكلمة الجديدة');
 }
 function authError(e) {
   const m = String((e && e.message) || '').toLowerCase();
@@ -3839,7 +3902,9 @@ sb.auth.onAuthStateChange((event) => {
   renderLoading();
   const pub = routePublic(); // a customer opening a store link sees the store right away
   try {
+    const recovering = /type=recovery/.test(location.hash);
     const { data } = await sb.auth.getSession();
+    if (recovering && data && data.session) { renderRecovery(); await pub; return; }
     if (data && data.session) await loadAccount(data.session.user);
   } catch (e) {
     toast('تعذّر الاتصال بالسيرفر، تحقق من الإنترنت', true);
