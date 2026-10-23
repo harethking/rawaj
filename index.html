@@ -1567,10 +1567,25 @@ function renderAuth() {
       <div class="sub" style="margin-bottom:10px">سجّل حساباً جديداً ويُنشأ لك متجرك مباشرة</div>
       <button class="btn primary block" type="button" data-tab="register">إنشاء متجر جديد</button>
     </div>
+    <details class="panel login-help" style="margin-top:14px">
+      <summary style="cursor:pointer;font-weight:600">ما قدرت تسجّل الدخول؟ راسلنا على واتساب</summary>
+      <textarea class="input" id="waHelpText" rows="3" maxlength="500" placeholder="اكتب مشكلتك هنا…" style="margin-top:10px;resize:vertical"></textarea>
+      <button class="btn primary block" type="button" id="waHelpBtn" style="margin-top:8px">أرسل على واتساب</button>
+    </details>
 `}
   </div></div>`;
   $('#authForm').addEventListener('submit', onAuthSubmit);
+  const wh = $('#waHelpBtn');
+  if (wh) wh.addEventListener('click', openLoginHelp);
   setTimeout(() => { const f = $(reg ? '#aName' : '#aId'); if (f) f.focus(); }, 30);
+}
+// Sends the login problem to the platform's WhatsApp. The password is never included.
+function openLoginHelp() {
+  const txt = ($('#waHelpText').value || '').trim();
+  if (txt.length < 5) { toast('اكتب مشكلتك أولاً', true); return; }
+  const id = (($('#aId') && $('#aId').value) || '').trim();
+  const msg = `مرحباً، ما قدرت أسجّل الدخول لمتجر رواج.\n${id ? 'البريد أو الهاتف: ' + id + '\n' : ''}\n${txt}`;
+  window.open(`https://wa.me/964${ADMIN_PHONE.slice(1)}?text=${encodeURIComponent(msg)}`, '_blank', 'noopener');
 }
 function renderForgot() {
   document.body.classList.add('signed-out');
@@ -4066,6 +4081,7 @@ sb.auth.onAuthStateChange((event) => {
 /* ---- Language switch: Arabic (default) or English, chosen in Settings. Visible text and placeholders are translated in place from DICT; text not in DICT stays as written. ---- */
 (() => {
   const DICT = {
+    "ما قدرت تسجّل الدخول؟ راسلنا على واتساب": "Can't sign in? Message us on WhatsApp", "اكتب مشكلتك هنا…": "Describe your problem here…", "أرسل على واتساب": "Send on WhatsApp", "اكتب مشكلتك أولاً": "Describe your problem first",
     "رواج": "Rawaj", "رواج الذكي": "Rawaj AI", "رواج · لوحة الإدارة": "Rawaj · Admin panel", "رواج — متجرك وحساباته في جيبك": "Rawaj — your store and accounts in your pocket",
     "متجرك وطلباته وحساباته… في جيبك": "Your store, orders and accounts… in your pocket", "صباح الخير": "Good morning", "مساء الخير": "Good evening",
     "أهلاً، أنا رواج الذكي": "Hi, I'm Rawaj AI", "سؤالك لرواج الذكي": "Ask Rawaj AI", "اكتب سؤالك…": "Type your question…", "يفكّر…": "Thinking…",
