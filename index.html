@@ -1952,7 +1952,7 @@ function adminStoreSheet(id) {
       <div class="row"><select class="input grow" id="aPlan">${['monthly', 'yearly', 'pro_monthly', 'pro_yearly', 'super_monthly', 'super_yearly', 'trial', 'free'].map((k) => `<option value="${k}" ${(s.plan || 'trial') === k ? 'selected' : ''}>${PLANS[k].l}${PLANS[k].price ? ` — ${PLANS[k].price.toLocaleString('en-US')} د.ع` : ''}${PLANS[k].days ? ` (${PLANS[k].days} يوماً)` : ''}</option>`).join('')}</select>
       <button class="btn primary" type="button" id="aPlanBtn">تفعيل</button></div>
       <small class="sub">في المرحلة الأولى يُفعَّل الاشتراك يدوياً بعد استلام التحويل.</small></div>
-    ${s.planEnds && planOf(s) !== 'free' ? '<div class="actions"><button class="btn danger" type="button" id="aCancelSub">حذف الاشتراك المفعّل</button></div>' : ''}
+    ${(s.plan || 'trial') !== 'free' ? '<div class="actions"><button class="btn danger" type="button" id="aCancelSub">حذف الاشتراك المفعّل</button></div>' : ''}
     <div class="actions">
       <button class="btn primary" type="button" id="aEnter">إدارة المتجر</button>
       <button class="btn" type="button" id="aOpen">فتح صفحة المتجر</button>
