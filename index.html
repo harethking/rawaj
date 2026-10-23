@@ -1952,6 +1952,7 @@ function adminStoreSheet(id) {
       <div class="row"><select class="input grow" id="aPlan">${['monthly', 'yearly', 'pro_monthly', 'pro_yearly', 'super_monthly', 'super_yearly', 'trial', 'free'].map((k) => `<option value="${k}" ${(s.plan || 'trial') === k ? 'selected' : ''}>${PLANS[k].l}${PLANS[k].price ? ` — ${PLANS[k].price.toLocaleString('en-US')} د.ع` : ''}${PLANS[k].days ? ` (${PLANS[k].days} يوماً)` : ''}</option>`).join('')}</select>
       <button class="btn primary" type="button" id="aPlanBtn">تفعيل</button></div>
       <small class="sub">في المرحلة الأولى يُفعَّل الاشتراك يدوياً بعد استلام التحويل.</small></div>
+    ${s.planEnds && planOf(s) !== 'free' ? '<div class="actions"><button class="btn danger" type="button" id="aCancelSub">حذف الاشتراك المفعّل</button></div>' : ''}
     <div class="actions">
       <button class="btn primary" type="button" id="aEnter">إدارة المتجر</button>
       <button class="btn" type="button" id="aOpen">فتح صفحة المتجر</button>
@@ -1971,6 +1972,14 @@ function adminStoreSheet(id) {
         'تغيير الخطة', `${PLANS[pl].l}${ends ? ' حتى ' + dateText(ends) : ''}`);
       renderAdmin(); adminStoreSheet(id);
       if (ok) toast(`الخطة الآن: ${PLANS[pl].l}`);
+    });
+    const cancelBtn = sh.querySelector('#aCancelSub');
+    if (cancelBtn) cancelBtn.addEventListener('click', async () => {
+      const ok = await confirmSheet('حذف الاشتراك المفعّل', 'ينتهي اشتراك المتجر الحين، ويرجع لحالة "منتهي" لحد ما تفعّل اشتراك جديد. لا تُحذف أي بيانات.', 'حذف الاشتراك', true);
+      if (!ok) { adminStoreSheet(id); return; }
+      const done = await adminUpdate(s, { plan_ends: new Date().toISOString(), welcome: false }, 'حذف الاشتراك المفعّل');
+      renderAdmin(); adminStoreSheet(id);
+      if (done) toast('تم حذف الاشتراك المفعّل');
     });
     sh.querySelector('#aEnter').addEventListener('click', () => {
       state.adminAs = s.id; state.role = 'owner'; state.view = 'home'; state.orderFilter = 'all'; state.q = ''; state.pq = ''; state.cq = ''; state.month = null;
@@ -4084,6 +4093,8 @@ sb.auth.onAuthStateChange((event) => {
 /* ---- Language switch: Arabic (default) or English, chosen in Settings. Visible text and placeholders are translated in place from DICT; text not in DICT stays as written. ---- */
 (() => {
   const DICT = {
+    "حذف الاشتراك المفعّل": "Delete active subscription", "حذف الاشتراك": "Delete subscription", "تم حذف الاشتراك المفعّل": "Active subscription deleted",
+    "ينتهي اشتراك المتجر الحين، ويرجع لحالة \"منتهي\" لحد ما تفعّل اشتراك جديد. لا تُحذف أي بيانات.": "The store's subscription ends now and goes back to expired until you activate a new one. No data is deleted.",
     "تم تأكيد بريدك ✅ سجّل الدخول الآن": "Email confirmed ✅ sign in now", "تم تأكيد بريدك ✅": "Email confirmed ✅",
     "على الآيفون إذا ما اشتغل الزر: اضغط عليه مطولاً واختر «نسخ الرابط»، وافتحه في Safari.": "On iPhone, if the button doesn't work: press and hold it, choose “Copy link”, and open it in Safari.",
     "ما قدرت تسجّل الدخول؟ راسلنا على واتساب": "Can't sign in? Message us on WhatsApp", "اكتب مشكلتك هنا…": "Describe your problem here…", "أرسل على واتساب": "Send on WhatsApp", "اكتب مشكلتك أولاً": "Describe your problem first",
