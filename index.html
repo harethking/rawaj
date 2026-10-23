@@ -1694,7 +1694,7 @@ async function onAuthSubmit(e) {
         <ol>
           <li>افتح بريدك الإلكتروني</li>
           <li>افتح رسالة <b>«رواج»</b> بعنوان «تأكيد بريدك الإلكتروني في رواج»</li>
-          <li>اضغط زر <b>«تأكيد البريد الإلكتروني»</b></li>
+          <li>اضغط زر <b>«تأكيد البريد الإلكتروني»</b>. <span class="sub">على الآيفون إذا ما اشتغل الزر: اضغط عليه مطولاً واختر «نسخ الرابط»، وافتحه في Safari.</span></li>
           <li>ارجع هنا وسجّل الدخول، ومتجرك يكون جاهز</li>
         </ol>
         <div class="confirm-note">ما وصلتك الرسالة؟ انتظر دقيقة، ثم شوف مجلد <b>الرسائل غير المرغوب فيها (Spam)</b>. إذا لگيتها هناك، اضغط «ليست رسالة غير مرغوب فيها» حتى توصلك رسائلنا القادمة للبريد الوارد.</div>`
@@ -4067,8 +4067,11 @@ sb.auth.onAuthStateChange((event) => {
   const pub = routePublic(); // a customer opening a store link sees the store right away
   try {
     const recovering = /type=recovery/.test(location.hash);
+    const confirmed = /type=signup/.test(location.hash);
     const { data } = await sb.auth.getSession();
+    if (confirmed) { try { history.replaceState(null, '', location.pathname + location.search); } catch (e) { /* ignore */ } }
     if (recovering && data && data.session) { renderRecovery(); await pub; return; }
+    if (confirmed) { authTab = 'login'; toast(data && data.session ? 'تم تأكيد بريدك ✅' : 'تم تأكيد بريدك ✅ سجّل الدخول الآن'); }
     if (data && data.session) await loadAccount(data.session.user);
   } catch (e) {
     toast('تعذّر الاتصال بالسيرفر، تحقق من الإنترنت', true);
@@ -4081,6 +4084,8 @@ sb.auth.onAuthStateChange((event) => {
 /* ---- Language switch: Arabic (default) or English, chosen in Settings. Visible text and placeholders are translated in place from DICT; text not in DICT stays as written. ---- */
 (() => {
   const DICT = {
+    "تم تأكيد بريدك ✅ سجّل الدخول الآن": "Email confirmed ✅ sign in now", "تم تأكيد بريدك ✅": "Email confirmed ✅",
+    "على الآيفون إذا ما اشتغل الزر: اضغط عليه مطولاً واختر «نسخ الرابط»، وافتحه في Safari.": "On iPhone, if the button doesn't work: press and hold it, choose “Copy link”, and open it in Safari.",
     "ما قدرت تسجّل الدخول؟ راسلنا على واتساب": "Can't sign in? Message us on WhatsApp", "اكتب مشكلتك هنا…": "Describe your problem here…", "أرسل على واتساب": "Send on WhatsApp", "اكتب مشكلتك أولاً": "Describe your problem first",
     "رواج": "Rawaj", "رواج الذكي": "Rawaj AI", "رواج · لوحة الإدارة": "Rawaj · Admin panel", "رواج — متجرك وحساباته في جيبك": "Rawaj — your store and accounts in your pocket",
     "متجرك وطلباته وحساباته… في جيبك": "Your store, orders and accounts… in your pocket", "صباح الخير": "Good morning", "مساء الخير": "Good evening",
