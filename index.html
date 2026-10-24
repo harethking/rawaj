@@ -615,6 +615,7 @@ body.signed-out #planBanner, body.admin-mode #planBanner{display:none}
 .kv dd{margin:0;word-break:break-all}
 .temp-pw{font-size:22px;font-weight:600;letter-spacing:1px;direction:ltr;text-align:center;background:var(--sunk);border-radius:10px;padding:12px;margin:10px 0}
 
+.psec{font-size:12.5px;font-weight:700;color:var(--muted);margin:18px 0 8px;padding-bottom:6px;border-bottom:1px solid var(--line)}
 /* Toast */
 .toast{position:fixed;z-index:60;left:50%;transform:translateX(-50%);bottom:calc(var(--nav-h) + 24px);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:14px;max-width:calc(100vw - 32px);display:none}
 .toast.show{display:block}
@@ -3168,24 +3169,29 @@ function productSheet(id) {
   const dis = edit ? '' : 'disabled';
   openSheet(`${sheetHead(existing ? esc(existing.name) : 'منتج جديد')}
     <form id="pForm" novalidate>
-      <div class="field"><label>صور المنتج <span class="sub">حتى ${imgMaxFor(store())} صور، الأولى هي الغلاف. تُضغط تلقائياً إلى أقل من 200 KB</span></label>
+      <div class="psec">الصور</div>
+      <div class="field"><label>صور المنتج <span class="sub">حتى ${imgMaxFor(store())}، الأولى هي الغلاف · تُضغط تلقائياً</span></label>
         <div class="pimgs" id="pImgs"></div>
         ${edit ? `<label class="btn upload" id="pUpBtn" style="align-self:flex-start">${icon('camera')} إضافة صور<input type="file" id="pFile" accept="image/*" multiple aria-label="إضافة صور المنتج"></label>` : ''}
       </div>
+      <div class="psec">المعلومات</div>
       <div class="field"><label for="pName">اسم المنتج</label><input class="input" id="pName" maxlength="80" value="${esc(p.name)}" ${dis}></div>
-      <div class="field"><label for="pDisc">نسبة الخصم % <span class="sub">(0 = بدون خصم، والحد الأعلى 90)</span></label><input class="input num" id="pDisc" inputmode="numeric" value="${discOf(p)}" style="text-align:right" ${dis}></div>
       <div class="grid2">
         <div class="field"><label for="pCat">التصنيف</label><input class="input" id="pCat" maxlength="40" list="cats" value="${esc(p.category)}" ${dis}>
           <datalist id="cats">${Array.from(new Set(s.products.map((x) => x.category))).map((c) => `<option value="${esc(c)}">`).join('')}</datalist></div>
         <div class="field"><label for="pLow">نبّهني عندما يصل المخزون إلى</label><input class="input num" id="pLow" inputmode="numeric" value="${p.low}" style="text-align:right" ${dis}></div>
       </div>
       <div class="field"><label for="pDesc">الوصف</label><textarea class="input" id="pDesc" maxlength="500" ${dis}>${esc(p.desc)}</textarea></div>
+      <div class="psec">الخيارات والأسعار</div>
       <div class="field"><label>الخيارات (لون، مقاس، حجم)</label>
         <div class="vrow head"><span>الخيار</span><span>سعر البيع</span><span>${showCost ? 'التكلفة' : ''}</span><span>المخزون</span><span></span></div>
         <div id="pVars"></div>
         ${edit ? '<button class="btn" type="button" id="pAddVar" style="margin-top:4px">+ خيار</button>' : ''}
       </div>
+      <div class="psec">الخصم</div>
+      <div class="field"><label for="pDisc">نسبة الخصم % <span class="sub">(0 = بدون خصم، والحد الأعلى 90)</span></label><input class="input num" id="pDisc" inputmode="numeric" value="${discOf(p)}" style="text-align:right" ${dis}><small class="sub" id="pDiscHint"></small></div>
       <div class="field" id="pReasonWrap" hidden><label for="pReason">سبب تعديل المخزون</label><input class="input" id="pReason" maxlength="120" placeholder="مثال: جرد، تالف، استلام بضاعة"></div>
+      <div class="psec">الظهور</div>
       <label class="row" style="margin:6px 0 12px"><input type="checkbox" id="pActive" ${p.active ? 'checked' : ''} ${dis}> يظهر للزبائن في واجهة المتجر</label>
       <div id="pErr" class="err" hidden></div>
       ${edit ? `<button class="btn primary block" type="submit">${existing ? 'حفظ التغييرات' : 'إضافة المنتج'}</button>${existing ? '<button class="btn danger block" type="button" id="pDel" style="margin-top:8px">حذف المنتج</button>' : ''}` : '<p class="sub">عرض فقط: دورك لا يسمح بتعديل المنتجات.</p>'}
@@ -3193,6 +3199,13 @@ function productSheet(id) {
     ${moves.length ? `<h2>آخر حركات المخزون</h2><div class="list">${moves.map((m) => `<div class="item"><div class="grow"><div>${esc(m.reason)}</div><div class="meta">${esc(vLabel(m.variantId))} · ${dateText(m.at)} · ${esc(m.by)}</div></div><b class="num" style="color:${m.qty < 0 ? 'var(--bad)' : 'var(--good)'}">${m.qty > 0 ? '+' : ''}${m.qty}</b></div>`).join('')}</div>` : ''}`,
   (sh) => {
     const orig = new Map((existing ? existing.variants : []).map((v) => [v.id, v.stock]));
+    const updDisc = () => {
+      const d = discOf({ discount: sh.querySelector('#pDisc').value });
+      const v0 = p.variants[0];
+      sh.querySelector('#pDiscHint').innerHTML = d && v0 && v0.price > 0 ? `بعد الخصم يصير سعر الخيار الأول ${money(Math.round(v0.price * (100 - d) / 100))}` : 'بدون خصم حالياً';
+    };
+    sh.addEventListener('input', updDisc);
+    updDisc();
     const draw = () => {
       sh.querySelector('#pVars').innerHTML = p.variants.map((v, i) => `<div class="vrow">
         <input class="input" data-k="label" data-i="${esc(i)}" value="${esc(v.label)}" placeholder="مثال: أسود / L" aria-label="اسم الخيار" ${dis}>
