@@ -794,6 +794,7 @@ function sanitizeStore(s) {
     p.color = safeColor(p.color);
     p.images = (Array.isArray(p.images) ? p.images : []).map(safeImg).filter(Boolean);
     p.name = String(p.name == null ? '' : p.name); p.category = String(p.category == null ? '' : p.category);
+    p.discount = Math.min(90, Math.max(0, Math.round(Number(p.discount) || 0)));
     p.variants = (Array.isArray(p.variants) ? p.variants : []).filter((v) => v && typeof v === 'object').map((v) => ({ ...v, id: safeId(v.id) || ('v' + Math.random().toString(36).slice(2, 9)), label: String(v.label == null ? '' : v.label), price: Number(v.price) || 0, cost: Number(v.cost) || 0, stock: Number(v.stock) || 0 }));
     return p;
   });
@@ -3172,6 +3173,7 @@ function productSheet(id) {
         ${edit ? `<label class="btn upload" id="pUpBtn" style="align-self:flex-start">${icon('camera')} إضافة صور<input type="file" id="pFile" accept="image/*" multiple aria-label="إضافة صور المنتج"></label>` : ''}
       </div>
       <div class="field"><label for="pName">اسم المنتج</label><input class="input" id="pName" maxlength="80" value="${esc(p.name)}" ${dis}></div>
+      <div class="field"><label for="pDisc">نسبة الخصم % <span class="sub">(0 = بدون خصم، والحد الأعلى 90)</span></label><input class="input num" id="pDisc" inputmode="numeric" value="${discOf(p)}" style="text-align:right" ${dis}></div>
       <div class="grid2">
         <div class="field"><label for="pCat">التصنيف</label><input class="input" id="pCat" maxlength="40" list="cats" value="${esc(p.category)}" ${dis}>
           <datalist id="cats">${Array.from(new Set(s.products.map((x) => x.category))).map((c) => `<option value="${esc(c)}">`).join('')}</datalist></div>
@@ -3272,7 +3274,7 @@ function productSheet(id) {
       if (err) { errEl.textContent = err; errEl.hidden = false; return; }
       const by = ROLES[state.role].l;
       const now = Date.now();
-      const clean = { ...p, name, category: sh.querySelector('#pCat').value.trim() || 'عام', desc: sh.querySelector('#pDesc').value.trim(), low: Math.max(0, Math.round(Number(sh.querySelector('#pLow').value) || 0)), active: sh.querySelector('#pActive').checked };
+      const clean = { ...p, name, category: sh.querySelector('#pCat').value.trim() || 'عام', desc: sh.querySelector('#pDesc').value.trim(), low: Math.max(0, Math.round(Number(sh.querySelector('#pLow').value) || 0)), active: sh.querySelector('#pActive').checked, discount: Math.min(90, Math.max(0, Math.round(Number(sh.querySelector('#pDisc').value) || 0))) };
       clean.variants = p.variants.map((v) => {
         const before = orig.has(v.id) ? orig.get(v.id) : 0;
         const diff = v.stock - before;
@@ -3352,10 +3354,18 @@ let cart = [];        // [{ pid, vid, qty }] kept per store in this browser
 const lsGet = (k, d) => { try { const v = JSON.parse(localStorage.getItem(k)); return v == null ? d : v; } catch (e) { return d; } };
 const lsSet = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* private mode */ } };
 const cartKey = () => `rawaj-cart-${sfStore ? sfStore.slug : ''}`;
+// Product discount: a percentage (0-90) taken off every option's price.
+const discOf = (p) => Math.min(90, Math.max(0, Math.round(Number(p && p.discount) || 0)));
+const effPrice = (p, v) => { const d = discOf(p); return d ? Math.round(v.price * (100 - d) / 100) : v.price; };
 function priceText(p) {
-  const ps = p.variants.map((v) => v.price);
+  const ps = p.variants.map((v) => effPrice(p, v));
   const lo = Math.min(...ps), hi = Math.max(...ps);
   return lo === hi ? money(lo) : `من ${money(lo)}`;
+}
+function priceHtml(p) {
+  if (!discOf(p)) return priceText(p);
+  const lo = Math.min(...p.variants.map((v) => v.price));
+  return `<s class="sub">${money(lo)}</s> ${priceText(p)}`;
 }
 const showLabel = (p, v) => p.variants.length > 1 || (v.label && !/^(افتراضي|default|-)$/i.test(v.label.trim()));
 function sfItems() {
@@ -3373,7 +3383,7 @@ function cartLines() {
   return out;
 }
 const cartCount = () => cartLines().reduce((t, l) => t + l.qty, 0);
-const cartSub = () => cartLines().reduce((t, l) => t + l.v.price * l.qty, 0);
+const cartSub = () => cartLines().reduce((t, l) => t + effPrice(l.p, l.v) * l.qty, 0);
 function cartAdd(pid, vid, qty) {
   const ex = cart.find((c) => c.pid === pid && c.vid === vid);
   if (ex) ex.qty = Math.min(99, ex.qty + qty); else cart.push({ pid, vid, qty: Math.min(99, qty) });
@@ -3412,12 +3422,18 @@ function renderStorefront() {
     if (!groups.has(k)) groups.set(k, []);
     groups.get(k).push(p);
   }
+  if (all.some((p) => discOf(p) > 0)) {
+    const rest = Array.from(groups.entries());
+    groups.clear();
+    groups.set('الخصومات', all.filter((p) => discOf(p) > 0));
+    for (const [k, v] of rest) groups.set(k, v);
+  }
   const cats = Array.from(groups.keys());
   const phone = s.phone && validPhone(s.phone) ? normPhone(s.phone) : '';
   const card = (p) => `<article class="sf-card" data-q="${esc(`${p.name} ${p.category || ''} ${p.desc || ''}`.toLowerCase())}">
       <button type="button" class="sf-card-hit" data-sfp="${esc(p.id)}" aria-label="${esc(p.name)}">${tile(p, 'pic')}</button>
       <div class="sf-card-body"><button type="button" class="sf-card-name" data-sfp="${esc(p.id)}">${esc(p.name)}</button>
-        <div class="sf-card-row"><span class="sf-card-price">${priceText(p)}</span>
+        <div class="sf-card-row"><span class="sf-card-price">${priceHtml(p)}</span>
           <button type="button" class="sf-add" data-sfadd="${esc(p.id)}" aria-label="أضف ${esc(p.name)} إلى السلة">${icon('plus')}</button></div></div></article>`;
   sf.innerHTML = `
     ${sfPublic ? '' : `<div class="sf-owner"><span>معاينة صفحة متجرك كما يراها الزبون</span><span class="row" style="gap:6px"><button type="button" data-act="copy-link">نسخ الرابط</button><button type="button" data-act="close-storefront">رجوع</button></span></div>`}
@@ -3548,7 +3564,7 @@ function sfProductSheet(id) {
       ${p.images.length > 1 ? `<div class="gal-thumbs">${p.images.map((im, i) => `<button type="button" data-gal="${esc(im)}" aria-pressed="${i === 0}" aria-label="صورة ${i + 1}"><img data-img="${esc(im)}" alt=""></button>`).join('')}</div>` : ''}`
       : `<div class="pic" style="background:${p.color};aspect-ratio:16/9;border-radius:14px;display:grid;place-items:center;color:#fff;font-size:48px;font-weight:600">${esc(p.name.charAt(0))}</div>`}
     ${p.category ? `<span class="sf-cat-tag">${esc(p.category)}</span>` : ''}
-    <div class="sf-price" id="spPrice">${multi ? priceText(p) : money(p.variants[0].price)}</div>
+    <div class="sf-price" id="spPrice">${multi ? priceText(p) : money(effPrice(p, p.variants[0]))}</div>
     ${p.desc ? `<p style="white-space:pre-line;margin:6px 0 0">${esc(p.desc)}</p>` : ''}
     ${multi ? `<div class="sf-label" id="spOptL">اختر النوع أو المقاس</div><div class="opts" role="group" aria-labelledby="spOptL">${p.variants.map((v) => `<button type="button" class="opt" data-v="${esc(v.id)}" aria-pressed="false">${esc(v.label)}${samePrice ? '' : ` · ${money(v.price)}`}</button>`).join('')}</div>` : ''}
     ${closed ? '' : `<div class="sf-label">الكمية</div>
@@ -3568,8 +3584,8 @@ function sfProductSheet(id) {
     const draw = () => {
       const v = vid && p.variants.find((x) => x.id === vid);
       sh.querySelector('#spQty').textContent = qty;
-      sh.querySelector('#spLine').innerHTML = v ? money(v.price * qty) : '';
-      if (v) sh.querySelector('#spPrice').innerHTML = money(v.price);
+      sh.querySelector('#spLine').innerHTML = v ? money(effPrice(p, v) * qty) : '';
+      if (v) sh.querySelector('#spPrice').innerHTML = money(effPrice(p, v));
     };
     $$('[data-v]', sh).forEach((b) => b.addEventListener('click', () => {
       vid = b.dataset.v;
@@ -3600,7 +3616,7 @@ function sfCartSheet() {
     openSheet(`${sheetHead('السلة')}
       <div id="cartLines">${lines.map((l, i) => `<div class="cline">${tile(l.p, 'thumb')}
         <div class="grow"><div class="trunc" style="font-weight:500">${esc(l.p.name)}</div>
-          <div class="sub">${showLabel(l.p, l.v) ? `${esc(l.v.label)} · ` : ''}${money(l.v.price)}</div>
+          <div class="sub">${showLabel(l.p, l.v) ? `${esc(l.v.label)} · ` : ''}${money(effPrice(l.p, l.v))}</div>
           <button type="button" class="x" data-crm="${esc(i)}">حذف</button></div>
         <div class="qty"><button type="button" data-cinc="${esc(i)}" aria-label="زيادة">+</button><span class="num">${l.qty}</span><button type="button" data-cdec="${esc(i)}" aria-label="إنقاص">−</button></div></div>`).join('')}</div>
       <div class="sum-box"><div class="tot grand" style="border:0;margin:0;padding:0"><span>مجموع المنتجات</span><span>${money(cartSub())}</span></div>
@@ -3662,7 +3678,7 @@ function sfCheckoutSheet() {
       <div class="field"><label for="coMark">أقرب نقطة دالة (اختياري)</label><input class="input" id="coMark" maxlength="80" placeholder="مثال: قرب جامع ..." value="${esc(me.landmark || '')}"></div>
       <div class="field"><label for="coNote">ملاحظات للطلب (اختياري)</label><textarea class="input" id="coNote" maxlength="300" style="min-height:60px"></textarea></div>
       <div class="sum-box">
-        ${lines.map((l) => `<div class="tot"><span class="trunc">${esc(l.p.name)}${showLabel(l.p, l.v) ? ` (${esc(l.v.label)})` : ''} × <span class="num">${l.qty}</span></span><span>${money(l.v.price * l.qty)}</span></div>`).join('')}
+        ${lines.map((l) => `<div class="tot"><span class="trunc">${esc(l.p.name)}${showLabel(l.p, l.v) ? ` (${esc(l.v.label)})` : ''} × <span class="num">${l.qty}</span></span><span>${money(effPrice(l.p, l.v) * l.qty)}</span></div>`).join('')}
         <div class="tot" id="coDiscRow" hidden><span>خصم الكوبون <b id="coCode" class="num"></b></span><span id="coDisc"></span></div>
         <div class="tot"><span>أجرة التوصيل</span><span id="coFee">اختر المحافظة</span></div>
         <div class="tot grand"><span>المجموع الكلي</span><span id="coTotal">${money(sub)}</span></div>
@@ -4093,6 +4109,7 @@ sb.auth.onAuthStateChange((event) => {
 /* ---- Language switch: Arabic (default) or English, chosen in Settings. Visible text and placeholders are translated in place from DICT; text not in DICT stays as written. ---- */
 (() => {
   const DICT = {
+    "الخصومات": "Discounts", "نسبة الخصم %": "Discount %", "(0 = بدون خصم، والحد الأعلى 90)": "(0 = no discount, max 90)",
     "حذف الاشتراك المفعّل": "Delete active subscription", "حذف الاشتراك": "Delete subscription", "تم حذف الاشتراك المفعّل": "Active subscription deleted",
     "ينتهي اشتراك المتجر الحين، ويرجع لحالة \"منتهي\" لحد ما تفعّل اشتراك جديد. لا تُحذف أي بيانات.": "The store's subscription ends now and goes back to expired until you activate a new one. No data is deleted.",
     "تم تأكيد بريدك ✅ سجّل الدخول الآن": "Email confirmed ✅ sign in now", "تم تأكيد بريدك ✅": "Email confirmed ✅",
