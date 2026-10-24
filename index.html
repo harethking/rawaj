@@ -615,7 +615,10 @@ body.signed-out #planBanner, body.admin-mode #planBanner{display:none}
 .kv dd{margin:0;word-break:break-all}
 .temp-pw{font-size:22px;font-weight:600;letter-spacing:1px;direction:ltr;text-align:center;background:var(--sunk);border-radius:10px;padding:12px;margin:10px 0}
 
-.psec{font-size:12.5px;font-weight:700;color:var(--muted);margin:18px 0 8px;padding-bottom:6px;border-bottom:1px solid var(--line)}
+.psec{display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:700;color:var(--ink);margin:20px 0 10px;padding:7px 12px;border-radius:10px;background:color-mix(in srgb,var(--c,var(--brand)) 13%,transparent);border-inline-start:4px solid var(--c,var(--brand))}
+.disc-box{padding:12px;border-radius:14px;border:1px dashed var(--line-strong);transition:background .2s,border-color .2s}
+.disc-box.on{border:1px solid var(--good);background:color-mix(in srgb,var(--good) 10%,transparent)}
+.disc-box.on #pDisc{font-weight:700;color:var(--good)}
 /* Toast */
 .toast{position:fixed;z-index:60;left:50%;transform:translateX(-50%);bottom:calc(var(--nav-h) + 24px);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:14px;max-width:calc(100vw - 32px);display:none}
 .toast.show{display:block}
@@ -3169,12 +3172,12 @@ function productSheet(id) {
   const dis = edit ? '' : 'disabled';
   openSheet(`${sheetHead(existing ? esc(existing.name) : 'منتج جديد')}
     <form id="pForm" novalidate>
-      <div class="psec">الصور</div>
+      <div class="psec" style="--c:#7c5cff">الصور</div>
       <div class="field"><label>صور المنتج <span class="sub">حتى ${imgMaxFor(store())}، الأولى هي الغلاف · تُضغط تلقائياً</span></label>
         <div class="pimgs" id="pImgs"></div>
         ${edit ? `<label class="btn upload" id="pUpBtn" style="align-self:flex-start">${icon('camera')} إضافة صور<input type="file" id="pFile" accept="image/*" multiple aria-label="إضافة صور المنتج"></label>` : ''}
       </div>
-      <div class="psec">المعلومات</div>
+      <div class="psec" style="--c:#1f6b4f">المعلومات</div>
       <div class="field"><label for="pName">اسم المنتج</label><input class="input" id="pName" maxlength="80" value="${esc(p.name)}" ${dis}></div>
       <div class="grid2">
         <div class="field"><label for="pCat">التصنيف</label><input class="input" id="pCat" maxlength="40" list="cats" value="${esc(p.category)}" ${dis}>
@@ -3182,16 +3185,16 @@ function productSheet(id) {
         <div class="field"><label for="pLow">نبّهني عندما يصل المخزون إلى</label><input class="input num" id="pLow" inputmode="numeric" value="${p.low}" style="text-align:right" ${dis}></div>
       </div>
       <div class="field"><label for="pDesc">الوصف</label><textarea class="input" id="pDesc" maxlength="500" ${dis}>${esc(p.desc)}</textarea></div>
-      <div class="psec">الخيارات والأسعار</div>
+      <div class="psec" style="--c:#e08a00">الخيارات والأسعار</div>
       <div class="field"><label>الخيارات (لون، مقاس، حجم)</label>
         <div class="vrow head"><span>الخيار</span><span>سعر البيع</span><span>${showCost ? 'التكلفة' : ''}</span><span>المخزون</span><span></span></div>
         <div id="pVars"></div>
         ${edit ? '<button class="btn" type="button" id="pAddVar" style="margin-top:4px">+ خيار</button>' : ''}
       </div>
-      <div class="psec">الخصم</div>
-      <div class="field"><label for="pDisc">نسبة الخصم % <span class="sub">(0 = بدون خصم، والحد الأعلى 90)</span></label><input class="input num" id="pDisc" inputmode="numeric" value="${discOf(p)}" style="text-align:right" ${dis}><small class="sub" id="pDiscHint"></small></div>
+      <div class="psec" style="--c:#e0457b">الخصم</div>
+      <div class="field disc-box" id="pDiscBox"><label for="pDisc">نسبة الخصم % <span class="sub">(0 = بدون خصم، والحد الأعلى 90)</span></label><input class="input num" id="pDisc" inputmode="numeric" value="${discOf(p)}" style="text-align:right" ${dis}><small class="sub" id="pDiscHint"></small></div>
       <div class="field" id="pReasonWrap" hidden><label for="pReason">سبب تعديل المخزون</label><input class="input" id="pReason" maxlength="120" placeholder="مثال: جرد، تالف، استلام بضاعة"></div>
-      <div class="psec">الظهور</div>
+      <div class="psec" style="--c:#2a9d8f">الظهور</div>
       <label class="row" style="margin:6px 0 12px"><input type="checkbox" id="pActive" ${p.active ? 'checked' : ''} ${dis}> يظهر للزبائن في واجهة المتجر</label>
       <div id="pErr" class="err" hidden></div>
       ${edit ? `<button class="btn primary block" type="submit">${existing ? 'حفظ التغييرات' : 'إضافة المنتج'}</button>${existing ? '<button class="btn danger block" type="button" id="pDel" style="margin-top:8px">حذف المنتج</button>' : ''}` : '<p class="sub">عرض فقط: دورك لا يسمح بتعديل المنتجات.</p>'}
@@ -3202,7 +3205,9 @@ function productSheet(id) {
     const updDisc = () => {
       const d = discOf({ discount: sh.querySelector('#pDisc').value });
       const v0 = p.variants[0];
-      sh.querySelector('#pDiscHint').innerHTML = d && v0 && v0.price > 0 ? `بعد الخصم يصير سعر الخيار الأول ${money(Math.round(v0.price * (100 - d) / 100))}` : 'بدون خصم حالياً';
+      const on = !!(d && v0 && v0.price > 0);
+      sh.querySelector('#pDiscBox').classList.toggle('on', on);
+      sh.querySelector('#pDiscHint').innerHTML = on ? `بعد الخصم يصير سعر الخيار الأول <b>${money(Math.round(v0.price * (100 - d) / 100))}</b>` : 'بدون خصم حالياً';
     };
     sh.addEventListener('input', updDisc);
     updDisc();
