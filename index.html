@@ -621,6 +621,32 @@ body.signed-out #planBanner, body.admin-mode #planBanner{display:none}
 .disc-box{padding:12px;border-radius:14px;border:1px dashed var(--line-strong);transition:background .2s,border-color .2s}
 .disc-box.on{border:1px solid var(--good);background:color-mix(in srgb,var(--good) 10%,transparent)}
 .disc-box.on #pDisc{font-weight:700;color:var(--good)}
+.sup-btn{position:fixed;inset-inline-end:16px;bottom:calc(16px + env(safe-area-inset-bottom));z-index:14;display:flex;align-items:center;gap:6px;border:0;border-radius:999px;padding:10px 16px;background:var(--brand);color:#fff;font:inherit;font-weight:600;cursor:pointer;box-shadow:0 6px 20px color-mix(in srgb,var(--brand) 35%,transparent)}
+.sup-btn svg{width:20px;height:20px}
+body:not(.signed-out):not(.admin-mode) .sup-btn{bottom:calc(var(--nav-h) + 16px + env(safe-area-inset-bottom))}
+@media (min-width:920px){body:not(.signed-out) .sup-btn{bottom:24px}}
+body:has(#storefront.open) .sup-btn, body:has(#storefront.open) .sup-panel{display:none}
+.sup-panel{position:fixed;inset-inline-end:12px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:55;width:min(380px,calc(100vw - 24px));height:min(560px,calc(100dvh - 90px));display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--line);border-radius:18px;box-shadow:0 18px 50px rgba(0,0,0,.22);overflow:hidden}
+.sup-panel[hidden]{display:none}
+.sup-head{display:flex;align-items:center;gap:8px;padding:12px 14px;background:var(--brand);color:#fff}
+.sup-head .sub{color:inherit;opacity:.85;font-size:12px;flex:1}
+.sup-x{background:transparent;border:0;color:inherit;font-size:24px;line-height:1;cursor:pointer;padding:0 4px}
+.sup-msgs{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:8px;background:var(--bg)}
+.sup-row{display:flex}
+.sup-row.me{justify-content:flex-start}
+.sup-row.bot{justify-content:flex-end}
+.sup-bub{max-width:85%;padding:9px 12px;border-radius:14px;white-space:pre-wrap;line-height:1.7;font-size:14px;word-break:break-word}
+.sup-row.me .sup-bub{background:var(--brand);color:#fff}
+.sup-row.bot .sup-bub{background:var(--surface);border:1px solid var(--line);color:var(--ink)}
+.sup-bub.pend{color:var(--muted)}
+.sup-bub.err{color:var(--bad)}
+.sup-chips{display:flex;flex-wrap:wrap;gap:6px}
+.sup-chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 12px;font:inherit;font-size:13px;color:var(--ink);cursor:pointer}
+.sup-form{display:flex;gap:8px;padding:10px;border-top:1px solid var(--line);align-items:flex-end;background:var(--surface)}
+.sup-form textarea{flex:1;resize:none;border:1px solid var(--line);border-radius:12px;padding:9px 10px;font:inherit;background:var(--bg);color:var(--ink);max-height:100px}
+.sup-wa{padding:0 10px 10px;text-align:center;font-size:12.5px;background:var(--surface)}
+.sup-wa a{color:var(--good);text-decoration:none}
+.sup-wa svg{width:14px;height:14px;vertical-align:middle}
 /* Toast */
 .toast{position:fixed;z-index:60;left:50%;transform:translateX(-50%);bottom:calc(var(--nav-h) + 24px);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:14px;max-width:calc(100vw - 32px);display:none}
 .toast.show{display:block}
@@ -4197,6 +4223,66 @@ setInterval(() => {
 sb.auth.onAuthStateChange((event) => {
   if (event === 'SIGNED_OUT' && state.session) { state = freshState(); loadUI(); renderAuth(); }
 });
+/* ---- Support chat, before and after sign-in. Answered by Gemini through the rawaj-support function. ---- */
+const SUP_SUGGEST = ['ما وصلني رمز التأكيد', 'نسيت كلمة المرور', 'شلون أضيف منتج؟', 'شنو أسعار الاشتراكات؟'];
+let supMsgs = [];
+let supBusy = false;
+function supDraw() {
+  const box = $('#supMsgs');
+  box.innerHTML = '<div class="sup-row bot"><div class="sup-bub">هلا بيك 👋 أنا دعم رواج. اسألني عن تسجيل الدخول، رمز التأكيد، كلمة المرور، أو أي شي بالمنصة.</div></div>'
+    + (supMsgs.length ? '' : `<div class="sup-chips">${SUP_SUGGEST.map((q) => `<button type="button" class="sup-chip" data-sup="${esc(q)}">${esc(q)}</button>`).join('')}</div>`)
+    + supMsgs.map((m) => `<div class="sup-row ${m.role === 'user' ? 'me' : 'bot'}"><div class="sup-bub${m.err ? ' err' : ''}${m.pend ? ' pend' : ''}">${esc(m.text)}</div></div>`).join('');
+  box.scrollTop = box.scrollHeight;
+}
+async function supAsk(q) {
+  q = String(q || '').trim().slice(0, 500);
+  if (!q || supBusy) return;
+  supBusy = true;
+  $('#supQ').value = '';
+  $('#supSend').disabled = true;
+  const history = supMsgs.filter((m) => !m.pend && !m.err).slice(-7).map((m) => ({ role: m.role, text: m.text }));
+  history.push({ role: 'user', text: q });
+  supMsgs.push({ role: 'user', text: q });
+  const pend = { role: 'model', text: 'يكتب…', pend: true };
+  supMsgs.push(pend);
+  supDraw();
+  try {
+    const sess = await sb.auth.getSession().catch(() => ({ data: null }));
+    const tok = sess.data && sess.data.session && sess.data.session.access_token;
+    const r = await fetch(`${SUPA_URL}/functions/v1/rawaj-support`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', apikey: SUPA_KEY, Authorization: `Bearer ${tok || SUPA_KEY}` },
+      body: JSON.stringify({ messages: history, signedIn: !!tok }),
+    });
+    const out = await r.json().catch(() => ({}));
+    pend.pend = false;
+    if (r.ok && out.answer) pend.text = out.answer;
+    else { pend.err = true; pend.text = r.status === 429 ? 'وصلت الحد اليومي للأسئلة. راسلنا على واتساب ونساعدك.' : 'ما قدرت أجاوب هسه. جرّب بعد شوية أو راسلنا على واتساب.'; }
+  } catch (e) {
+    pend.pend = false; pend.err = true; pend.text = 'تعذّر الاتصال، تحقق من الإنترنت وجرّب مرة ثانية.';
+  }
+  supBusy = false;
+  $('#supSend').disabled = false;
+  supDraw();
+}
+(function supInit() {
+  const b = document.createElement('button');
+  b.type = 'button'; b.id = 'supBtn'; b.className = 'sup-btn';
+  b.innerHTML = `${icon('chat')}<span>الدعم</span>`;
+  const p = document.createElement('div');
+  p.id = 'supPanel'; p.className = 'sup-panel'; p.hidden = true;
+  p.setAttribute('role', 'dialog'); p.setAttribute('aria-label', 'دعم رواج');
+  p.innerHTML = `<div class="sup-head"><b>دعم رواج</b><span class="sub">نجاوبك بالحال</span><button type="button" class="sup-x" id="supClose" aria-label="إغلاق">×</button></div>
+    <div class="sup-msgs" id="supMsgs"></div>
+    <form class="sup-form" id="supForm" novalidate><textarea id="supQ" rows="1" maxlength="500" placeholder="اكتب مشكلتك أو سؤالك…" aria-label="سؤالك للدعم"></textarea><button class="btn primary" type="submit" id="supSend">إرسال</button></form>
+    <div class="sup-wa"><a href="https://wa.me/964${ADMIN_PHONE.slice(1)}" target="_blank" rel="noopener">${icon('chat')} تواصل معنا على واتساب</a></div>`;
+  document.body.append(b, p);
+  b.addEventListener('click', () => { p.hidden = !p.hidden; if (!p.hidden) { supDraw(); setTimeout(() => $('#supQ').focus(), 30); } });
+  $('#supClose').addEventListener('click', () => { p.hidden = true; });
+  $('#supForm').addEventListener('submit', (e) => { e.preventDefault(); supAsk($('#supQ').value); });
+  $('#supQ').addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); supAsk($('#supQ').value); } });
+  $('#supMsgs').addEventListener('click', (e) => { const c = e.target.closest('[data-sup]'); if (c) supAsk(c.dataset.sup); });
+})();
 (async function boot() {
   loadUI();
   renderLoading();
@@ -4223,6 +4309,8 @@ sb.auth.onAuthStateChange((event) => {
     "رمز التأكيد": "Verification code", "تأكيد الحساب": "Confirm account", "إعادة إرسال الرمز": "Resend code", "أرسل رمز التأكيد": "Send verification code",
     "اكتب الرمز كاملاً": "Enter the full code", "أرسلنا رمزاً جديداً": "We sent a new code", "جارِ التأكيد…": "Confirming…", "أرسلنا رمز تأكيد إلى": "We sent a verification code to",
     "الرمز غير صحيح أو انتهت صلاحيته. اطلب رمزاً جديداً": "The code is wrong or expired. Request a new one",
+    "الدعم": "Support", "دعم رواج": "Rawaj support", "نجاوبك بالحال": "We reply right away", "اكتب مشكلتك أو سؤالك…": "Describe your problem or question…",
+    "تواصل معنا على واتساب": "Contact us on WhatsApp", "ما وصلني رمز التأكيد": "I didn't get the code", "شلون أضيف منتج؟": "How do I add a product?", "شنو أسعار الاشتراكات؟": "What are the plan prices?",
     "الخصومات": "Discounts", "نسبة الخصم %": "Discount %", "(0 = بدون خصم، والحد الأعلى 90)": "(0 = no discount, max 90)",
     "حذف الاشتراك المفعّل": "Delete active subscription", "حذف الاشتراك": "Delete subscription", "تم حذف الاشتراك المفعّل": "Active subscription deleted",
     "ينتهي اشتراك المتجر الحين، ويرجع لحالة \"منتهي\" لحد ما تفعّل اشتراك جديد. لا تُحذف أي بيانات.": "The store's subscription ends now and goes back to expired until you activate a new one. No data is deleted.",
