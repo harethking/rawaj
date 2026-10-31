@@ -1520,7 +1520,8 @@ function render() {
   const changed = v.dataset.view !== state.view;
   v.innerHTML = views[state.view]();
   v.dataset.view = state.view;
-  if (state.view === 'settings') fillReferrals(s0).catch(() => {});
+  if (state.view === 'settings') { fillReferrals(s0).catch(() => {}); fillWaseet(s0).catch(() => {}); }
+  if (state.view === 'orders') wsAutoSync(s0).catch(() => {});
   if (changed) { v.classList.remove('enter'); void v.offsetWidth; v.classList.add('enter'); }
   const fab = $('.fab');
   if (fab) fab.blur();
@@ -3094,6 +3095,9 @@ function viewSettings() {
     <button class="btn primary block" type="submit">حفظ التغييرات</button>
   </form>
 
+  <h2>شركة التوصيل</h2>
+  <div class="panel" id="wsBox"><span class="sub">جارِ التحميل…</span></div>
+
   <h2>كلمة المرور</h2>
   <form class="panel" id="chgPwForm" novalidate>
     <div class="field"><label for="cNew">كلمة المرور الجديدة</label><input class="input" id="cNew" type="password" autocomplete="new-password" dir="ltr" style="text-align:left"></div>
@@ -3155,6 +3159,7 @@ function orderSheet(id) {
       <button class="btn" type="button" data-act="copy-order">${icon('copy')} نسخ للواتساب</button>
       <button class="btn" type="button" data-act="print-order">${icon('print')} طباعة الفاتورة</button>
     </div>
+    <div id="wsOrder"></div>
     <h2 style="margin-top:20px">سجل الطلب</h2>
     <ol class="timeline">${o.history.slice().reverse().map((h) => `<li style="--c:${STATUS[h.to].c}">${STATUS[h.to].l}<small>${dateText(h.at)} ${new Date(h.at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })} · ${esc(h.by || '')}</small></li>`).join('')}</ol>
     <p class="sub">المصدر: ${o.source === 'storefront' ? 'واجهة المتجر' : 'إدخال يدوي'}</p>`,
@@ -3178,6 +3183,7 @@ function orderSheet(id) {
       toast((await copyText(txt)) ? 'نُسخت تفاصيل الطلب' : 'تعذّر النسخ، انسخ يدوياً', false);
     });
     sh.querySelector('[data-act="print-order"]').addEventListener('click', () => printOrder(o));
+    fillWsOrder(o, id).catch(() => {});
   });
 }
 
@@ -3955,9 +3961,256 @@ function sfTrackSheet() {
         <div class="sub" style="margin:4px 0 8px">${hint}</div>
         ${(data.items || []).map((i) => `<div class="tot"><span class="trunc">${esc(i.name)} × <span class="num">${Number(i.qty)}</span></span><span>${money(Number(i.price) * Number(i.qty))}</span></div>`).join('')}
         <div class="tot grand"><span>المجموع</span><span>${money(total)}</span></div></div>`;
+      if (st === 'shipped') sfWaseetLine(s.slug, no, phone, out);
     });
     if (last.no) sh.querySelector('#trForm').requestSubmit();
   });
+}
+
+/* ---------------- Al-Waseet delivery (edge function "waseet") ----------------
+   The owner connects their Al-Waseet merchant account in settings; confirmed orders can then be sent
+   to Al-Waseet and their delivery status is tracked here and on the customer's "track your order" page. */
+const WS = { status: {}, cities: null, sizes: null, regions: {}, synced: {} };
+const WS_SEND_FROM = new Set(['confirmed', 'preparing']);
+const WS_ALIAS = { 'نينوى': 'موصل', 'الأنبار': 'انبار', 'القادسية': 'ديوانيه', 'ذي قار': 'ناصريه', 'المثنى': 'سماوه', 'ميسان': 'عماره', 'بابل': 'حله', 'واسط': 'كوت', 'صلاح الدين': 'صلاح' };
+const wsArr = (d) => (Array.isArray(d) ? d : d && typeof d === 'object' ? Object.values(d) : []);
+const wsLabel = (x) => String(x.city_name || x.region_name || x.size || x.name || x.title || x.id);
+const wsRef = (o) => String(o.waseet.qrId || o.waseet.id || '');
+const wsSafeUrl = (u) => (/^https:\/\//i.test(String(u || '')) ? String(u) : '');
+const wsNorm = (t) => String(t || '').replace(/[أإآ]/g, 'ا').replace(/ة/g, 'ه').replace(/ى/g, 'ي').replace(/(^|\s)ال/g, '$1').replace(/\s+/g, '');
+function wsNameMatch(name, city) {
+  const a = wsNorm(name), b = wsNorm(city);
+  if (!a || !b) return false;
+  if (a === b || a.includes(b) || b.includes(a)) return true;
+  return !!WS_ALIAS[city] && a.includes(wsNorm(WS_ALIAS[city]));
+}
+async function wsCall(action, payload) {
+  const s = store();
+  const { data: ss } = await sb.auth.getSession();
+  const tok = ss && ss.session ? ss.session.access_token : '';
+  const body = Object.assign({ action }, payload || {});
+  if (s && state.adminAs) body.store_id = s.id;
+  let r;
+  try {
+    r = await fetch(`${SUPA_URL}/functions/v1/waseet`, { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: SUPA_KEY, Authorization: `Bearer ${tok || SUPA_KEY}` }, body: JSON.stringify(body) });
+  } catch (e) { return { ok: false, msg: 'تعذّر الاتصال، تحقق من الإنترنت' }; }
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok && !j.msg) j.msg = 'تعذّر الاتصال بخدمة التوصيل';
+  return j;
+}
+async function wsStatus(s) {
+  if (WS.status[s.id]) return WS.status[s.id];
+  const j = await wsCall('status');
+  if (typeof j.connected === 'boolean') WS.status[s.id] = j;
+  return j;
+}
+function wsReset(s) { WS.status[s.id] = null; WS.cities = null; WS.sizes = null; WS.regions = {}; }
+
+async function fillWaseet(s) {
+  if (!$('#wsBox')) return;
+  const st = await wsStatus(s);
+  const b = $('#wsBox');
+  if (!b || store() !== s) return;
+  if (st.connected) {
+    b.innerHTML = `<div class="spread"><div><b>${icon('truck')} حساب الوسيط مربوط</b><div class="sub">الحساب: <span dir="ltr">${esc(st.username || '')}</span>. افتح أي طلب مؤكد واضغط «إرسال لشركة الوسيط».</div></div>
+      <button class="btn danger" type="button" id="wsOff">فصل</button></div>`;
+    b.querySelector('#wsOff').addEventListener('click', async () => {
+      const ok = await confirmSheet('فصل حساب الوسيط', 'الطلبات المرسلة تبقى، بس تتبعها ما يتحدث لحد ما تربط الحساب مرة ثانية.', 'فصل', true);
+      if (!ok) return;
+      const j = await wsCall('disconnect');
+      if (!j.ok) { toast(j.msg || 'تعذّر الفصل', true); return; }
+      wsReset(s); render(); toast('فُصل حساب الوسيط');
+    });
+    return;
+  }
+  if (st.connected !== false) { b.innerHTML = `<span class="sub">${esc(st.msg || 'تعذّر تحميل حالة الربط')}</span>`; return; }
+  b.innerHTML = `<form id="wsForm" novalidate>
+    <p class="sub" style="margin-top:0">اربط حساب التاجر مالتك بشركة <b>الوسيط</b> حتى ترسل الطلبات إلها مباشرة وتتابع حالتها، وزبونك يشوف حالة التوصيل من صفحة «تتبّع طلبك».</p>
+    <div class="grid2">
+      <div class="field"><label for="wsUser">اسم المستخدم بالوسيط</label><input class="input" id="wsUser" dir="ltr" style="text-align:left" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="100"></div>
+      <div class="field"><label for="wsPass">كلمة المرور</label><input class="input" id="wsPass" type="password" dir="ltr" style="text-align:left" autocomplete="off" maxlength="200"></div>
+    </div>
+    <small class="sub">كلمة المرور تنحفظ مشفّرة بالسيرفر وما تظهر لأي أحد.</small>
+    <div id="wsErr" class="err" hidden></div>
+    <button class="btn primary block" type="submit" id="wsBtn" style="margin-top:10px">${icon('link')} ربط الحساب</button>
+  </form>`;
+  b.querySelector('#wsForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const err = b.querySelector('#wsErr'), btn = b.querySelector('#wsBtn');
+    const username = b.querySelector('#wsUser').value.trim(), password = b.querySelector('#wsPass').value;
+    err.hidden = true;
+    if (!username || !password) { err.textContent = 'اكتب اسم المستخدم وكلمة المرور'; err.hidden = false; return; }
+    btn.disabled = true; btn.textContent = 'جارِ الربط…';
+    const j = await wsCall('connect', { username, password });
+    btn.disabled = false; btn.innerHTML = `${icon('link')} ربط الحساب`;
+    if (!j.ok) { err.textContent = j.msg || 'تعذّر الربط'; err.hidden = false; return; }
+    wsReset(s);
+    WS.status[s.id] = { connected: true, username: j.username };
+    render(); toast('تم ربط حساب الوسيط');
+  });
+}
+
+// Pulls the latest Al-Waseet status for the given orders (25 per request). Returns how many changed, -1 on error.
+async function wsSync(s, list, force) {
+  const now = Date.now();
+  const todo = list.filter((o) => o.waseet && wsRef(o) && (force || ((!o.waseet.checkedAt || now - o.waseet.checkedAt > 10 * 60e3) && o.status === 'shipped')));
+  if (!todo.length) return 0;
+  let changed = 0;
+  for (let i = 0; i < todo.length; i += 25) {
+    const chunk = todo.slice(i, i + 25);
+    const j = await wsCall('track', { ids: chunk.map(wsRef) });
+    if (!j.ok) { if (changed) save(); return changed || -1; }
+    for (const o of chunk) {
+      const ref = wsRef(o);
+      const it = (j.data || []).find((x) => x.qr_id === ref || x.id === ref);
+      o.waseet.checkedAt = now;
+      if (!it) continue;
+      if (it.status !== o.waseet.status || (it.notes || '') !== (o.waseet.notes || '')) {
+        o.waseet.status = it.status || ''; o.waseet.statusId = it.status_id; o.waseet.notes = it.notes || ''; changed++;
+      }
+      if (o.status === 'shipped' && can('orders.write') && /تم\s*(ال)?تسليم/.test(it.status || '') && changeStatus(o, 'delivered')) changed++;
+    }
+  }
+  save();
+  return changed;
+}
+async function wsAutoSync(s) {
+  if (WS.synced[s.id] && Date.now() - WS.synced[s.id] < 5 * 60e3) return;
+  const list = s.orders.filter((o) => o.waseet && o.status === 'shipped');
+  if (!list.length) return;
+  WS.synced[s.id] = Date.now();
+  const n = await wsSync(s, list, false);
+  if (n > 0 && store() === s && state.view === 'orders' && !$('#sheet').classList.contains('open')) { render(); toast(`تحدّثت حالة ${n} طلب من الوسيط`); }
+}
+
+async function fillWsOrder(o, id) {
+  const box = $('#wsOrder');
+  if (!box) return;
+  const s = store();
+  if (o.waseet) {
+    const w = o.waseet, link = wsSafeUrl(w.link);
+    box.innerHTML = `<div class="panel" style="margin-top:12px">
+      <div class="spread"><b>${icon('truck')} الوسيط <span class="num">#${esc(wsRef(o))}</span></b><button class="btn" type="button" id="wsRefresh" style="min-height:34px;padding:4px 12px">تحديث</button></div>
+      <div style="margin-top:6px">${w.status ? esc(w.status) : '<span class="sub">ما وصلت حالة بعد</span>'}</div>
+      ${w.notes ? `<div class="sub">ملاحظة الوسيط: ${esc(w.notes)}</div>` : ''}
+      ${w.checkedAt ? `<div class="sub">آخر تحديث: ${ago(w.checkedAt)}</div>` : ''}
+      ${link ? `<a class="btn" style="margin-top:8px" href="${esc(link)}" target="_blank" rel="noopener">${icon('print')} وصل الوسيط</a>` : ''}
+    </div>`;
+    box.querySelector('#wsRefresh').addEventListener('click', async (e) => {
+      const btn = e.currentTarget;
+      btn.disabled = true; btn.textContent = 'جارِ التحديث…';
+      const n = await wsSync(s, [o], true);
+      if (n < 0) { toast('تعذّر تحديث الحالة، حاول مرة ثانية', true); btn.disabled = false; btn.textContent = 'تحديث'; return; }
+      render(); orderSheet(id);
+    });
+    return;
+  }
+  if (!can('orders.write') || !WS_SEND_FROM.has(o.status)) return;
+  const st = await wsStatus(s);
+  const b = $('#wsOrder');
+  if (!b || !st.connected) return;
+  b.innerHTML = `<div class="actions"><button class="btn primary" type="button" id="wsSend">${icon('truck')} إرسال لشركة الوسيط</button></div>`;
+  b.querySelector('#wsSend').addEventListener('click', () => wsSendSheet(id));
+}
+
+async function wsSendSheet(id) {
+  const s = store();
+  const o = s.orders.find((x) => x.id === id);
+  if (!o) return;
+  openSheet(`${sheetHead(`إرسال طلب <span class="num">#${o.no}</span> للوسيط`)}<div id="wsSendBody"><p class="sub">جارِ تحميل المحافظات…</p></div>`);
+  const [c, z] = await Promise.all([WS.cities ? { ok: true, data: WS.cities } : wsCall('cities'), WS.sizes ? { ok: true, data: WS.sizes } : wsCall('sizes')]);
+  const body = $('#wsSendBody');
+  if (!body) return;
+  if (!c.ok || !z.ok) { body.innerHTML = `<div class="err">${esc(c.msg || z.msg || 'تعذّر التحميل')}</div>`; return; }
+  WS.cities = wsArr(c.data); WS.sizes = wsArr(z.data);
+  const guess = WS.cities.find((x) => wsNameMatch(wsLabel(x), o.customer.city));
+  const qty = o.items.reduce((t, it) => t + it.qty, 0);
+  const type = o.items.map((it) => it.name).join('، ').slice(0, 100);
+  const num = 'class="input num" inputmode="numeric" style="text-align:right"';
+  body.innerHTML = `<form id="wsSendForm" novalidate>
+    <div class="grid2">
+      <div class="field"><label for="wsCity">المحافظة</label><select class="input" id="wsCity"><option value="">اختر</option>${WS.cities.map((x) => `<option value="${esc(x.id)}"${guess && guess.id === x.id ? ' selected' : ''}>${esc(wsLabel(x))}</option>`).join('')}</select></div>
+      <div class="field"><label for="wsRegion">المنطقة</label><select class="input" id="wsRegion" disabled><option value="">اختر المحافظة أولاً</option></select></div>
+    </div>
+    <div class="field"><label for="wsLoc">العنوان</label><input class="input" id="wsLoc" maxlength="250" value="${esc(o.customer.address)}"></div>
+    <div class="grid2">
+      <div class="field"><label for="wsName">اسم الزبون</label><input class="input" id="wsName" maxlength="60" value="${esc(o.customer.name)}"></div>
+      <div class="field"><label for="wsPhone">هاتف الزبون</label><input class="input num" id="wsPhone" inputmode="tel" style="text-align:right" value="${esc(normPhone(o.customer.phone))}"></div>
+    </div>
+    <div class="field"><label for="wsType">نوع البضاعة</label><input class="input" id="wsType" maxlength="100" value="${esc(type)}"></div>
+    <div class="grid2">
+      <div class="field"><label for="wsQty">عدد القطع</label><input ${num} id="wsQty" value="${qty}"></div>
+      <div class="field"><label for="wsPrice">المبلغ الكلي مع التوصيل</label><input ${num} id="wsPrice" value="${orderTotal(o)}"></div>
+    </div>
+    <div class="field"><label for="wsSize">حجم الطرد</label><select class="input" id="wsSize">${WS.sizes.map((x) => `<option value="${esc(x.id)}">${esc(wsLabel(x))}</option>`).join('')}</select></div>
+    <div class="field"><label for="wsNote">ملاحظة للمندوب (اختياري)</label><input class="input" id="wsNote" maxlength="300" value="${esc(o.note || '')}"></div>
+    <label class="row" style="gap:8px;margin:4px 0 10px"><input type="checkbox" id="wsRepl"> طلب استبدال</label>
+    <div id="wsSendErr" class="err" hidden></div>
+    <button class="btn primary block" type="submit" id="wsSendBtn">${icon('truck')} إرسال الطلب</button>
+  </form>`;
+  const citySel = body.querySelector('#wsCity'), regSel = body.querySelector('#wsRegion');
+  async function loadRegions() {
+    const cid = citySel.value;
+    regSel.disabled = true;
+    if (!cid) { regSel.innerHTML = '<option value="">اختر المحافظة أولاً</option>'; return; }
+    regSel.innerHTML = '<option value="">جارِ التحميل…</option>';
+    let list = WS.regions[cid];
+    if (!list) {
+      const r = await wsCall('regions', { city_id: Number(cid) });
+      if (!r.ok) { if (citySel.value === cid) regSel.innerHTML = `<option value="">${esc(r.msg || 'تعذّر التحميل')}</option>`; return; }
+      list = WS.regions[cid] = wsArr(r.data);
+    }
+    if (citySel.value !== cid) return;
+    regSel.innerHTML = `<option value="">اختر</option>${list.map((x) => `<option value="${esc(x.id)}">${esc(wsLabel(x))}</option>`).join('')}`;
+    regSel.disabled = false;
+  }
+  citySel.addEventListener('change', loadRegions);
+  if (citySel.value) loadRegions();
+  body.querySelector('#wsSendForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const err = body.querySelector('#wsSendErr'), btn = body.querySelector('#wsSendBtn');
+    const v = (k) => body.querySelector(k).value.trim();
+    const show = (t) => { err.textContent = t; err.hidden = false; };
+    const phone = normPhone(v('#wsPhone'));
+    const qtyN = parseInt(v('#wsQty'), 10), price = parseInt(v('#wsPrice').replace(/[^0-9]/g, ''), 10);
+    err.hidden = true;
+    const cur = store().orders.find((x) => x.id === id);
+    if (!cur) return show('الطلب غير موجود');
+    if (cur.waseet) return show('هذا الطلب مرسل للوسيط من قبل');
+    if (!v('#wsCity') || !v('#wsRegion')) return show('اختر المحافظة والمنطقة');
+    if (!validPhone(phone)) return show('رقم الهاتف لازم يكون 07XXXXXXXXX');
+    if (v('#wsLoc').length < 3) return show('اكتب العنوان');
+    if (!(qtyN >= 1)) return show('عدد القطع غير صحيح');
+    if (!(price >= 0)) return show('المبلغ غير صحيح');
+    btn.disabled = true; btn.textContent = 'جارِ الإرسال…';
+    const j = await wsCall('create', { order: {
+      client_name: v('#wsName'), client_mobile: '+964' + phone.slice(1), city_id: Number(v('#wsCity')), region_id: Number(v('#wsRegion')),
+      location: v('#wsLoc'), type_name: v('#wsType'), items_number: qtyN, price, package_size: Number(v('#wsSize')),
+      merchant_notes: v('#wsNote'), replacement: body.querySelector('#wsRepl').checked ? 1 : 0,
+    } });
+    if (!j.ok || !j.order) { btn.disabled = false; btn.innerHTML = `${icon('truck')} إرسال الطلب`; return show(j.msg || 'تعذّر الإرسال'); }
+    const o2 = store().orders.find((x) => x.id === id) || cur;
+    o2.waseet = { id: j.order.id, qrId: j.order.qr_id || j.order.id, link: j.order.qr_link || '', status: j.order.status || '', notes: '', sentAt: Date.now(), checkedAt: Date.now() };
+    if (o2.status === 'confirmed') changeStatus(o2, 'preparing');
+    if (o2.status === 'preparing') changeStatus(o2, 'shipped');
+    save(); render(); orderSheet(id);
+    toast(`أُرسل الطلب #${o2.no} للوسيط`);
+  });
+}
+
+// Customer side: live Al-Waseet status under the order on the "track your order" sheet.
+async function sfWaseetLine(slug, no, phone, out) {
+  const box = out.querySelector('.sum-box');
+  if (!box) return;
+  const line = document.createElement('div');
+  line.className = 'sub'; line.style.margin = '0 0 8px'; line.textContent = 'جارِ جلب حالة شركة التوصيل…';
+  box.insertBefore(line, box.children[2] || null);
+  try {
+    const r = await fetch(`${SUPA_URL}/functions/v1/waseet`, { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: SUPA_KEY, Authorization: `Bearer ${SUPA_KEY}` }, body: JSON.stringify({ action: 'public_track', slug, no, phone }) });
+    const j = await r.json().catch(() => ({}));
+    if (j.waseet && j.waseet.status) line.innerHTML = `${icon('truck')} شركة التوصيل: <b>${esc(j.waseet.status)}</b>`;
+    else line.remove();
+  } catch (e) { line.remove(); }
 }
 
 /* ---------------- events ---------------- */
