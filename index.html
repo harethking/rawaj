@@ -674,6 +674,7 @@ body:has(#storefront.open) .sup-btn, body:has(#storefront.open) .sup-panel{displ
   </div>
   <select class="role-pick" id="roleSelect" aria-label="تجربة الصلاحيات">
     <option value="owner">المالك</option>
+    <option value="manager">مدير</option>
     <option value="orders">موظف طلبات</option>
     <option value="inventory">موظف مخزون</option>
   </select>
@@ -747,6 +748,7 @@ const STOCK_OUT = new Set(['confirmed', 'preparing', 'shipped', 'delivered']); /
 
 const ROLES = {
   owner:     { l: 'المالك',      p: ['home', 'orders', 'orders.write', 'products', 'products.write', 'cost', 'warehouse', 'customers', 'reports', 'settings', 'feature', 'coupons', 'ai'] },
+  manager:   { l: 'مدير',        p: ['home', 'orders', 'orders.write', 'products', 'products.write', 'cost', 'warehouse', 'customers', 'reports', 'feature', 'coupons'] },
   orders:    { l: 'موظف طلبات',  p: ['home', 'orders', 'orders.write', 'products', 'customers', 'feature'] },
   inventory: { l: 'موظف مخزون',  p: ['home', 'orders', 'products', 'products.write', 'cost', 'warehouse', 'feature'] },
 };
@@ -1225,6 +1227,13 @@ async function loadAccount(user) {
   const { data: mine, error } = await sb.from('stores').select('*').eq('owner_id', user.id).maybeSingle();
   if (error) throw error;
   if (mine) { const s = fromRow(mine); state.stores.push(s); me.storeId = s.id; }
+  else if (!me.isAdmin) {
+    const { data: mem } = await sb.from('store_members').select('store_id,role').eq('user_id', user.id).maybeSingle();
+    if (mem) {
+      const { data: row } = await sb.from('stores').select('*').eq('id', mem.store_id).maybeSingle();
+      if (row) { const s = fromRow(row); state.stores.push(s); me.storeId = s.id; me.staffRole = ROLES[mem.role] && mem.role !== 'owner' ? mem.role : 'orders'; }
+    }
+  }
   if (me.isAdmin) await loadAdminData();
 }
 async function loadAdminData() {
@@ -1271,7 +1280,8 @@ const store = () => {
   if (u.isAdmin) return state.adminAs ? state.stores.find((s) => s.id === state.adminAs) || null : null;
   return state.stores.find((s) => s.id === u.storeId) || null;
 };
-const can = (perm) => ROLES[state.role].p.includes(perm);
+const isStaff = () => { const u = currentUser(); return !!(u && u.staffRole && !state.adminAs); };
+const can = (perm) => ROLES[state.role].p.includes(perm) || (perm === 'settings' && isStaff());
 const findVariant = (s, vid) => { for (const p of s.products) { const v = p.variants.find((x) => x.id === vid); if (v) return { p, v }; } return null; };
 const orderSubtotal = (o) => o.items.reduce((t, it) => t + it.price * it.qty, 0);
 const orderTotal = (o) => Math.max(0, orderSubtotal(o) - (o.discount || 0)) + (o.delivery || 0);
@@ -1483,6 +1493,7 @@ function renderChrome() {
   $('#storeName').textContent = s.name;
   $('#storeSub').textContent = `${currentUser().name} · ${ROLES[state.role].l}`;
   $('#roleSelect').value = state.role;
+  $('#roleSelect').hidden = isStaff();
   const allowed = NAV.filter((n) => can(n.id));
   const btn = (n) => `<button type="button" data-nav="${esc(n.id)}" ${state.view === n.id ? 'aria-current="page"' : ''}>${icon(n.id)}<span>${n.l}</span>${n.pro ? `<i class="pro-tag">${n.tag || 'برو'}</i>` : ''}</button>`;
   $('#sideNav').innerHTML = allowed.map(btn).join('');
@@ -1494,6 +1505,8 @@ function renderChrome() {
 function render() {
   const u = currentUser();
   if (!u) { renderAuth(); return; }
+  if (pendingJoin() && !u.isAdmin && !joinTried) applyPendingJoin().catch(() => {});
+  if (u.staffRole) state.role = u.staffRole;
   if (u.isAdmin && !store()) { state.adminAs = null; renderAdmin(); return; }
   const s0 = store();
   if (!s0) { renderNoStore(); return; }
@@ -1520,7 +1533,7 @@ function render() {
   const changed = v.dataset.view !== state.view;
   v.innerHTML = views[state.view]();
   v.dataset.view = state.view;
-  if (state.view === 'settings') { fillReferrals(s0).catch(() => {}); fillWaseet(s0).catch(() => {}); }
+  if (state.view === 'settings' && !isStaff()) { fillReferrals(s0).catch(() => {}); fillWaseet(s0).catch(() => {}); fillStaff(s0).catch(() => {}); }
   if (state.view === 'orders') wsAutoSync(s0).catch(() => {});
   if (changed) { v.classList.remove('enter'); void v.offsetWidth; v.classList.add('enter'); }
   const fab = $('.fab');
@@ -1543,6 +1556,13 @@ function pendingRef() { try { const r = localStorage.getItem('rawaj-ref'); retur
 (function captureRef() {
   const r = (new URLSearchParams(location.search).get('ref') || '').toLowerCase();
   if (REF_RE.test(r)) { try { localStorage.setItem('rawaj-ref', r); } catch (e) { /* ignore */ } authTab = 'register'; }
+})();
+const JOIN_RE = /^[a-z0-9]{16}$/;
+let joinStoreName = '';
+function pendingJoin() { try { const t = localStorage.getItem('rawaj-join'); return t && JOIN_RE.test(t) ? t : null; } catch (e) { return null; } }
+(function captureJoin() {
+  const t = (new URLSearchParams(location.search).get('join') || '').toLowerCase();
+  if (JOIN_RE.test(t)) { try { localStorage.setItem('rawaj-join', t); } catch (e) { /* ignore */ } authTab = 'register'; }
 })();
 const REF_ERRORS = { BAD_SOCIAL: 'رابط الصفحة غير صحيح. ضع رابط صفحتك على انستغرام أو فيسبوك أو تيك توك', SOCIAL_USED: 'هذه الصفحة مسجّلة لمتجر آخر', BAD_REF: 'رابط الدعوة غير صالح', ALREADY_SET: 'الدعوة مسجّلة من قبل', TOO_LATE: 'انتهت مدة تسجيل الدعوة' };
 async function applyPendingReferral() {
@@ -1568,6 +1588,7 @@ function renderAuth() {
   $('#adminBanner').classList.remove('on');
   closeSheet();
   const reg = authTab === 'register';
+  const joining = !!pendingJoin();
   $('#auth').innerHTML = `
   <div class="auth"><div class="auth-box">
     <div class="auth-brand">${LOGO_SVG(52)}<div><h1 class="rawaj-name">رواج</h1><p>متجرك وطلباته وحساباته… في جيبك</p></div></div>
@@ -1576,22 +1597,23 @@ function renderAuth() {
       <li>الطلبات والمخزن والموردون في مكان واحد</li>
       <li>تعرف ربحك الحقيقي كل يوم</li>
     </ul>
+    ${joining ? `<div class="hint" style="margin:0 0 12px">${icon('customers')} دعوة للانضمام كموظف بمتجر <b class="join-store-name">${esc(joinStoreName)}</b>. سوّ حساب جديد، أو سجّل دخول إذا عندك حساب، وتدخل على المتجر مباشرة.</div>` : ''}
     <div class="tabs" role="tablist">
       <button type="button" role="tab" data-tab="login" aria-selected="${!reg}">تسجيل الدخول</button>
-      <button type="button" role="tab" data-tab="register" aria-selected="${reg}">إنشاء متجر جديد</button>
+      <button type="button" role="tab" data-tab="register" aria-selected="${reg}">${joining ? 'حساب موظف جديد' : 'إنشاء متجر جديد'}</button>
     </div>
-    ${reg ? '<h2 style="margin:0 0 10px">أنشئ متجرك خلال دقيقة</h2>' : ''}
+    ${reg ? (joining ? '<h2 style="margin:0 0 10px">سوّ حسابك كموظف</h2>' : '<h2 style="margin:0 0 10px">أنشئ متجرك خلال دقيقة</h2>') : ''}
     <form class="panel" id="authForm" novalidate>
       ${reg ? `
         <div class="field"><label for="aName">اسمك</label><input class="input" id="aName" maxlength="80" autocomplete="name"></div>
-        <div class="field"><label for="aStore">اسم متجرك</label><input class="input" id="aStore" maxlength="80" placeholder="مثال: عطور الأنبار"></div>
-        ${pendingRef() ? `<div class="hint ref-hint" style="margin:0 0 12px">جيت من رابط دعوة 🎁 ضع رابط صفحة متجرك على انستغرام أو فيسبوك أو تيك توك، نتحقق منها حتى تنحسب الدعوة لصاحبها.</div>
+        ${joining ? '' : '<div class="field"><label for="aStore">اسم متجرك</label><input class="input" id="aStore" maxlength="80" placeholder="مثال: عطور الأنبار"></div>'}
+        ${pendingRef() && !joining ? `<div class="hint ref-hint" style="margin:0 0 12px">جيت من رابط دعوة 🎁 ضع رابط صفحة متجرك على انستغرام أو فيسبوك أو تيك توك، نتحقق منها حتى تنحسب الدعوة لصاحبها.</div>
         <div class="field"><label for="aSocial">رابط صفحتك (انستغرام / فيسبوك / تيك توك)</label><input class="input" id="aSocial" maxlength="200" dir="ltr" style="text-align:left" placeholder="instagram.com/your.shop" autocapitalize="off" spellcheck="false"></div>` : ''}
-        <div class="hint" style="margin:0 0 12px">متجرك الجديد يحصل على <b>شهر كامل مجاناً</b>، وبعدها نسخة عادي <b class="num">${fmtPrice(PRICES.basic.m)}</b> د.ع أو برو <b class="num">${fmtPrice(PRICES.pro.m)}</b> د.ع شهرياً.</div>` : ''}
+        ${joining ? '' : `<div class="hint" style="margin:0 0 12px">متجرك الجديد يحصل على <b>شهر كامل مجاناً</b>، وبعدها نسخة عادي <b class="num">${fmtPrice(PRICES.basic.m)}</b> د.ع أو برو <b class="num">${fmtPrice(PRICES.pro.m)}</b> د.ع شهرياً.</div>`}` : ''}
       <div class="field"><label for="aId">البريد الإلكتروني أو رقم الهاتف</label><input class="input" id="aId" maxlength="120" autocomplete="username" dir="ltr" style="text-align:right"></div>
       <div class="field"><label for="aPw">كلمة المرور</label><input class="input" id="aPw" type="password" maxlength="200" autocomplete="${reg ? 'new-password' : 'current-password'}">${reg ? '<small class="sub">8 أحرف على الأقل، حروف وأرقام</small>' : ''}</div>
       <div id="aErr" class="err" hidden></div>
-      <button class="btn primary block" type="submit" id="aSubmit">${reg ? 'إنشاء الحساب والمتجر' : 'دخول'}</button>
+      <button class="btn primary block" type="submit" id="aSubmit">${reg ? (joining ? 'إنشاء الحساب والانضمام' : 'إنشاء الحساب والمتجر') : 'دخول'}</button>
       ${reg ? '' : '<button class="btn block" type="button" data-tab="forgot" style="margin-top:8px">نسيت كلمة المرور؟</button>'}
     </form>
     ${reg ? `<p class="sub" style="text-align:center;margin-top:14px">كل تجارة عظيمة بدأت بخطوة… وخطوتك الآن ✨</p>
@@ -1682,7 +1704,7 @@ function renderSignupCode(email, storeName) {
     let res = await sb.auth.verifyOtp({ email, token, type: 'signup' });
     if (res.error) res = await sb.auth.verifyOtp({ email, token, type: 'email' });
     if (res.error || !res.data.session) return showErr(otpError(res.error));
-    try { await loadAccount(res.data.user); if (!store()) await createStore(storeName); localStorage.removeItem('rawaj-pending-store'); } catch (err) { return showErr('تأكد الحساب لكن تعذّر إنشاء المتجر. سجّل الدخول لإكماله'); }
+    try { await loadAccount(res.data.user); if (!store() && !pendingJoin() && storeName) await createStore(storeName); localStorage.removeItem('rawaj-pending-store'); } catch (err) { return showErr('تأكد الحساب لكن تعذّر إنشاء المتجر. سجّل الدخول لإكماله'); }
     await applyPendingReferral().catch(() => {});
     afterSignIn('home');
     welcomeSheet();
@@ -1794,9 +1816,10 @@ async function onAuthSubmit(e) {
   const pw = $('#aPw').value;
   if (authTab === 'register') {
     const name = $('#aName').value.trim();
-    const storeName = $('#aStore').value.trim();
+    const storeName = $('#aStore') ? $('#aStore').value.trim() : '';
+    const joining = !!pendingJoin();
     if (!name) return showErr('اكتب اسمك');
-    if (!storeName) return showErr('اكتب اسم متجرك');
+    if (!storeName && !joining) return showErr('اكتب اسم متجرك');
     if (!id) return showErr('اكتب بريداً صحيحاً أو رقم هاتف من 11 رقماً يبدأ بـ 07');
     if (pw.length < 8 || !/[A-Za-z\u0600-\u06FF]/.test(pw) || !/[0-9]/.test(pw)) return showErr('كلمة المرور 8 أحرف على الأقل، وبيها حروف وأرقام');
     const socialEl = $('#aSocial');
@@ -1805,12 +1828,12 @@ async function onAuthSubmit(e) {
       if (!SOCIAL_RE.test(soc)) return showErr(REF_ERRORS.BAD_SOCIAL);
       try { localStorage.setItem('rawaj-ref-social', soc); } catch (err) { /* ignore */ }
     }
-    btn.disabled = true; btn.textContent = 'جارِ إنشاء متجرك…';
+    btn.disabled = true; btn.textContent = joining ? 'جارِ إنشاء حسابك…' : 'جارِ إنشاء متجرك…';
     const { data, error } = await sb.auth.signUp({ email: idToEmail(id), password: pw, options: { data: { name } } });
     if (error) return showErr(authError(error));
     if (data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) return showErr('هذا الحساب مسجّل مسبقاً، سجّل الدخول بدلاً من ذلك');
     if (!data.session) {
-      try { localStorage.setItem('rawaj-pending-store', storeName); } catch (err) { /* ignore */ }
+      try { if (storeName) localStorage.setItem('rawaj-pending-store', storeName); } catch (err) { /* ignore */ }
       const isMail = id.includes('@');
       if (isMail) { renderSignupCode(idToEmail(id), storeName); return; }
       $('#authForm').outerHTML = `<div class="panel confirm-box" role="status">
@@ -1828,7 +1851,7 @@ async function onAuthSubmit(e) {
       </div>`;
       return;
     }
-    try { await loadAccount(data.user); if (!store()) await createStore(storeName); } catch (err) { return showErr('أُنشئ الحساب لكن تعذّر إنشاء المتجر. سجّل الدخول لإكماله'); }
+    try { await loadAccount(data.user); if (!store() && !joining) await createStore(storeName); } catch (err) { return showErr('أُنشئ الحساب لكن تعذّر إنشاء المتجر. سجّل الدخول لإكماله'); }
     await applyPendingReferral().catch(() => {});
     afterSignIn('home');
     welcomeSheet();
@@ -1841,7 +1864,7 @@ async function onAuthSubmit(e) {
   try { await loadAccount(data.user); } catch (err) { await sb.auth.signOut().catch(() => {}); return showErr('تعذّر تحميل بياناتك، حاول مجدداً'); }
   let pending = null;
   try { pending = localStorage.getItem('rawaj-pending-store'); } catch (err) { /* ignore */ }
-  if (pending && !store() && !currentUser().isAdmin) {
+  if (pending && !store() && !currentUser().isAdmin && !pendingJoin()) {
     try { await createStore(pending); localStorage.removeItem('rawaj-pending-store'); await applyPendingReferral().catch(() => {}); afterSignIn('home'); welcomeSheet(); return; } catch (err) { /* user can create it from the next screen */ }
   }
   afterSignIn('home');
@@ -1864,7 +1887,7 @@ async function signOut() {
 // Shown once, right after a new store is created.
 function welcomeSheet() {
   const s = store();
-  if (!s) return;
+  if (!s || isStaff() || pendingJoin()) return;
   openSheet(`<div class="welcome">
       <div class="welcome-burst">${LOGO_SVG(64)}</div>
       <h3 id="sheetTitle">مبروك! 🎉</h3>
@@ -1880,6 +1903,7 @@ function welcomeSheet() {
 }
 function renderNoStore() {
   document.body.classList.add('signed-out');
+  if (pendingJoin() && !joinTried) { $('#auth').innerHTML = '<div class="auth"><div class="auth-box" style="text-align:center"><p class="sub">جارِ الانضمام للمتجر…</p></div></div>'; return; }
   document.body.classList.remove('admin-mode');
   $('#adminBanner').classList.remove('on');
   $('#auth').innerHTML = `<div class="auth"><div class="auth-box">
@@ -3054,6 +3078,7 @@ function couponSheet(i) {
   });
 }
 function viewSettings() {
+  if (isStaff()) return viewStaffAccount();
   const s = store();
   return `
   <h1>إعدادات المتجر</h1>
@@ -3122,10 +3147,9 @@ function viewSettings() {
 
   ${s.refCode ? `<h2>ادعُ أصحاب المتاجر واحصل على شهر مجاني</h2>${inviteCard(s)}` : ''}
 
-  <h2>الموظفون والصلاحيات</h2>
-  <div class="panel">
-    <p style="margin-top:0">جرّب تغيير الدور من أعلى الصفحة لترى ما يراه كل موظف. موظف الطلبات لا يرى سعر التكلفة ولا الأرباح.</p>
-  </div>
+  <h2>الموظفون</h2>
+  <div class="panel" id="staffBox"><span class="sub">جارِ التحميل…</span></div>
+  <p class="sub">تقدر تشوف شنو يشوف كل موظف من قائمة الأدوار بأعلى الصفحة.</p>
 
   <h2>الحساب</h2>
   <div class="panel spread"><div><div>${esc(currentUser().name)}</div><div class="sub" dir="ltr" style="text-align:right">${esc(currentUser().email)}</div></div>
@@ -4213,6 +4237,122 @@ async function sfWaseetLine(slug, no, phone, out) {
   } catch (e) { line.remove(); }
 }
 
+/* ---------------- staff accounts ----------------
+   The owner shares a private link (?join=<token>). Whoever opens it signs up or signs in and works inside
+   that store with the role the owner picks (default: orders). Server: store_members + RPCs. */
+const STAFF_ROLES = ['manager', 'orders', 'inventory'];
+const JOIN_ERRORS = {
+  BAD_LINK: 'رابط الموظفين غير صالح أو تغيّر. اطلب رابطاً جديداً من صاحب المتجر',
+  HAS_STORE: 'حسابك عنده متجر خاص، فما يقدر ينضم كموظف. سوّ حساباً جديداً للموظف برقم أو بريد ثاني',
+  OWNER: 'أنت صاحب هذا المتجر',
+  OTHER_STORE: 'حسابك موظف بمتجر ثاني. اطلع منه أولاً من «حسابي»',
+  FULL: 'وصل المتجر للحد الأعلى من الموظفين (20)',
+};
+let joinTried = false;
+const staffUrl = (token) => `${siteBase()}?join=${token}`;
+async function applyPendingJoin() {
+  const t = pendingJoin();
+  if (!t || joinTried) return;
+  joinTried = true;
+  const { data, error } = await sb.rpc('join_store', { p_token: t });
+  if (error) { toast('تعذّر الانضمام للمتجر، حاول مرة ثانية', true); render(); return; }
+  try { localStorage.removeItem('rawaj-join'); } catch (e) { /* ignore */ }
+  if (!data || !data.ok) { toast(JOIN_ERRORS[data && data.error] || 'تعذّر الانضمام للمتجر', true); render(); return; }
+  const { data: u } = await sb.auth.getUser();
+  if (u && u.user) await loadAccount(u.user);
+  afterSignIn('home');
+  toast(`انضممت لمتجر «${data.store_name || ''}» كموظف`);
+}
+async function loadJoinName() {
+  const t = pendingJoin();
+  if (!t) return;
+  const { data } = await sb.rpc('staff_link_info', { p_token: t });
+  if (data && data.name) { joinStoreName = data.name; $$('.join-store-name').forEach((e) => { e.textContent = data.name; }); }
+}
+loadJoinName().catch(() => {});
+
+async function fillStaff(s) {
+  if (!$('#staffBox')) return;
+  if (state.adminAs) { $('#staffBox').innerHTML = '<span class="sub">صاحب المتجر يدير موظفيه من حسابه.</span>'; return; }
+  const [lk, ls] = await Promise.all([sb.rpc('staff_link'), sb.rpc('store_staff')]);
+  const b = $('#staffBox');
+  if (!b || store() !== s) return;
+  if (lk.error || !lk.data || !lk.data.ok) { b.innerHTML = '<span class="sub">تعذّر تحميل الموظفين، حدّث الصفحة وحاول مرة ثانية.</span>'; return; }
+  const url = staffUrl(lk.data.token);
+  const list = Array.isArray(ls.data) ? ls.data : [];
+  const share = `انضم لفريق متجر «${s.name}» على رواج من هذا الرابط:\n${url}`;
+  b.innerHTML = `
+    <p style="margin-top:0">شارك هذا الرابط مع الموظف. يفتحه ويسوي حساب (أو يسجل دخول بحسابه)، ويدخل على متجرك مباشرة بصلاحية <b>${ROLES.orders.l}</b>، وتقدر تغيّرها من هنا.</p>
+    <div class="url" dir="ltr">${esc(url.replace(/^https?:\/\//, ''))}</div>
+    <div class="row" style="flex-wrap:wrap;margin-top:8px">
+      <button class="btn" type="button" id="staffCopy">${icon('copy')} نسخ الرابط</button>
+      <a class="btn" href="https://wa.me/?text=${encodeURIComponent(share)}" target="_blank" rel="noopener">${icon('chat')} مشاركة بالواتساب</a>
+      <button class="btn danger" type="button" id="staffReset">تغيير الرابط</button>
+    </div>
+    <p class="note">لا تنشره للعامة: أي شخص عنده الرابط يقدر ينضم. «تغيير الرابط» يوقف القديم، والموظفون الحاليون يبقون.</p>
+    <h3 style="margin:16px 0 4px">الموظفون <span class="num">(${list.length})</span></h3>
+    ${list.length ? list.map((m) => `<div class="row" style="padding:10px 0;border-top:1px solid var(--line);flex-wrap:wrap">
+        <div class="grow" style="min-width:140px"><div>${esc(m.name || 'بدون اسم')}</div><div class="sub" dir="ltr" style="text-align:right">${esc(emailToDisplay(m.email || ''))}</div></div>
+        <select class="input" data-staff-role="${esc(m.user_id)}" aria-label="صلاحية ${esc(m.name || '')}" style="width:auto">${STAFF_ROLES.map((r) => `<option value="${r}"${m.role === r ? ' selected' : ''}>${ROLES[r].l}</option>`).join('')}</select>
+        <button class="btn danger" type="button" data-staff-del="${esc(m.user_id)}" style="min-height:34px;padding:4px 12px">حذف</button>
+      </div>`).join('') : '<p class="sub" style="margin:0">ما عندك موظفين بعد.</p>'}
+    <p class="sub" style="margin-bottom:0"><b>${ROLES.manager.l}:</b> كلشي عدا الإعدادات. <b>${ROLES.orders.l}:</b> الطلبات والزبائن، بدون التكلفة والأرباح. <b>${ROLES.inventory.l}:</b> المنتجات والمخزن.</p>`;
+  b.querySelector('#staffCopy').addEventListener('click', async () => toast((await copyText(url)) ? 'نُسخ رابط الموظفين' : 'تعذّر النسخ، انسخه يدوياً'));
+  b.querySelector('#staffReset').addEventListener('click', async () => {
+    const ok = await confirmSheet('تغيير رابط الموظفين', 'الرابط القديم يتوقف، واللي ما انضموا بعد يحتاجون الرابط الجديد. الموظفون الحاليون يبقون.', 'تغيير الرابط', true);
+    if (!ok) return;
+    const { data, error } = await sb.rpc('staff_link', { p_reset: true });
+    if (error || !data || !data.ok) { toast('تعذّر تغيير الرابط', true); return; }
+    toast('تغيّر رابط الموظفين'); fillStaff(s);
+  });
+  $$('[data-staff-role]', b).forEach((sel) => sel.addEventListener('change', async () => {
+    const { data, error } = await sb.rpc('set_staff_role', { p_user: sel.dataset.staffRole, p_role: sel.value });
+    if (error || !data || !data.ok) { toast('تعذّر تغيير الصلاحية', true); fillStaff(s); return; }
+    toast(`صارت الصلاحية: ${ROLES[sel.value].l}. تتطبق عند الموظف بعد ما يحدّث الصفحة`);
+  }));
+  $$('[data-staff-del]', b).forEach((btn) => btn.addEventListener('click', async () => {
+    const m = list.find((x) => x.user_id === btn.dataset.staffDel);
+    const ok = await confirmSheet('حذف موظف', `«${m ? m.name : ''}» ما يقدر يدخل على متجرك بعد هذا. حسابه يبقى بس بدون متجر.`, 'حذف', true);
+    if (!ok) return;
+    const { data, error } = await sb.rpc('remove_staff', { p_user: btn.dataset.staffDel });
+    if (error || !data || !data.ok) { toast('تعذّر الحذف', true); return; }
+    toast('حُذف الموظف'); fillStaff(s);
+  }));
+}
+
+// What a staff member sees under "settings": their account only.
+function viewStaffAccount() {
+  const s = store(), u = currentUser();
+  return `
+  <h1>حسابي</h1>
+  <div class="panel"><div>تشتغل بمتجر <b>${esc(s.name)}</b></div><div class="sub">صلاحيتك: ${ROLES[u.staffRole].l}</div></div>
+  <h2>كلمة المرور</h2>
+  <form class="panel" id="chgPwForm" novalidate>
+    <div class="field"><label for="cNew">كلمة المرور الجديدة</label><input class="input" id="cNew" type="password" autocomplete="new-password" dir="ltr" style="text-align:left"></div>
+    <div class="field"><label for="cNew2">أعد كتابة كلمة المرور</label><input class="input" id="cNew2" type="password" autocomplete="new-password" dir="ltr" style="text-align:left"></div>
+    <small class="sub">8 أحرف على الأقل، وبيها حروف وأرقام.</small>
+    <div id="cErr" class="err" hidden></div>
+    <button class="btn block" type="submit" id="cSubmit" style="margin-top:10px">حفظ كلمة المرور الجديدة</button>
+  </form>
+  <h2>الحساب</h2>
+  <div class="panel spread"><div><div>${esc(u.name)}</div><div class="sub" dir="ltr" style="text-align:right">${esc(u.email)}</div></div>
+    <button class="btn danger" type="button" data-act="logout">تسجيل الخروج</button></div>
+  <button class="btn block" type="button" id="staffLeave" style="margin-top:12px">الخروج من فريق المتجر</button>`;
+}
+document.addEventListener('click', async (e) => {
+  if (!e.target.closest('#staffLeave')) return;
+  const u = currentUser();
+  const ok = await confirmSheet('الخروج من فريق المتجر', 'ما تقدر تدخل على هذا المتجر بعد، إلا إذا انضميت مرة ثانية برابط من صاحبه.', 'خروج', true);
+  if (!ok) return;
+  await syncNow();
+  const { data, error } = await sb.rpc('remove_staff', { p_user: u.id });
+  if (error || !data || !data.ok) { toast('تعذّر الخروج، حاول مرة ثانية', true); return; }
+  const { data: au } = await sb.auth.getUser();
+  if (au && au.user) await loadAccount(au.user);
+  afterSignIn('home');
+  toast('خرجت من فريق المتجر');
+});
+
 /* ---------------- events ---------------- */
 document.addEventListener('click', (e) => {
   const t = e.target.closest('button, [data-act]');
@@ -4305,6 +4445,7 @@ $('#scrim').addEventListener('click', closeSheet);
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && $('#sheet').classList.contains('open')) closeSheet(); });
 
 $('#roleSelect').addEventListener('change', (e) => {
+  if (isStaff()) return;
   state.role = e.target.value;
   save(); render(); toast(`تعرض الآن كـ ${ROLES[state.role].l}`);
 });

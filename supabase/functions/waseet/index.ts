@@ -149,7 +149,7 @@ Deno.serve(async (req) => {
   const { data: who, error: whoErr } = await db.auth.getUser(token);
   if (whoErr || !who?.user) return json({ error: 'UNAUTHENTICATED' }, 401);
 
-  let storeId = '';
+  let storeId = '', isOwner = true;
   if (body.store_id) {
     storeId = String(body.store_id);
     if (!/^[0-9a-f-]{36}$/i.test(storeId)) return json({ error: 'BAD_STORE' }, 400);
@@ -161,9 +161,15 @@ Deno.serve(async (req) => {
     }
   } else {
     const { data: st } = await db.from('stores').select('id').eq('owner_id', who.user.id).maybeSingle();
-    if (!st) return json({ error: 'NO_STORE' }, 404);
-    storeId = st.id;
+    if (st) storeId = st.id;
+    else {
+      // Staff member working inside someone else's store.
+      const { data: m } = await db.from('store_members').select('store_id').eq('user_id', who.user.id).maybeSingle();
+      if (!m) return json({ error: 'NO_STORE' }, 404);
+      storeId = m.store_id; isOwner = false;
+    }
   }
+  if (!isOwner && (action === 'connect' || action === 'disconnect')) return json({ ok: false, msg: 'ربط حساب الوسيط من صلاحية صاحب المتجر' }, 403);
 
   if (action === 'connect') {
     const username = str(body.username, 100), password = String(body.password ?? '').slice(0, 200);
